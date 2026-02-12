@@ -6,6 +6,5 @@
     "name": "Orka"
   },
   "keywords": ["memory", "context", "session", "restore", "project-state"],
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }

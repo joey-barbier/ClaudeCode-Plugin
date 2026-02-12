@@ -6,6 +6,5 @@
     "name": "Orka"
   },
   "keywords": ["openclaw", "session", "context", "compression", "gateway", "memory"],
-  "skills": "./skills/",
-  "hooks": "./hooks/hooks.json"
+  "skills": "./skills/"
 }
