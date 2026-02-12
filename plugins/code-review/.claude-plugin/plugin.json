@@ -6,6 +6,6 @@
     "name": "Orka"
   },
   "keywords": ["code-review", "pull-request", "pr-review", "quality", "security", "tech-lead"],
-  "agents": "./agents/",
+  "agents": ["./agents/review-pr.md"],
   "hooks": "./hooks/hooks.json"
 }

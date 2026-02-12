@@ -6,5 +6,5 @@
     "name": "Orka"
   },
   "keywords": ["analytics", "tracking", "saas", "conversion", "funnel", "metrics", "dashboard"],
-  "agents": "./agents/"
+  "agents": ["./agents/saas-analytics-architect.md"]
 }

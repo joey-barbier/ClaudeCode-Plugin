@@ -6,7 +6,7 @@
     "name": "Orka"
   },
   "keywords": ["workflow", "methodology", "mvp", "architecture", "documentation", "git", "productivity"],
-  "agents": "./agents/",
+  "agents": ["./agents/structured-dev-methodology.md"],
   "skills": "./skills/",
   "hooks": "./hooks/hooks.json"
 }

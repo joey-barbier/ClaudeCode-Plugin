@@ -6,6 +6,6 @@
     "name": "Orka"
   },
   "keywords": ["testing", "qa", "unit-tests", "validation", "quality-assurance", "test-generation"],
-  "agents": "./agents/",
+  "agents": ["./agents/qa-validate.md"],
   "skills": "./skills/"
 }
