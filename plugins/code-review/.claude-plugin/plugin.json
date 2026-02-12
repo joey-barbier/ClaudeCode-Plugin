@@ -1,0 +1,10 @@
+{
+  "name": "code-review",
+  "version": "1.0.0",
+  "description": "Senior Tech Lead PR review agent with structured feedback and quality enforcement",
+  "author": "Orka",
+  "keywords": ["code-review", "pull-request", "pr-review", "quality", "security", "tech-lead"],
+  "agents": [
+    "agents/review-pr.md"
+  ]
+}

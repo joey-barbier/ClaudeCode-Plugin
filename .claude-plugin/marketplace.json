@@ -1,0 +1,17 @@
+{
+  "name": "ClaudeCode-Plugin",
+  "version": "1.0.0",
+  "description": "Claude Code marketplace for developer workflow skills and agents",
+  "author": "Orka",
+  "license": "MIT",
+  "repository": "https://github.com/joey-barbier/ClaudeCode-Plugin",
+  "plugins": [
+    "plugins/code-review",
+    "plugins/qa-testing",
+    "plugins/dev-workflow",
+    "plugins/cc-memory",
+    "plugins/analytics",
+    "plugins/openclaw",
+    "plugins/cc-setup"
+  ]
+}
