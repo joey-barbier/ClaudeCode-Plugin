@@ -1,17 +1,50 @@
 {
   "name": "ClaudeCode-Plugin",
-  "version": "1.0.0",
-  "description": "Claude Code marketplace for developer workflow skills and agents",
-  "author": "Orka",
-  "license": "MIT",
-  "repository": "https://github.com/joey-barbier/ClaudeCode-Plugin",
+  "owner": {
+    "name": "Orka"
+  },
   "plugins": [
-    "plugins/code-review",
-    "plugins/qa-testing",
-    "plugins/dev-workflow",
-    "plugins/cc-memory",
-    "plugins/analytics",
-    "plugins/openclaw",
-    "plugins/cc-setup"
+    {
+      "name": "code-review",
+      "source": "./plugins/code-review",
+      "description": "Senior Tech Lead PR review agent with push guard hook",
+      "version": "1.0.0"
+    },
+    {
+      "name": "qa-testing",
+      "source": "./plugins/qa-testing",
+      "description": "QA validation and business-focused unit test generation",
+      "version": "1.0.0"
+    },
+    {
+      "name": "dev-workflow",
+      "source": "./plugins/dev-workflow",
+      "description": "Structured development methodology, MVP time management, and git safety",
+      "version": "1.0.0"
+    },
+    {
+      "name": "cc-memory",
+      "source": "./plugins/cc-memory",
+      "description": "Project memory management: auto-restore context between sessions",
+      "version": "1.0.0"
+    },
+    {
+      "name": "cc-setup",
+      "source": "./plugins/cc-setup",
+      "description": "Interactive CLAUDE.md generator with best practices",
+      "version": "1.0.0"
+    },
+    {
+      "name": "analytics",
+      "source": "./plugins/analytics",
+      "description": "SaaS analytics tracking strategy design and optimization",
+      "version": "1.0.0"
+    },
+    {
+      "name": "openclaw",
+      "source": "./plugins/openclaw",
+      "description": "Context management and session optimization for OpenClaw gateway",
+      "version": "1.0.0"
+    }
   ]
 }
