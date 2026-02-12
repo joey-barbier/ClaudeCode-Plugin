@@ -2,180 +2,139 @@
 
 **[EN](README.md)** | **[ES](README.es.md)** | **[DE](README.de.md)**
 
-Une collection de plugins prêts à l'emploi pour [Claude Code](https://docs.anthropic.com/en/docs/claude-code) qui enrichissent votre assistant IA avec des bonnes pratiques, des garde-fous de sécurité et des outils de productivité.
+Des plugins prêts à l'emploi qui rendent Claude Code réellement utile dans les vrais projets. Mémoire, révision de code, flux de travail de développement, garde-fous de sécurité — construits à partir de mois d'utilisation quotidienne.
 
-> Construit par l'équipe derrière [LibTracker](https://app.libtracker.io/) — des workflows éprouvés, forgés en construisant un vrai produit SaaS avec Claude Code.
+> En parallèle, pour suivre vos librairies externes, les CVEs et plus encore, découvrez [LibTracker](https://app.libtracker.io/).
 
-## Qu'est-ce qu'un plugin ?
+![Demo](assets/demo.gif)
 
-Les plugins Claude Code étendent les capacités de Claude dans votre terminal. Ils ajoutent :
+## Commencer
 
-- **Skills** — Des commandes que vous tapez (comme `/memory` ou `/setup`) pour déclencher des flux de travail spécifiques
-- **Agents** — Des personas IA spécialisées qui s'activent automatiquement quand c'est pertinent (comme un réviseur de code)
-- **Hooks** — Des vérifications de sécurité automatiques qui s'exécutent en arrière-plan (comme le blocage de pertes de données accidentelles)
+Suivez les étapes dans l'ordre. Chacune s'appuie sur la précédente.
 
-Vous installez uniquement ce dont vous avez besoin. Chaque plugin fonctionne de manière indépendante.
+### Étape 1 : Configurer Claude Code (première fois seulement)
 
-## Plugins disponibles
+Installez `cc-setup` et exécutez l'assistant de configuration. Il vous pose des questions sur votre flux de travail et génère un `CLAUDE.md` personnalisé — le fichier qui dit à Claude comment VOUS travaillez.
 
-### code-review
+```bash
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/cc-setup
+```
+Puis tapez `/cc-setup:setup` et répondez aux questions.
 
-**Votre Tech Lead senior personnel.**
-Révise vos modifications de code avant leur mise en ligne, détectant les bugs, les problèmes de sécurité et les défauts de qualité.
+### Étape 2 : Donner une mémoire à Claude
 
-| Ce que vous obtenez | Comment l'utiliser |
-|---|---|
-| Agent de révision de PR | Dites "review PR" ou s'active automatiquement |
+Installez `cc-memory` afin que Claude se souvienne de votre projet entre les sessions. Fini d'expliquer où vous en étiez après une compression ou une nouvelle conversation.
 
-> Hook : Vous rappelle de réviser le code avant de pousser des modifications sur les branches de fonctionnalité.
+```bash
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/cc-memory
+```
 
----
+**Ce qui se passe :** Quand vous ouvrez Claude, il détecte automatiquement les fichiers de votre projet et restaure le contexte complet — ce qui est fait, ce qui ne l'est pas, sur quoi travailler ensuite. Tapez `/cc-memory:memory` pour initialiser la mémoire sur un nouveau projet ou la restaurer manuellement.
 
-### qa-testing
+### Étape 3 : Ajouter les outils dont vous avez besoin
 
-**Assurance qualité et tests.**
-Valide votre travail comme le ferait un Product Owner, et génère des tests pour votre code dans n'importe quel langage.
-
-| Ce que vous obtenez | Comment l'utiliser |
-|---|---|
-| Agent de validation QA | S'active lors de la validation de fonctionnalités |
-| Générateur de tests | Tapez `/qa-testing:unit-test-expert` |
+Choisissez ce qui correspond à votre flux de travail. Chaque plugin fonctionne indépendamment.
 
 ---
 
-### dev-workflow
+#### code-review — *Autonome*
 
-**Méthodologie de développement structurée.**
-Vous garde organisé, prévient les pertes de temps et protège contre les pertes accidentelles de données.
-
-| Ce que vous obtenez | Comment l'utiliser |
-|---|---|
-| Agent de méthodologie de développement | S'active pour les implémentations complexes |
-| Démarrer l'implémentation | Tapez `/dev-workflow:implement` |
-| Détecteur de perte de temps | Tapez `/dev-workflow:time-check` |
-| Configuration de la documentation | Tapez `/dev-workflow:init-docs` |
-| Préparation nouvelle fonctionnalité | Tapez `/dev-workflow:new-feature` |
-
-> Hook : Bloque les commandes git dangereuses (force push, hard reset, clean) pour prévenir la perte de données.
-
----
-
-### cc-memory
-
-**Mémoire de session et contexte.**
-Mémorise votre projet entre les sessions afin que Claude ne perde jamais le fil de là où vous en étiez.
-
-| Ce que vous obtenez | Comment l'utiliser |
-|---|---|
-| Restauration / initialisation du contexte | Tapez `/cc-memory:memory` |
-
-> Hook : Détecte automatiquement les fichiers de mémoire du projet au démarrage d'une session et restaure le contexte.
-
----
-
-### cc-setup
-
-**Assistant de configuration interactif.**
-Génère un fichier de configuration personnalisé (CLAUDE.md) via un questionnaire simple. Fonctionne pour les développeurs, chefs de projet, rédacteurs — toute personne utilisant Claude Code.
-
-| Ce que vous obtenez | Comment l'utiliser |
-|---|---|
-| Générateur CLAUDE.md | Tapez `/cc-setup:setup` |
-
----
-
-### analytics
-
-**Expert en analytics SaaS.**
-Conçoit des stratégies de suivi pour les applications web — quoi mesurer, comment le configurer et quels tableaux de bord construire.
-
-| Ce que vous obtenez | Comment l'utiliser |
-|---|---|
-| Agent architecte analytics | S'active pour les tâches liées aux analytics |
-
----
-
-### openclaw
-
-**Gestion de session pour la passerelle OpenClaw.**
-Outils pour gérer les sessions IA de longue durée — compresser le contexte, extraire les apprentissages et maintenir les performances.
-
-| Ce que vous obtenez | Comment l'utiliser |
-|---|---|
-| Compresseur de session | Tapez `/openclaw:compact` |
-| Extracteur d'apprentissage | Tapez `/openclaw:extract` |
-| Moniteur de contexte | Exécutez `context-monitor.sh` |
-| Gardien de contexte | Exécutez `context-guardian-daemon.sh` |
-| Redémarrage de la passerelle | Exécutez `self-reboot.sh` |
-| Nettoyeur de blobs | Exécutez `clean-session-blobs.sh` |
-
-> Hook : Vous rappelle de sauvegarder les apprentissages avant que les grandes sessions ne soient compressées.
-
-## Installation
-
-### Installer un seul plugin
-
-Choisissez uniquement ce dont vous avez besoin :
+**Votre responsable technique senior personnel.** S'active automatiquement quand vous dites "review PR" ou quand Claude détecte du code prêt à être poussé. Fait un premier passage complet (architecture, sécurité, qualité) pour que quand vous révisiez, vous vous concentriez sur ce qui compte — pas les fautes de frappe et les ifs mal placés.
 
 ```bash
 claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/code-review
 ```
 
-### Essayer avant d'installer
+> Hook inclus (se lance automatiquement, aucune commande requise) : Bloque le push vers main/master. Vous rappelle de réviser avant de pousser les branches de fonctionnalités.
 
-Testez un plugin temporairement :
+---
 
-```bash
-claude --plugin-dir ./plugins/dev-workflow
-```
+#### qa-testing — *Mixte (autonome + commande)*
 
-### Installer depuis une copie locale
+**Validation QA et génération de tests.** L'agent QA s'active automatiquement quand vous affirmez qu'une fonctionnalité est terminée — il remet vos assertions en question et teste les cas limites. Le générateur de tests est une commande manuelle.
 
 ```bash
-git clone https://github.com/joey-barbier/ClaudeCode-Plugin.git
-claude plugin add ./ClaudeCode-Plugin/plugins/cc-memory
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/qa-testing
 ```
 
-## Démarrage rapide
-
-1. **Installez les plugins dont vous avez besoin** (voir ci-dessus)
-2. **Les agents fonctionnent automatiquement** — ils s'activent quand Claude détecte une situation pertinente
-3. **Les skills sont des commandes** — tapez-les quand nécessaire :
-   ```
-   /cc-setup:setup              # Configurer vos préférences Claude Code
-   /cc-memory:memory            # Restaurer le contexte du projet
-   /dev-workflow:new-feature    # Préparer une nouvelle fonctionnalité
-   /dev-workflow:implement      # Démarrer la construction
-   /dev-workflow:time-check     # Vérifier si vous sur-ingénieurez
-   /dev-workflow:init-docs      # Configurer la documentation du projet
-   /qa-testing:unit-test-expert # Générer des tests
-   /openclaw:compact            # Compresser une grande session
-   /openclaw:extract            # Sauvegarder les apprentissages d'une session
-   ```
-4. **Les hooks s'exécutent silencieusement** — vous protégeant des erreurs en arrière-plan
-
-## Configurations recommandées
-
-| Profil | Plugins recommandés |
+| Composant | Comment cela fonctionne |
 |---|---|
-| **Débute avec Claude Code** | `cc-setup` → exécutez `/cc-setup:setup` |
-| **Développeur solo** | `cc-memory` + `dev-workflow` + `code-review` |
-| **Équipe avec revues de code** | `code-review` + `qa-testing` + `dev-workflow` |
-| **Chef de projet ou rédacteur** | `cc-setup` + `cc-memory` |
-| **Opérateur de passerelle OpenClaw** | `openclaw` + `cc-memory` |
+| Agent de validation QA | Autonome — s'active lors de la validation des fonctionnalités |
+| Générateur de tests | Commande — tapez `/qa-testing:unit-test-expert` |
 
-## Structure
+---
 
+#### dev-workflow — *Commandes + agent autonome*
+
+**Méthodologie de développement structurée.** L'agent s'active pour les implémentations complexes. Les compétences sont des commandes que vous tapez quand vous en avez besoin.
+
+```bash
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/dev-workflow
 ```
-plugins/
-├── code-review/     # Agent de révision de PR + hook de garde de push
-├── qa-testing/      # Validation QA + génération de tests
-├── dev-workflow/    # Méthodologie de dev + hook de sécurité git
-├── cc-memory/       # Restauration de contexte + hook de détection auto
-├── cc-setup/        # Générateur interactif CLAUDE.md
-├── analytics/       # Suivi analytics SaaS
-└── openclaw/        # Gestion de session + hook pré-compaction
+
+| Composant | Comment cela fonctionne |
+|---|---|
+| Agent de méthodologie de développement | Autonome — s'active pour les travaux complexes multicouches |
+| `/dev-workflow:implement` | Commande — lancer une session de développement structurée |
+| `/dev-workflow:new-feature` | Commande — préparer git pour une nouvelle fonctionnalité |
+| `/dev-workflow:time-check` | Commande — détecter la sur-ingénierie et les boucles |
+| `/dev-workflow:init-docs` | Commande — initialiser la documentation du projet |
+
+> Hook inclus (se lance automatiquement, aucune commande requise) : Bloque les commandes git dangereuses (force push, hard reset, checkout ., restore ., clean, branch -D).
+
+---
+
+#### analytics — *Autonome*
+
+**Expert en analytique SaaS.** S'active quand vous travaillez sur le suivi, les entonnoirs ou la conversion. Conçoit quoi mesurer, comment le mettre en place et quels tableaux de bord construire.
+
+```bash
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/analytics
 ```
+
+---
+
+#### openclaw — *Commandes*
+
+**Gestion de session pour la passerelle OpenClaw.** Outils pour les sessions longues — compresser le contexte, extraire les apprentissages, maintenir les performances.
+
+```bash
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/openclaw
+```
+
+| Composant | Comment cela fonctionne |
+|---|---|
+| `/openclaw:compact` | Commande — compresser une grande session |
+| `/openclaw:extract` | Commande — sauvegarder les apprentissages avant le nettoyage |
+| Scripts shell | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
+
+> Hook inclus (se lance automatiquement, aucune commande requise) : Vous avertit de sauvegarder les apprentissages avant que les grandes sessions ne soient compactées.
+
+## Comment fonctionnent les plugins
+
+Trois types de composants, trois comportements :
+
+| Type | Comportement | Exemple |
+|---|---|---|
+| **Agents** | Autonome — Claude les active quand c'est pertinent | L'agent de révision de code se déclenche sur "review PR" |
+| **Compétences** | Commandes — vous les tapez quand vous en avez besoin | `/cc-memory:memory` pour restaurer le contexte |
+| **Hooks** | Silencieux — s'exécutent en arrière-plan, vous protègent des erreurs | Bloque automatiquement `git push --force` |
+
+## Installer la marketplace
+
+Pour parcourir tous les plugins depuis Claude Code :
+
+```bash
+/plugin marketplace add github:joey-barbier/ClaudeCode-Plugin
+```
+
+Puis utilisez `/plugin` → onglet **Discover** pour parcourir et installer.
+
+## Questions ?
+
+Je fais un direct sur Twitch en construisant avec Claude Code. Venez poser des questions, voir les plugins en action, ou en suggérer de nouveaux.
+
+**[twitch.tv/horka_tv](https://twitch.tv/horka_tv)**
 
 ## Licence
 

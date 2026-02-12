@@ -2,181 +2,140 @@
 
 **[EN](README.md)** | **[FR](README.fr.md)** | **[DE](README.de.md)**
 
-Una colección de plugins listos para usar para [Claude Code](https://docs.anthropic.com/en/docs/claude-code) que mejoran tu asistente de IA con buenas prácticas, medidas de seguridad y herramientas de productividad.
+Plugins listos para usar que hacen Claude Code realmente útil en proyectos reales. Memoria, revisión de código, flujo de desarrollo, guardias de seguridad — construidos a partir de meses de uso diario.
 
-> Creado por el equipo detrás de [LibTracker](https://app.libtracker.io/) — flujos de trabajo probados en batalla, forjados construyendo un producto SaaS real con Claude Code.
+> Además, para seguir tus librerías externas, los CVEs y más, descubre [LibTracker](https://app.libtracker.io/).
 
-## ¿Qué son los Plugins?
+![Demo](assets/demo.gif)
 
-Los plugins de Claude Code amplían lo que Claude puede hacer en tu terminal. Añaden:
+## Primeros pasos
 
-- **Skills** — Comandos que tecleas (como `/memory` o `/setup`) para activar flujos de trabajo específicos
-- **Agents** — Personas de IA especializadas que se activan automáticamente cuando es relevante (como un revisor de código)
-- **Hooks** — Verificaciones de seguridad automáticas que se ejecutan en segundo plano (como bloquear pérdida accidental de datos)
+Sigue los pasos en orden. Cada uno se basa en el anterior.
 
-Solo instalas lo que necesitas. Cada plugin funciona de manera independiente.
+### Paso 1: Configura Claude Code (solo la primera vez)
 
-## Plugins Disponibles
+Instala `cc-setup` y ejecuta el asistente de configuración. Pregunta sobre tu flujo de trabajo y genera un `CLAUDE.md` personalizado — el archivo que le dice a Claude cómo TRABAJAS.
 
-### code-review
+```bash
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/cc-setup
+```
+Luego escribe `/cc-setup:setup` y responde las preguntas.
 
-**Tu Tech Lead Senior personal.**
-Revisa tus cambios de código antes de que se publiquen, detectando errores, problemas de seguridad y fallos de calidad.
+### Paso 2: Dale a Claude una memoria
 
-| Qué obtienes | Cómo usarlo |
-|---|---|
-| Agente de revisión de PR | Di "review PR" o se activa automáticamente |
+Instala `cc-memory` para que Claude recuerde tu proyecto entre sesiones. No más re-explicar dónde te quedaste después de una compactación o una nueva conversación.
 
-> Hook: Te recuerda revisar el código antes de enviar cambios en ramas de características.
+```bash
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/cc-memory
+```
 
----
+**Qué sucede:** Cuando abres Claude, detecta automáticamente los archivos de tu proyecto y restaura el contexto completo — qué está hecho, qué no, en qué trabajar a continuación. Escribe `/cc-memory:memory` para inicializar la memoria en un nuevo proyecto o restaurarla manualmente.
 
-### qa-testing
+### Paso 3: Añade las herramientas que necesitas
 
-**Aseguramiento de calidad y pruebas.**
-Valida tu trabajo como lo haría un Product Owner, y genera pruebas para tu código en cualquier lenguaje.
-
-| Qué obtienes | Cómo usarlo |
-|---|---|
-| Agente de validación QA | Se activa al validar características |
-| Generador de pruebas | Escribe `/qa-testing:unit-test-expert` |
+Elige lo que se ajuste a tu flujo de trabajo. Cada plugin funciona de forma independiente.
 
 ---
 
-### dev-workflow
+#### code-review — *Autónomo*
 
-**Metodología de desarrollo estructurada.**
-Te mantiene organizado, previene pérdidas de tiempo y protege contra pérdida accidental de datos.
-
-| Qué obtienes | Cómo usarlo |
-|---|---|
-| Agente de metodología de desarrollo | Se activa para implementaciones complejas |
-| Iniciar implementación | Escribe `/dev-workflow:implement` |
-| Detector de pérdida de tiempo | Escribe `/dev-workflow:time-check` |
-| Configuración de documentación | Escribe `/dev-workflow:init-docs` |
-| Preparación de nueva característica | Escribe `/dev-workflow:new-feature` |
-
-> Hook: Bloquea comandos git peligrosos (force push, hard reset, clean) para prevenir pérdida de datos.
-
----
-
-### cc-memory
-
-**Memoria de sesión y contexto.**
-Recuerda tu proyecto entre sesiones para que Claude nunca pierda la pista de dónde lo dejaste.
-
-| Qué obtienes | Cómo usarlo |
-|---|---|
-| Restaurar / iniciar contexto | Escribe `/cc-memory:memory` |
-
-> Hook: Detecta automáticamente archivos de memoria del proyecto cuando inicia una sesión y restaura el contexto.
-
----
-
-### cc-setup
-
-**Asistente de configuración interactivo.**
-Genera un archivo de configuración personalizado (CLAUDE.md) a través de un cuestionario simple. Funciona para desarrolladores, gestores de proyectos, escritores — cualquiera que use Claude Code.
-
-| Qué obtienes | Cómo usarlo |
-|---|---|
-| Generador de CLAUDE.md | Escribe `/cc-setup:setup` |
-
----
-
-### analytics
-
-**Experto en analítica SaaS.**
-Diseña estrategias de seguimiento para aplicaciones web — qué medir, cómo configurarlo y qué paneles construir.
-
-| Qué obtienes | Cómo usarlo |
-|---|---|
-| Agente arquitecto de analítica | Se activa para tareas relacionadas con analítica |
-
----
-
-### openclaw
-
-**Gestión de sesiones para gateway OpenClaw.**
-Herramientas para gestionar sesiones de IA de larga duración — comprimir contexto, extraer aprendizajes y mantener el rendimiento.
-
-| Qué obtienes | Cómo usarlo |
-|---|---|
-| Compresor de sesión | Escribe `/openclaw:compact` |
-| Extractor de aprendizajes | Escribe `/openclaw:extract` |
-| Monitor de contexto | Ejecuta `context-monitor.sh` |
-| Guardián de contexto | Ejecuta `context-guardian-daemon.sh` |
-| Reinicio de gateway | Ejecuta `self-reboot.sh` |
-| Limpiador de blobs | Ejecuta `clean-session-blobs.sh` |
-
-> Hook: Te recuerda guardar aprendizajes antes de que las sesiones grandes sean comprimidas.
-
-## Instalación
-
-### Instalar un solo plugin
-
-Elige solo lo que necesitas:
+**Tu Líder Técnico Sénior personal.** Se activa automáticamente cuando dices "review PR" o cuando Claude detecta código listo para enviar. Realiza un primer pase completo (arquitectura, seguridad, calidad) para que cuando revises, te concentres en lo que importa — no en errores tipográficos e ifs mal colocados.
 
 ```bash
 claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/code-review
 ```
 
-### Probar antes de instalar
+> Hook incluido (se ejecuta automáticamente, sin necesidad de comando): Bloquea el envío a main/master. Te recuerda que revises antes de enviar ramas de características.
 
-Prueba un plugin temporalmente:
+---
 
-```bash
-claude --plugin-dir ./plugins/dev-workflow
-```
+#### qa-testing — *Mixto (autónomo + comando)*
 
-### Instalar desde una copia local
+**Validación de QA y generación de pruebas.** El agente de QA se activa automáticamente cuando afirmas que una característica está completa — cuestiona tus afirmaciones y prueba casos extremos. El generador de pruebas es un comando manual.
 
 ```bash
-git clone https://github.com/joey-barbier/ClaudeCode-Plugin.git
-claude plugin add ./ClaudeCode-Plugin/plugins/cc-memory
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/qa-testing
 ```
 
-## Inicio Rápido
-
-1. **Instala los plugins que quieras** (ver arriba)
-2. **Los agentes funcionan automáticamente** — se activan cuando Claude detecta una situación relevante
-3. **Los skills son comandos** — escríbelos cuando los necesites:
-   ```
-   /cc-setup:setup              # Configura tus preferencias de Claude Code
-   /cc-memory:memory            # Restaura el contexto del proyecto
-   /dev-workflow:new-feature    # Prepara una nueva característica
-   /dev-workflow:implement      # Comienza a construir
-   /dev-workflow:time-check     # Verifica si estás sobre-ingeniando
-   /dev-workflow:init-docs      # Configura la documentación del proyecto
-   /qa-testing:unit-test-expert # Genera pruebas
-   /openclaw:compact            # Comprime una sesión grande
-   /openclaw:extract            # Guarda aprendizajes de una sesión
-   ```
-4. **Los hooks se ejecutan silenciosamente** — protegiéndote de errores en segundo plano
-
-## Configuraciones Recomendadas
-
-| Perfil | Plugins recomendados |
+| Componente | Cómo funciona |
 |---|---|
-| **Empezando con Claude Code** | `cc-setup` → ejecuta `/cc-setup:setup` |
-| **Desarrollador individual** | `cc-memory` + `dev-workflow` + `code-review` |
-| **Equipo con revisiones de código** | `code-review` + `qa-testing` + `dev-workflow` |
-| **Gestor de proyecto o escritor** | `cc-setup` + `cc-memory` |
-| **Operador de gateway OpenClaw** | `openclaw` + `cc-memory` |
+| Agente de validación de QA | Autónomo — se activa cuando se validan características |
+| Generador de pruebas | Comando — escribe `/qa-testing:unit-test-expert` |
 
-## Estructura
+---
 
+#### dev-workflow — *Comandos + agente autónomo*
+
+**Metodología de desarrollo estructurada.** El agente se activa para implementaciones complejas. Las habilidades son comandos que escribes cuando sea necesario.
+
+```bash
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/dev-workflow
 ```
-plugins/
-├── code-review/     # Agente de revisión de PR + hook de protección de push
-├── qa-testing/      # Validación QA + generación de pruebas
-├── dev-workflow/    # Metodología de desarrollo + hook de seguridad git
-├── cc-memory/       # Restauración de contexto + hook de detección automática
-├── cc-setup/        # Generador interactivo de CLAUDE.md
-├── analytics/       # Seguimiento de analítica SaaS
-└── openclaw/        # Gestión de sesiones + hook pre-compactación
+
+| Componente | Cómo funciona |
+|---|---|
+| Agente de metodología de desarrollo | Autónomo — se activa para trabajo complejo multicapa |
+| `/dev-workflow:implement` | Comando — lanza una sesión de desarrollo estructurada |
+| `/dev-workflow:new-feature` | Comando — prepara git para una nueva característica |
+| `/dev-workflow:time-check` | Comando — detecta exceso de ingeniería y bucles |
+| `/dev-workflow:init-docs` | Comando — inicializa la documentación del proyecto |
+
+> Hook incluido (se ejecuta automáticamente, sin necesidad de comando): Bloquea comandos de git peligrosos (force push, hard reset, checkout ., restore ., clean, branch -D).
+
+---
+
+#### analytics — *Autónomo*
+
+**Experto en análisis de SaaS.** Se activa cuando trabajas en seguimiento, embudos o conversión. Diseña qué medir, cómo configurarlo y qué paneles construir.
+
+```bash
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/analytics
 ```
+
+---
+
+#### openclaw — *Comandos*
+
+**Gestión de sesiones para la puerta de enlace OpenClaw.** Herramientas para sesiones de larga duración — comprimir contexto, extraer aprendizajes, mantener el rendimiento.
+
+```bash
+claude plugin add github:joey-barbier/ClaudeCode-Plugin/plugins/openclaw
+```
+
+| Componente | Cómo funciona |
+|---|---|
+| `/openclaw:compact` | Comando — comprime una sesión grande |
+| `/openclaw:extract` | Comando — guarda los aprendizajes antes de la limpieza |
+| Scripts de shell | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
+
+> Hook incluido (se ejecuta automáticamente, sin necesidad de comando): Te advierte que guardes los aprendizajes antes de que se compacten sesiones grandes.
+
+## Cómo funcionan los plugins
+
+Tres tipos de componentes, tres comportamientos:
+
+| Tipo | Comportamiento | Ejemplo |
+|---|---|---|
+| **Agentes** | Autónomos — Claude los activa cuando son relevantes | El agente de revisión de código se activa en "review PR" |
+| **Habilidades** | Comandos — los escribes cuando sea necesario | `/cc-memory:memory` para restaurar el contexto |
+| **Hooks** | Silenciosos — se ejecutan en segundo plano, te protegen de errores | Bloquea `git push --force` automáticamente |
+
+## Instala el marketplace
+
+Para explorar todos los plugins desde Claude Code:
+
+```bash
+/plugin marketplace add github:joey-barbier/ClaudeCode-Plugin
+```
+
+Luego usa `/plugin` → pestaña **Discover** para explorar e instalar.
+
+## ¿Preguntas?
+
+Transmito en vivo en Twitch mientras construyo con Claude Code. Ven a hacer preguntas, ver los plugins en acción, o sugerir nuevos.
+
+**[twitch.tv/horka_tv](https://twitch.tv/horka_tv)**
 
 ## Licencia
 
-MIT — libre para usar, modificar y compartir.
+MIT — libre de usar, modificar y compartir.
