@@ -2,9 +2,9 @@
   "name": "analytics",
   "version": "1.0.0",
   "description": "SaaS analytics tracking strategy design, audit, and optimization",
-  "author": "Orka",
+  "author": {
+    "name": "Orka"
+  },
   "keywords": ["analytics", "tracking", "saas", "conversion", "funnel", "metrics", "dashboard"],
-  "agents": [
-    "agents/saas-analytics-architect.md"
-  ]
+  "agents": "./agents/"
 }

@@ -2,9 +2,10 @@
   "name": "cc-memory",
   "version": "1.0.0",
   "description": "Project memory management for Claude Code: restore context or initialize memory files",
-  "author": "Orka",
+  "author": {
+    "name": "Orka"
+  },
   "keywords": ["memory", "context", "session", "restore", "project-state"],
-  "skills": [
-    "skills/memory"
-  ]
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
 }

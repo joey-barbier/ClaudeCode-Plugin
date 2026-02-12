@@ -2,12 +2,10 @@
   "name": "qa-testing",
   "version": "1.0.0",
   "description": "QA validation and business-focused unit test generation across any language",
-  "author": "Orka",
+  "author": {
+    "name": "Orka"
+  },
   "keywords": ["testing", "qa", "unit-tests", "validation", "quality-assurance", "test-generation"],
-  "agents": [
-    "agents/qa-validate.md"
-  ],
-  "skills": [
-    "skills/unit-test-expert"
-  ]
+  "agents": "./agents/",
+  "skills": "./skills/"
 }

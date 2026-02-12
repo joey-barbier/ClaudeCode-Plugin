@@ -2,9 +2,9 @@
   "name": "cc-setup",
   "version": "1.0.0",
   "description": "Interactive CLAUDE.md generator with best practices and personalized workflow configuration",
-  "author": "Orka",
+  "author": {
+    "name": "Orka"
+  },
   "keywords": ["setup", "configuration", "claude-md", "onboarding", "best-practices"],
-  "skills": [
-    "skills/setup"
-  ]
+  "skills": "./skills/"
 }

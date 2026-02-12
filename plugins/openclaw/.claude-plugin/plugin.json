@@ -2,16 +2,10 @@
   "name": "openclaw",
   "version": "1.0.0",
   "description": "Context management and session optimization tools for OpenClaw gateway",
-  "author": "Orka",
+  "author": {
+    "name": "Orka"
+  },
   "keywords": ["openclaw", "session", "context", "compression", "gateway", "memory"],
-  "skills": [
-    "skills/compact",
-    "skills/extract"
-  ],
-  "scripts": [
-    "scripts/context-monitor",
-    "scripts/context-guardian",
-    "scripts/self-reboot",
-    "scripts/clean-session-blobs"
-  ]
+  "skills": "./skills/",
+  "hooks": "./hooks/hooks.json"
 }
