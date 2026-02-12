@@ -1,12 +1,14 @@
 {
-  "PreCompact": [
-    {
-      "hooks": [
-        {
-          "type": "command",
-          "command": "${CLAUDE_PLUGIN_ROOT}/scripts/pre-compact.sh"
-        }
-      ]
-    }
-  ]
+  "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/pre-compact.sh"
+          }
+        ]
+      }
+    ]
+  }
 }
