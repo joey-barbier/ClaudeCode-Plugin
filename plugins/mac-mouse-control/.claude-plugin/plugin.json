@@ -1,0 +1,10 @@
+{
+  "name": "mac-mouse-control",
+  "version": "1.0.0",
+  "description": "Control mouse cursor on macOS using cliclick. Essential for remote GUI automation via Screen Sharing or headless setups.",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["mouse", "cursor", "cliclick", "macos", "screen-sharing", "gui-automation"],
+  "skills": "./skills/"
+}
