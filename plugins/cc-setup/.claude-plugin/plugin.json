@@ -1,6 +1,6 @@
 {
   "name": "cc-setup",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Interactive CLAUDE.md generator with best practices and personalized workflow configuration",
   "author": {
     "name": "Orka"

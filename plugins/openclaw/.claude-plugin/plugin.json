@@ -1,6 +1,6 @@
 {
   "name": "openclaw",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Context management and session optimization tools for OpenClaw gateway",
   "author": {
     "name": "Orka"

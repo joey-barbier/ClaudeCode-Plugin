@@ -1,6 +1,6 @@
 {
   "name": "qa-testing",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "QA validation and business-focused unit test generation across any language",
   "author": {
     "name": "Orka"
