@@ -1,6 +1,6 @@
 {
   "name": "dev-workflow",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Structured development methodology, MVP time management, documentation initialization, and feature scaffolding",
   "author": {
     "name": "Orka"

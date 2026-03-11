@@ -1,6 +1,6 @@
 {
   "name": "cc-memory",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Project memory management: restore context (/orka-memory) and save progression (/orka-save)",
   "author": {
     "name": "Orka"
