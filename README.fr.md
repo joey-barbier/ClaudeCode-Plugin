@@ -86,8 +86,7 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/dev-workflow
 
 | Composant | Comment cela fonctionne |
 |---|---|
-| Agent de méthodologie de développement | Autonome — s'active pour les travaux complexes multicouches |
-| `/dev-workflow:implement` | Lance une session de dev structurée : analyse votre architecture, vérifie la doc par rapport au code, puis implémente dans le bon ordre de dépendances avec validation à chaque étape |
+| Agent de méthodologie de développement | Autonome — analyse votre architecture et conventions depuis le code, puis implémente les changements multicouches dans le bon ordre de dépendances |
 | `/dev-workflow:new-feature` | Prépare git pour une nouvelle fonctionnalité : bascule sur main/develop, pull le dernier état, propose de supprimer les branches mergées, puis crée une branche `feature/` |
 | `/dev-workflow:time-check` | Détecte quand vous tournez en rond : même erreur 3+ fois, sur-ingénierie, débats sans décision. Propose la solution la plus rapide avec un plan d'action concret |
 | `/dev-workflow:init-docs` | Crée la documentation d'architecture (ARCHITECTURE.md, CONVENTIONS.md, etc.) depuis votre codebase, ou met à jour chirurgicalement la doc existante quand les patterns changent |
@@ -121,6 +120,20 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/openclaw
 | Scripts shell | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
 
 > Hook inclus (se lance automatiquement, aucune commande requise) : Vous avertit de sauvegarder les apprentissages avant que les grandes sessions ne soient compactées.
+
+#### skill-eval — *Commande*
+
+**Auditeur qualite de skills.** Evalue vos skills selon le guide officiel de bonnes pratiques d'Anthropic. Note 5 categories sur 100 points, propose des corrections, et montre l'amelioration avant/apres.
+
+```bash
+claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/skill-eval
+```
+
+| Composant | Comment cela fonctionne |
+|---|---|
+| `/skill-eval:evaluate` | Audite un ou tous les skills : note la structure, la description, les instructions, l'efficacite token et la composabilite. Affiche une note (A+ a F), liste les problemes par severite, propose des corrections concretes, puis re-evalue pour montrer l'amelioration |
+
+---
 
 ## Comment fonctionnent les plugins
 

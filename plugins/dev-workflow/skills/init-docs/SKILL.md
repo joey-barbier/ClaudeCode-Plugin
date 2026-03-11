@@ -1,6 +1,6 @@
 ---
 name: init-docs
-description: Initialize or maintain technical architecture documentation with surgical, targeted modifications. Use for creating project docs, detecting inconsistencies, or updating architecture documentation.
+description: Initialize or maintain technical architecture documentation with surgical, targeted modifications. Use for creating project docs, detecting inconsistencies, or updating architecture docs. Trigger on "init docs", "create documentation", "update architecture docs", "document this project".
 argument-hint: describe the documentation change or leave empty to initialize
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Glob, Grep

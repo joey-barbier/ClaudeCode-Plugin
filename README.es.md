@@ -86,8 +86,7 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/dev-workflow
 
 | Componente | Cómo funciona |
 |---|---|
-| Agente de metodología de desarrollo | Autónomo — se activa para trabajo complejo multicapa |
-| `/dev-workflow:implement` | Lanza una sesión de dev estructurada: analiza tu arquitectura, verifica la doc contra el código, luego implementa en el orden correcto de dependencias con validación en cada paso |
+| Agente de metodología de desarrollo | Autónomo — analiza tu arquitectura y convenciones desde el código, luego implementa cambios multicapa en el orden correcto de dependencias |
 | `/dev-workflow:new-feature` | Prepara git para una nueva característica: cambia a main/develop, hace pull del último estado, ofrece eliminar ramas mergeadas, luego crea una rama `feature/` |
 | `/dev-workflow:time-check` | Detecta cuando estás dando vueltas: mismo error 3+ veces, exceso de ingeniería, debates sin decisión. Propone la solución más rápida con un plan de acción concreto |
 | `/dev-workflow:init-docs` | Crea documentación de arquitectura (ARCHITECTURE.md, CONVENTIONS.md, etc.) desde tu codebase, o actualiza quirúrgicamente la doc existente cuando cambian los patrones |
@@ -121,6 +120,20 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/openclaw
 | Scripts de shell | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
 
 > Hook incluido (se ejecuta automáticamente, sin necesidad de comando): Te advierte que guardes los aprendizajes antes de que se compacten sesiones grandes.
+
+#### skill-eval — *Comando*
+
+**Auditor de calidad de skills.** Evalua tus skills segun la guia oficial de buenas practicas de Anthropic. Puntua 5 categorias sobre 100 puntos, propone correcciones y muestra la mejora antes/despues.
+
+```bash
+claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/skill-eval
+```
+
+| Componente | Como funciona |
+|---|---|
+| `/skill-eval:evaluate` | Audita uno o todos los skills: puntua estructura, descripcion, instrucciones, eficiencia de tokens y composabilidad. Muestra una nota (A+ a F), lista problemas por severidad, propone correcciones concretas, luego re-evalua para mostrar la mejora |
+
+---
 
 ## Cómo funcionan los plugins
 

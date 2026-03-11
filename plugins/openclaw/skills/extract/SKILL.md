@@ -1,12 +1,19 @@
 ---
 name: extract
-description: Extract learnings from the current conversation session and store them in memory files. Use before deleting large sessions or on /compact command.
+description: Extract learnings from the current conversation session and store them in memory files. Use before deleting large sessions or on /compact command. Trigger on "extract learnings", "save session", "extract session", "archive session".
 allowed-tools: Read, Write, Bash, Glob
 ---
 
 # Session Memory Extraction
 
 Extract important information from the current session and archive it.
+
+## Scope
+
+Extracts and archives session content only. Does NOT:
+- Modify existing memory files (only appends)
+- Delete sessions without archiving first
+- Process non-JSONL files
 
 ## Process
 
@@ -78,6 +85,13 @@ Session [ID] compacted
 - Original size: X MB -> gzip archive
 - Archive: ~/.openclaw/agents/main/archive/[file].gz
 ```
+
+## Error Handling
+
+- **No sessions found**: Report "No session files found at expected path." and stop.
+- **jq not installed**: "jq required for extraction. Install with `brew install jq`."
+- **Empty session**: Report "Session contains no extractable messages." and stop.
+- **Archive directory not writable**: Report error, do not delete original.
 
 ## Rules
 

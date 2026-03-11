@@ -86,8 +86,7 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/dev-workflow
 
 | Component | How it works |
 |---|---|
-| Dev methodology agent | Autonomous — activates for complex multi-layer work |
-| `/dev-workflow:implement` | Launches a structured dev session: analyzes your architecture, verifies docs against code, then implements changes in the right dependency order with validation at each step |
+| Dev methodology agent | Autonomous — analyzes your architecture and conventions from code, then implements complex multi-layer changes in the right dependency order |
 | `/dev-workflow:new-feature` | Prepares git for a new feature: switches to main/develop, pulls latest, offers to delete merged branches, then creates a `feature/` branch |
 | `/dev-workflow:time-check` | Detects when you're stuck in a loop: same error 3+ times, over-engineering, debates without decisions. Proposes the fastest working solution with a clear action plan |
 | `/dev-workflow:init-docs` | Creates architecture docs (ARCHITECTURE.md, CONVENTIONS.md, etc.) from your codebase, or surgically updates existing docs when patterns change |
@@ -121,6 +120,20 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/openclaw
 | Shell scripts | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
 
 > Hook included (runs automatically, no command needed): Warns you to save learnings before large sessions get compacted.
+
+#### skill-eval — *Command*
+
+**Skill quality auditor.** Evaluates your skills against Anthropic's official best practices guide. Scores 5 categories on 100 points, proposes fixes, and shows before/after improvement.
+
+```bash
+claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/skill-eval
+```
+
+| Component | How it works |
+|---|---|
+| `/skill-eval:evaluate` | Audits one or all skills: scores structure, description, instructions, token efficiency, and composability. Shows a grade (A+ to F), lists issues by severity, proposes concrete fixes, then re-evaluates to show improvement |
+
+---
 
 ## How plugins work
 
