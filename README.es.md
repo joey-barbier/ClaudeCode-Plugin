@@ -24,12 +24,21 @@ O instala plugins individualmente siguiendo los pasos a continuación.
 
 Sigue los pasos en orden. Cada uno se basa en el anterior.
 
+### Requisitos previos
+
+Agrega primero el marketplace (solo una vez):
+
+```bash
+/plugin marketplace add joey-barbier/ClaudeCode-Plugin
+```
+
 ### Paso 1: Configura Claude Code (solo la primera vez)
 
 Instala `cc-setup` y ejecuta el asistente de configuración.
 
 ```bash
-claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/cc-setup
+# asegurate de agregar primero el marketplace (ver Requisitos previos)
+claude plugin install cc-setup
 ```
 Luego escribe `/cc-setup:setup` — te pregunta sobre tu flujo git, estilo de comunicación, preferencias de seguridad y plugins instalados, luego genera un `CLAUDE.md` personalizado que le dice a Claude cómo TRABAJAS.
 
@@ -38,7 +47,8 @@ Luego escribe `/cc-setup:setup` — te pregunta sobre tu flujo git, estilo de co
 Instala `cc-memory` para que Claude recuerde tu proyecto entre sesiones. No más re-explicar dónde te quedaste después de una compactación o una nueva conversación.
 
 ```bash
-claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/cc-memory
+# asegurate de agregar primero el marketplace (ver Requisitos previos)
+claude plugin install cc-memory
 ```
 
 **Qué sucede:** Cuando abres Claude, detecta automáticamente los archivos de tu proyecto y restaura el contexto completo — qué está hecho, qué no, en qué trabajar a continuación. Escribe `/cc-memory:memory` para inicializar la memoria en un nuevo proyecto (escanea tu codebase y crea los archivos PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS y COMMANDS) o restaurar el contexto manualmente al inicio de sesión.
@@ -54,7 +64,8 @@ Elige lo que se ajuste a tu flujo de trabajo. Cada plugin funciona de forma inde
 **Tu Líder Técnico Sénior personal.** Se activa automáticamente cuando dices "review PR" o cuando Claude detecta código listo para enviar. Realiza un primer pase completo (arquitectura, seguridad, calidad) para que cuando revises, te concentres en lo que importa — no en errores tipográficos e ifs mal colocados.
 
 ```bash
-claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/code-review
+# asegurate de agregar primero el marketplace (ver Requisitos previos)
+claude plugin install code-review
 ```
 
 > Hook incluido (se ejecuta automáticamente, sin necesidad de comando): Bloquea el envío a main/master. Te recuerda que revises antes de enviar ramas de características.
@@ -66,7 +77,8 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/code-review
 **Validación de QA y generación de pruebas.** Dos componentes — uno autónomo, uno manual.
 
 ```bash
-claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/qa-testing
+# asegurate de agregar primero el marketplace (ver Requisitos previos)
+claude plugin install qa-testing
 ```
 
 | Componente | Cómo funciona |
@@ -81,7 +93,8 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/qa-testing
 **Metodología de desarrollo estructurada.** El agente se activa para implementaciones complejas. Las habilidades son comandos que escribes cuando sea necesario.
 
 ```bash
-claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/dev-workflow
+# asegurate de agregar primero el marketplace (ver Requisitos previos)
+claude plugin install dev-workflow
 ```
 
 | Componente | Cómo funciona |
@@ -100,7 +113,8 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/dev-workflow
 **Experto en análisis de SaaS.** Se activa cuando trabajas en seguimiento, embudos o conversión. Diseña qué medir, cómo configurarlo y qué paneles construir.
 
 ```bash
-claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/analytics
+# asegurate de agregar primero el marketplace (ver Requisitos previos)
+claude plugin install analytics
 ```
 
 ---
@@ -110,7 +124,8 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/analytics
 **Gestión de sesiones para la puerta de enlace OpenClaw.** Herramientas para sesiones de larga duración — comprimir contexto, extraer aprendizajes, mantener el rendimiento.
 
 ```bash
-claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/openclaw
+# asegurate de agregar primero el marketplace (ver Requisitos previos)
+claude plugin install openclaw
 ```
 
 | Componente | Cómo funciona |
@@ -126,7 +141,8 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/openclaw
 **Auditor de calidad de skills.** Evalua tus skills segun la guia oficial de buenas practicas de Anthropic. Puntua 5 categorias sobre 100 puntos, propone correcciones y muestra la mejora antes/despues.
 
 ```bash
-claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/skill-eval
+# asegurate de agregar primero el marketplace (ver Requisitos previos)
+claude plugin install skill-eval
 ```
 
 | Componente | Como funciona |
