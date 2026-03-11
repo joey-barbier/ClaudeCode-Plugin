@@ -14,25 +14,25 @@
       "name": "qa-testing",
       "source": "./plugins/qa-testing",
       "description": "QA validation and business-focused unit test generation",
-      "version": "1.0.0"
+      "version": "1.1.0"
     },
     {
       "name": "dev-workflow",
       "source": "./plugins/dev-workflow",
       "description": "Structured development methodology, MVP time management, and git safety",
-      "version": "1.0.0"
+      "version": "1.1.0"
     },
     {
       "name": "cc-memory",
       "source": "./plugins/cc-memory",
       "description": "Project memory management: auto-restore context between sessions",
-      "version": "1.0.0"
+      "version": "1.1.0"
     },
     {
       "name": "cc-setup",
       "source": "./plugins/cc-setup",
       "description": "Interactive CLAUDE.md generator with best practices",
-      "version": "1.0.0"
+      "version": "1.1.0"
     },
     {
       "name": "analytics",
@@ -44,6 +44,12 @@
       "name": "openclaw",
       "source": "./plugins/openclaw",
       "description": "Context management and session optimization for OpenClaw gateway",
+      "version": "1.1.0"
+    },
+    {
+      "name": "skill-eval",
+      "source": "./plugins/skill-eval",
+      "description": "Evaluate skills against Anthropic's official best practices with scoring and fixes",
       "version": "1.0.0"
     }
   ]
