@@ -1,12 +1,19 @@
 ---
-name: memory
-description: Restore project context from memory files, or initialize them if none exist. Use at session start, when losing track, or to bootstrap a new project's memory. Trigger on "context", "memory", "where were we", "resume", "catch up", "refresh context", "init memory".
+name: orka-memory
+description: Restore project context from memory files, or initialize them if none exist. Use when user says "where were we", "resume", "catch up", "refresh context", "init memory", or at the start of a new session to reload project state.
 allowed-tools: Read, Write, Glob, Grep, Bash
 ---
 
-# Memory
+# Orka Memory - Restore Context
 
-Manage project memory files: restore context from existing files, or create them from scratch.
+Restore project context from existing memory files, or create them from scratch.
+
+## Scope
+
+Reads and creates memory files only. Does NOT:
+- Modify project source code
+- Make architectural decisions
+- Delete existing memory files (only adds/updates)
 
 ## Step 1: Find Memory Files
 
@@ -103,7 +110,8 @@ Memory initialized at .claude/memory/
 
 Created: PROJECT_STATE.md, ARCHITECTURE.md, DECISIONS.md, NEXT_STEPS.md, COMMANDS.md
 
-Use /cc-memory:memory to reload this context in future sessions.
+Use /cc-memory:orka-memory to reload this context in future sessions.
+Use /cc-memory:orka-save to save progression after significant work.
 ```
 
 ## Rules

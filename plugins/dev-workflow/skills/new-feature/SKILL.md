@@ -8,6 +8,13 @@ allowed-tools: Bash
 
 Prepare the git environment for starting a new feature.
 
+## Scope
+
+Prepares git environment only. Does NOT:
+- Create feature implementations
+- Modify existing code
+- Push to remote (only local branch operations)
+
 ## Steps
 
 ### 1. Identify and switch to base branch
@@ -44,6 +51,10 @@ Working tree: clean
 
 What's the new feature? I'll create the branch: feature/<description>
 ```
+
+**Error handling**:
+- If `git pull` fails (network/auth): warn user "Could not pull latest. Continue on local state or fix connection?"
+- If branch already exists: ask "Branch feature/X already exists. Switch to it or pick a new name?"
 
 Wait for user to describe the feature, then sanitize the name (lowercase, replace spaces with hyphens, remove special characters):
 ```bash

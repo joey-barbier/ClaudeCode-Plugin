@@ -8,6 +8,13 @@ allowed-tools: Bash, Read, Write, Glob
 
 Compress large OpenClaw/Claude session files to prevent context overflow while preserving key learnings.
 
+## Scope
+
+Compresses OpenClaw session files only. Does NOT:
+- Modify memory files (only reads for dedup)
+- Delete original sessions without archiving first
+- Process non-OpenClaw files
+
 ## When to Use
 
 - Session files exceed 20MB
@@ -70,6 +77,13 @@ Run the included `session-compactor.sh` for automated processing:
 ./session-compactor.sh --dry-run    # Dry run
 ./session-compactor.sh --threshold-mb 30  # Custom threshold
 ```
+
+## Error Handling
+
+- **jq not installed**: `brew install jq` or `apt-get install jq`. Cannot proceed without it.
+- **No sessions above threshold**: Report "No sessions above threshold. Nothing to compact." and stop.
+- **gzip fails**: Keep original file intact. Report error. Do not clear session.
+- **Empty session file**: Skip with "Session empty, skipping."
 
 ## Requirements
 

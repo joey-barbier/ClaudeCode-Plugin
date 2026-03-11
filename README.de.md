@@ -86,8 +86,7 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/dev-workflow
 
 | Komponente | Funktionsweise |
 |---|---|
-| Dev-Methodik-Agent | Autonom — aktiviert sich bei komplexen mehrschichtigen Arbeiten |
-| `/dev-workflow:implement` | Startet eine strukturierte Dev-Sitzung: analysiert deine Architektur, prüft Doku gegen Code, implementiert dann in der richtigen Abhängigkeitsreihenfolge mit Validierung bei jedem Schritt |
+| Dev-Methodik-Agent | Autonom — analysiert deine Architektur und Konventionen aus dem Code, implementiert dann komplexe mehrschichtige Änderungen in der richtigen Abhängigkeitsreihenfolge |
 | `/dev-workflow:new-feature` | Bereitet Git für eine neue Funktion vor: wechselt zu main/develop, zieht den neuesten Stand, bietet an gemergte Branches zu löschen, erstellt dann einen `feature/`-Branch |
 | `/dev-workflow:time-check` | Erkennt wenn du dich im Kreis drehst: gleicher Fehler 3+ mal, Over-Engineering, Debatten ohne Entscheidung. Schlägt die schnellste funktionierende Lösung mit konkretem Aktionsplan vor |
 | `/dev-workflow:init-docs` | Erstellt Architektur-Doku (ARCHITECTURE.md, CONVENTIONS.md, etc.) aus deiner Codebase, oder aktualisiert bestehende Doku chirurgisch wenn sich Patterns ändern |
@@ -121,6 +120,20 @@ claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/openclaw
 | Shell-Skripte | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
 
 > Hook enthalten (läuft automatisch, kein Befehl nötig): Erinnert dich daran, Erkenntnisse zu speichern, bevor große Sitzungen komprimiert werden.
+
+#### skill-eval — *Befehl*
+
+**Skill-Qualitaetsprufer.** Bewertet deine Skills nach Anthropics offiziellem Best-Practices-Leitfaden. Benotet 5 Kategorien auf 100 Punkte, schlaegt Korrekturen vor und zeigt die Vorher/Nachher-Verbesserung.
+
+```bash
+claude plugin add joey-barbier/ClaudeCode-Plugin/plugins/skill-eval
+```
+
+| Komponente | Funktionsweise |
+|---|---|
+| `/skill-eval:evaluate` | Prueft einen oder alle Skills: bewertet Struktur, Beschreibung, Anweisungen, Token-Effizienz und Komposierbarkeit. Zeigt eine Note (A+ bis F), listet Probleme nach Schweregrad, schlaegt konkrete Korrekturen vor, bewertet dann erneut um die Verbesserung zu zeigen |
+
+---
 
 ## Wie Plugins funktionieren
 

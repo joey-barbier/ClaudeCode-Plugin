@@ -1,7 +1,7 @@
 {
   "name": "cc-memory",
   "version": "1.0.0",
-  "description": "Project memory management for Claude Code: restore context or initialize memory files",
+  "description": "Project memory management: restore context (/orka-memory) and save progression (/orka-save)",
   "author": {
     "name": "Orka"
   },
