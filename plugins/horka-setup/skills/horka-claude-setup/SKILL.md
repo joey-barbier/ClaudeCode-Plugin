@@ -1,5 +1,5 @@
 ---
-name: claude-setup
+name: horka-claude-setup
 description: Interactive CLAUDE.md generator. Asks about workflow, preferences, and installed plugins to generate a personalized instruction file. Use when user says "setup claude", "generate CLAUDE.md", "configure claude code", "setup", or at first project setup. Also trigger when the user asks how to customize Claude's behavior or mentions wanting Claude to follow specific conventions.
 disable-model-invocation: true
 allowed-tools: AskUserQuestion, Read, Write, Edit, Glob, Bash

@@ -1,5 +1,5 @@
 ---
-name: init-docs
+name: horka-init-docs
 description: Initialize or maintain technical architecture documentation with surgical, targeted modifications. Use for creating project docs from scratch, detecting inconsistencies between doc files, or updating architecture docs after code changes. Trigger on "init docs", "create documentation", "update architecture docs", "document this project", "docs out of date".
 argument-hint: describe the documentation change or leave empty to initialize
 disable-model-invocation: true

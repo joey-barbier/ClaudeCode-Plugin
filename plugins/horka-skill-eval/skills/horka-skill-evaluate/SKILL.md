@@ -1,5 +1,5 @@
 ---
-name: evaluate
+name: horka-skill-evaluate
 description: Evaluate Claude skills against Anthropic's official best practices guide. Scores structure, description, instructions, token efficiency, and composability on a 100-point scale with fix proposals and before/after debrief. Use when user says "evaluate skill", "audit skills", "skill quality", "grade skills", "skill check", or after creating/modifying a skill.
 allowed-tools: AskUserQuestion, Read, Edit, Glob, Bash
 ---

@@ -1,5 +1,5 @@
 ---
-name: save
+name: horka-memory-save
 description: Save current session progression to project memory files. Updates PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS based on work done in this session. Use when user says "save progress", "update memory", "save state", "checkpoint", or before ending a productive session. Also use proactively after significant implementations, bug fixes, or architectural changes.
 allowed-tools: Read, Write, Edit, Glob, Bash
 ---
@@ -9,7 +9,7 @@ allowed-tools: Read, Write, Edit, Glob, Bash
 ## Scope
 
 Updates existing memory files only. Does NOT:
-- Create memory files from scratch (use `/horka-memory:restore` for that)
+- Create memory files from scratch (use `/horka-memory:horka-memory-restore` for that)
 - Modify project source code
 - Push changes to remote
 
@@ -17,7 +17,7 @@ Updates existing memory files only. Does NOT:
 
 Use Glob to find `.claude/memory/**/*.md`.
 
-If no memory files exist: tell the user "No memory files found. Run `/horka-memory:restore` first to initialize." and stop.
+If no memory files exist: tell the user "No memory files found. Run `/horka-memory:horka-memory-restore` first to initialize." and stop.
 
 Read all found files to understand the current documented state.
 
@@ -90,7 +90,7 @@ Use Edit for precise changes -- don't rewrite entire files.
 
 ## Error Handling
 
-- **No memory files found**: Tell user "No memory files found. Run `/horka-memory:restore` first to initialize." and stop.
+- **No memory files found**: Tell user "No memory files found. Run `/horka-memory:horka-memory-restore` first to initialize." and stop.
 - **Git not available**: Skip git analysis, rely on conversation context only. Note "Git unavailable" in report.
 - **Write permission denied on memory files**: Show proposed updates in output and let user apply manually.
 - **No changes detected**: "No significant changes found in this session. Nothing to save."

@@ -1,5 +1,5 @@
 ---
-name: git-new-feature
+name: horka-git-new-feature
 description: Prepare the git environment for starting a new feature. Switches to main/develop branch, pulls latest, cleans up merged branches, and confirms ready state. Trigger on "new feature", "GNF", "start feature", "next feature", "prepare for new work".
 allowed-tools: Bash
 ---
