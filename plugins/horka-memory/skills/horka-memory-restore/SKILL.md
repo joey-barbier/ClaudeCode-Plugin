@@ -1,5 +1,5 @@
 ---
-name: restore
+name: horka-memory-restore
 description: Restore project context from memory files, or initialize them if none exist. This skill MUST run at the very start of any new session before doing anything else. If no memory files exist, create them automatically from project analysis. Trigger on "where were we", "resume", "catch up", "refresh context", "init memory", "what were we doing", "reload context", or any first message in a new conversation. Also trigger proactively when .claude/memory/ does not exist in the current project.
 allowed-tools: Read, Write, Glob, Bash
 ---
@@ -87,8 +87,8 @@ Memory initialized at .claude/memory/
 
 Created: PROJECT_STATE.md, ARCHITECTURE.md, DECISIONS.md, NEXT_STEPS.md, COMMANDS.md
 
-Use /horka-memory:restore to reload context in future sessions.
-Use /horka-memory:save to save progress after significant work.
+Use /horka-memory:horka-memory-restore to reload context in future sessions.
+Use /horka-memory:horka-memory-save to save progress after significant work.
 ```
 
 ## Error Handling

@@ -1,5 +1,5 @@
 ---
-name: unit-test-generate
+name: horka-unit-test-generate
 description: Create, review, or modify unit tests with a focus on business-critical logic. Supports any language/framework by adapting to the project's existing test conventions. Trigger on "write tests", "add tests", "test coverage", "unit tests", "test this feature", "need tests for".
 argument-hint: file or feature to test
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash, LSP

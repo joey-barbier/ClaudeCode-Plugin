@@ -1,5 +1,5 @@
 ---
-name: session-compact
+name: horka-openclaw-session-compact
 description: Compress large OpenClaw sessions with intelligent summarization. Extracts learnings, archives originals, clears session files to prevent context overflow. Trigger on "compact", "compress sessions", "session too large", "clean up sessions".
 allowed-tools: Bash, Read, Write, Glob
 ---

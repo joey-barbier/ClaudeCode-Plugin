@@ -1,5 +1,5 @@
 ---
-name: mvp-time-guardian
+name: horka-mvp-time-guardian
 description: Detect over-engineering, circular discussions, and time-wasting during MVP development. Auto-triggers on patterns like same problem mentioned 3+ times, Stack Overflow loops (try/fail/search/repeat), or debates without decisions. Trigger on "time check", "we're going in circles", "over-engineering", "MVP check", "time waste", "we're stuck".
 allowed-tools: Read, Glob, Bash
 ---

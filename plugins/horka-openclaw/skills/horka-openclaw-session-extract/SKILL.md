@@ -1,5 +1,5 @@
 ---
-name: session-extract
+name: horka-openclaw-session-extract
 description: Extract learnings from the current conversation session and store them in memory files. Use before deleting large sessions or on /compact command. Trigger on "extract learnings", "save session", "extract session", "archive session".
 allowed-tools: Read, Write, Bash, Glob
 ---

@@ -46,7 +46,7 @@ if [ "$COUNT" -ge "$THRESHOLD" ]; then
   GIT_NEW_COMMITS=$(git log --oneline --since="1 hour ago" 2>/dev/null | wc -l | tr -d ' ')
 
   if [ -n "$GIT_CHANGES" ] || [ "$GIT_NEW_COMMITS" -gt 0 ]; then
-    echo "Significant work detected ($COUNT interactions, $GIT_NEW_COMMITS recent commits). Consider running /horka-memory:save to persist progress."
+    echo "Significant work detected ($COUNT interactions, $GIT_NEW_COMMITS recent commits). Consider running /horka-memory:horka-memory-save to persist progress."
     touch "$REMINDER_FLAG"
     echo "0" > "$SESSION_COUNTER"
   fi
