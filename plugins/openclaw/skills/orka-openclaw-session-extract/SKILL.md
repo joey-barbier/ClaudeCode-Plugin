@@ -1,5 +1,5 @@
 ---
-name: extract
+name: orka-openclaw-session-extract
 description: Extract learnings from the current conversation session and store them in memory files. Use before deleting large sessions or on /compact command. Trigger on "extract learnings", "save session", "extract session", "archive session".
 allowed-tools: Read, Write, Bash, Glob
 ---
@@ -23,19 +23,22 @@ Extracts and archives session content only. Does NOT:
 ls -lhS ~/.openclaw/agents/main/sessions/*.jsonl
 ```
 
-Take the most recent / largest file.
+Take the most recent / largest file. If no sessions found: "No session files found at expected path." and stop.
 
 ### 2. Extract messages
 
 ```bash
+# Parse user and assistant messages from JSONL session file
 jq -r 'select(.type == "message") | select(.message.role == "user" or .message.role == "assistant") | .message.content[]? | select(.type == "text") | .text' SESSION.jsonl
 ```
 
+This jq command filters the JSONL for actual conversation messages (skipping system events), then extracts the text content from each message's content array.
+
 ### 3. Filter noise
 
-**IGNORE:** HEARTBEAT, empty/short responses (<20 chars), system messages, greetings, raw command outputs.
+**IGNORE**: HEARTBEAT, empty/short responses (<20 chars), system messages, greetings, raw command outputs.
 
-**KEEP:** Decisions, configurations, problems resolved + solutions, explicit learnings, project state.
+**KEEP**: Decisions, configurations, problems resolved + solutions, explicit learnings, project state.
 
 ### 4. Structure learnings
 
@@ -61,7 +64,7 @@ jq -r 'select(.type == "message") | select(.message.role == "user" or .message.r
 ### 5. Save to memory/
 
 1. Add summary to `~/.openclaw/memory/YYYY-MM-DD.md`
-2. If learnings are generalizable, add to `~/.openclaw/memory/MEMORY.md` (cumulative knowledge base)
+2. If learnings are generalizable, append to `~/.openclaw/memory/MEMORY.md`
 3. Update `~/.openclaw/memory/INDEX.md` with tagged entries (e.g., `- [2024-01-15] #config #deployment - Server setup learnings`)
 
 ### 6. Archive the .jsonl
@@ -69,7 +72,7 @@ jq -r 'select(.type == "message") | select(.message.role == "user" or .message.r
 ```bash
 mkdir -p ~/.openclaw/agents/main/archive
 gzip -c SESSION.jsonl > ~/.openclaw/agents/main/archive/SESSION_ID_YYYY-MM-DD.jsonl.gz
-# Clear session to minimal size (keep first line as header) instead of deleting
+# Keep header only (first line) instead of deleting
 head -1 SESSION.jsonl > SESSION.jsonl.tmp && mv SESSION.jsonl.tmp SESSION.jsonl
 ```
 
@@ -88,15 +91,14 @@ Session [ID] compacted
 
 ## Error Handling
 
-- **No sessions found**: Report "No session files found at expected path." and stop.
 - **jq not installed**: "jq required for extraction. Install with `brew install jq`."
-- **Empty session**: Report "Session contains no extractable messages." and stop.
+- **Empty session**: "Session contains no extractable messages." and stop.
 - **Archive directory not writable**: Report error, do not delete original.
 
 ## Rules
 
-1. **Only extract what's explicitly in the logs**
-2. **Max 100 lines** of summary per session
-3. **Priority**: Decisions > Configs > Learnings > State
-4. **Deduplicate** against existing memory files
-5. **Archive in the right place** - `archive/` at parent level
+1. Only extract what's explicitly in the logs
+2. Max 100 lines of summary per session
+3. Priority: Decisions > Configs > Learnings > State
+4. Deduplicate against existing memory files
+5. Archive in the right place -- `archive/` at parent level

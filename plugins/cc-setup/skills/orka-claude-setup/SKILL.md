@@ -1,17 +1,15 @@
 ---
-name: setup
-description: Interactive CLAUDE.md generator. Asks about workflow, preferences, and installed plugins to generate an optimized instruction file. Use when user says "setup claude", "generate CLAUDE.md", "configure claude code", "setup", or at first project setup.
+name: orka-claude-setup
+description: Interactive CLAUDE.md generator. Asks about workflow, preferences, and installed plugins to generate a personalized instruction file. Use when user says "setup claude", "generate CLAUDE.md", "configure claude code", "setup", or at first project setup. Also trigger when the user asks how to customize Claude's behavior or mentions wanting Claude to follow specific conventions.
 disable-model-invocation: true
 allowed-tools: AskUserQuestion, Read, Write, Edit, Glob, Bash
 ---
 
-# Setup
-
-Generate a personalized `CLAUDE.md` through interactive questions and project analysis.
+# Setup - CLAUDE.md Generator
 
 ## Scope
 
-This skill generates CLAUDE.md files only. It does NOT:
+Generates CLAUDE.md files only. Does NOT:
 - Modify existing project code or configuration
 - Install plugins or dependencies
 - Set up git repositories
@@ -19,10 +17,13 @@ This skill generates CLAUDE.md files only. It does NOT:
 ## Step 1: Detect Context
 
 1. Check for existing CLAUDE.md files: `~/.claude/CLAUDE.md` (global), `.claude/CLAUDE.md` (project), `CLAUDE.md` (root)
-2. If in a project: detect tech stack from config files and git conventions from recent commits
+2. If in a project: detect tech stack from config files (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, etc.) and git conventions from recent commits (`git log --oneline -5`)
 3. Note findings for pre-filling defaults
 
 If existing CLAUDE.md found, ask: replace, augment, or create at different scope.
+- **Replace**: proceed with full questionnaire, overwrite existing file
+- **Augment**: read existing file, identify covered sections, ask only about missing/uncovered topics, merge results
+- **Different scope**: proceed with full questionnaire, write to chosen alternative location
 
 ## Step 2: Questionnaire
 
@@ -39,8 +40,12 @@ Consult `references/generation-rules.md` for section templates, plugin integrati
 
 Key rules:
 - Generate ONLY sections relevant to user answers
-- Every instruction must be actionable (NEVER, ALWAYS)
+- Every instruction must be actionable (NEVER, ALWAYS for absolute rules)
+- Add contextual qualifiers for non-absolute rules ("For non-trivial changes", "Skip for obvious fixes")
 - No filler prose -- bullet points only
+- Put critical rules at the top of each section
+- Use `##` numbered subsections to group 3+ related concerns within a `#` category
+- Do NOT duplicate rules already in Claude's system prompt (e.g., "no emojis")
 - Keep total length under 100 lines
 - Include plugin section if ANY plugins selected
 
@@ -56,6 +61,16 @@ CLAUDE.md generated at [path]
 [N] sections | [M] lines | Language: [lang]
 
 Sections: [list of generated section names]
+
+Tip: Edit this file anytime to adjust Claude's behavior.
+```
+
+Example:
+```
+CLAUDE.md generated at .claude/CLAUDE.md
+6 sections | 42 lines | Language: English
+
+Sections: Workflow, Security, Communication, Context, File Headers, Plugins & Agents
 
 Tip: Edit this file anytime to adjust Claude's behavior.
 ```

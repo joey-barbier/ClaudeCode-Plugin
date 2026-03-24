@@ -1,6 +1,6 @@
 ---
-name: compact
-description: Compress large OpenClaw sessions with intelligent summarization. Extracts learnings, archives originals, clears session files. Trigger on "compact", "compress sessions", "session too large".
+name: orka-openclaw-session-compact
+description: Compress large OpenClaw sessions with intelligent summarization. Extracts learnings, archives originals, clears session files to prevent context overflow. Trigger on "compact", "compress sessions", "session too large", "clean up sessions".
 allowed-tools: Bash, Read, Write, Glob
 ---
 
@@ -32,11 +32,17 @@ ls -lhS ~/.openclaw/agents/main/sessions/*.jsonl
 
 Identify files above threshold (default: 20MB).
 
+If no sessions above threshold: "No sessions above threshold. Nothing to compact." and stop.
+
 ### 2. Extract meaningful messages
 
-**IGNORE:** HEARTBEAT messages, messages <30 chars, system messages (GatewayRestart, Exec completed), raw command outputs.
+**IGNORE**: HEARTBEAT messages, messages <30 chars, system messages (GatewayRestart, Exec completed), raw command outputs.
 
-**KEEP:** Decisions made, configurations performed, problems resolved + solutions, explicit learnings, project state changes.
+**KEEP**: Decisions made, configurations performed, problems resolved + solutions, explicit learnings, project state changes.
+
+Example of meaningful vs noise:
+- Noise: `{"type":"heartbeat","ts":"..."}` -- skip
+- Meaningful: `"Decided to use PostgreSQL over SQLite because we need concurrent writes"` -- keep
 
 ### 3. Generate summary (max 100 lines)
 
@@ -60,7 +66,7 @@ Identify files above threshold (default: 20MB).
 
 1. Save summary to `~/.openclaw/memory/YYYY-MM-DD.md`
 2. Compress original: `gzip -c session.jsonl > archive/session-TIMESTAMP.jsonl.gz`
-3. Clear session file to minimal size (keep header only)
+3. Clear session file to minimal size: `head -1 session.jsonl > session.jsonl.tmp && mv session.jsonl.tmp session.jsonl`
 
 Archives go to `~/.openclaw/agents/main/archive/` (NEVER in `sessions/`).
 
@@ -74,26 +80,25 @@ Run the included `session-compactor.sh` for automated processing:
 
 ```bash
 ./session-compactor.sh              # Standard run
-./session-compactor.sh --dry-run    # Dry run
+./session-compactor.sh --dry-run    # Preview changes
 ./session-compactor.sh --threshold-mb 30  # Custom threshold
 ```
 
 ## Error Handling
 
 - **jq not installed**: `brew install jq` or `apt-get install jq`. Cannot proceed without it.
-- **No sessions above threshold**: Report "No sessions above threshold. Nothing to compact." and stop.
 - **gzip fails**: Keep original file intact. Report error. Do not clear session.
 - **Empty session file**: Skip with "Session empty, skipping."
 
 ## Requirements
 
 - `jq` for JSON parsing
-- `claude` CLI (optional, for intelligent summaries)
 - `gzip` for compression
+- `claude` CLI (optional, for intelligent summaries)
 
 ## Rules
 
-1. **Only extract what's explicitly in the logs** - never invent
-2. **Max 100 lines** of summary per session
-3. **Priority**: Decisions > Configs > Learnings > State
-4. **Deduplicate** against existing memory files
+1. Only extract what's explicitly in the logs -- never invent
+2. Max 100 lines of summary per session
+3. Priority: Decisions > Configs > Learnings > State
+4. Deduplicate against existing memory files

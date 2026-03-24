@@ -1,6 +1,6 @@
 {
   "name": "skill-eval",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Evaluate skills against Anthropic's official best practices guide with scoring, fixes, and before/after debrief",
   "author": {
     "name": "Orka"

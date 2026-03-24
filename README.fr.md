@@ -40,7 +40,7 @@ Installez `cc-setup` et exécutez l'assistant de configuration.
 # pensez d'abord a ajouter la marketplace (voir Prerequis)
 claude plugin install cc-setup
 ```
-Puis tapez `/cc-setup:setup` — il vous interroge sur votre workflow git, style de communication, préférences de sécurité et plugins installés, puis génère un `CLAUDE.md` personnalisé qui dit à Claude comment VOUS travaillez.
+Puis tapez `/cc-setup:orka-claude-setup` — il vous interroge sur votre workflow git, style de communication, préférences de sécurité et plugins installés, puis génère un `CLAUDE.md` personnalisé qui dit à Claude comment VOUS travaillez.
 
 ### Étape 2 : Donner une mémoire à Claude
 
@@ -84,7 +84,7 @@ claude plugin install qa-testing
 | Composant | Comment cela fonctionne |
 |---|---|
 | Agent de validation QA | Autonome — s'active quand vous affirmez qu'une fonctionnalité est terminée, remet vos assertions en question et teste les cas limites |
-| `/qa-testing:unit-test-expert` | Génère des tests unitaires orientés métier : permissions, limites, cohérence des données. Lit d'abord vos conventions de test existantes, puis écrit des tests qui correspondent à vos patterns. Supporte tout langage/framework |
+| `/qa-testing:orka-unit-test-generate` | Génère des tests unitaires orientés métier : permissions, limites, cohérence des données. Lit d'abord vos conventions de test existantes, puis écrit des tests qui correspondent à vos patterns. Supporte tout langage/framework |
 
 ---
 
@@ -100,9 +100,9 @@ claude plugin install dev-workflow
 | Composant | Comment cela fonctionne |
 |---|---|
 | Agent de méthodologie de développement | Autonome — analyse votre architecture et conventions depuis le code, puis implémente les changements multicouches dans le bon ordre de dépendances |
-| `/dev-workflow:new-feature` | Prépare git pour une nouvelle fonctionnalité : bascule sur main/develop, pull le dernier état, propose de supprimer les branches mergées, puis crée une branche `feature/` |
-| `/dev-workflow:time-check` | Détecte quand vous tournez en rond : même erreur 3+ fois, sur-ingénierie, débats sans décision. Propose la solution la plus rapide avec un plan d'action concret |
-| `/dev-workflow:init-docs` | Crée la documentation d'architecture (ARCHITECTURE.md, CONVENTIONS.md, etc.) depuis votre codebase, ou met à jour chirurgicalement la doc existante quand les patterns changent |
+| `/dev-workflow:orka-git-new-feature` | Prépare git pour une nouvelle fonctionnalité : bascule sur main/develop, pull le dernier état, propose de supprimer les branches mergées, puis crée une branche `feature/` |
+| `/dev-workflow:orka-mvp-time-guardian` | Détecte quand vous tournez en rond : même erreur 3+ fois, sur-ingénierie, débats sans décision. Propose la solution la plus rapide avec un plan d'action concret |
+| `/dev-workflow:orka-init-docs` | Crée la documentation d'architecture (ARCHITECTURE.md, CONVENTIONS.md, etc.) depuis votre codebase, ou met à jour chirurgicalement la doc existante quand les patterns changent |
 
 > Hook inclus (se lance automatiquement, aucune commande requise) : Bloque les commandes git dangereuses (force push, hard reset, checkout ., restore ., clean, branch -D).
 
@@ -130,8 +130,8 @@ claude plugin install openclaw
 
 | Composant | Comment cela fonctionne |
 |---|---|
-| `/openclaw:compact` | Compresse les grosses sessions IA : scanne les fichiers de plus de 20 Mo, extrait décisions/configs/apprentissages, archive l'original et réduit la session au minimum |
-| `/openclaw:extract` | Extrait les apprentissages de la session en cours et les sauvegarde dans les fichiers mémoire — à utiliser avant de supprimer des sessions ou quand le contexte devient lourd |
+| `/openclaw:orka-openclaw-session-compact` | Compresse les grosses sessions IA : scanne les fichiers de plus de 20 Mo, extrait décisions/configs/apprentissages, archive l'original et réduit la session au minimum |
+| `/openclaw:orka-openclaw-session-extract` | Extrait les apprentissages de la session en cours et les sauvegarde dans les fichiers mémoire — à utiliser avant de supprimer des sessions ou quand le contexte devient lourd |
 | Scripts shell | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
 
 > Hook inclus (se lance automatiquement, aucune commande requise) : Vous avertit de sauvegarder les apprentissages avant que les grandes sessions ne soient compactées.
@@ -147,7 +147,7 @@ claude plugin install skill-eval
 
 | Composant | Comment cela fonctionne |
 |---|---|
-| `/skill-eval:evaluate` | Audite un ou tous les skills : note la structure, la description, les instructions, l'efficacite token et la composabilite. Affiche une note (A+ a F), liste les problemes par severite, propose des corrections concretes, puis re-evalue pour montrer l'amelioration |
+| `/skill-eval:orka-skill-evaluate` | Audite un ou tous les skills : note la structure, la description, les instructions, l'efficacite token et la composabilite. Affiche une note (A+ a F), liste les problemes par severite, propose des corrections concretes, puis re-evalue pour montrer l'amelioration |
 
 ---
 

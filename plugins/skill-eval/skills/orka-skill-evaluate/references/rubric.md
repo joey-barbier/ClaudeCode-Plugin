@@ -24,9 +24,33 @@ Detailed scoring criteria from Anthropic's "The Complete Guide to Building Skill
 
 ### Scoring notes
 
-- If `allowed-tools` is present, verify tools are actually used in instructions (+0/-2 if listing unused tools)
 - `description` field is scored in Category 2, not here
 - `argument-hint` is optional but gets +1 bonus if present and useful (cap at 20)
+- Optional frontmatter fields (`license`, `compatibility`, `metadata`): +1 bonus per present and useful field, max +2 (cap at 20)
+
+### allowed-tools validation (auto-detect)
+
+If `allowed-tools` is present, cross-reference instructions against the tool list. Score: +0/-2 per mismatch.
+
+**Pattern detection** -- scan instructions for these signals and verify the matching tool is declared:
+
+| Signal in instructions | Required tool |
+|---|---|
+| "ask the user", "confirm with user", "get user input", `AskUserQuestion` | AskUserQuestion |
+| ````bash` blocks, "run via Bash", "Run:", `git`, `wc`, `ls`, `sed` | Bash |
+| "Read the file", "Use Read", "read all found files" | Read |
+| "Use Write", "Write to", "create file", "save to" | Write |
+| "Use Edit", "surgical update", "modify", "augment" | Edit |
+| "Use Glob", "scan for", "find files", `**/*.md` glob patterns | Glob |
+| "Use Grep", "search for", "find pattern" | Grep |
+| "Use LSP", "type checking", "symbol resolution" | LSP |
+| "Use WebFetch", "fetch URL" | WebFetch |
+| "Use WebSearch", "search the web" | WebSearch |
+
+**Mismatch types**:
+- **Tool declared but never used**: -2 (bloats permissions for no reason)
+- **Tool needed but not declared**: -2 (skill will fail at runtime)
+- **Implicit tool use** (e.g., "augment" implies Edit): -0 if the action is clearly described, -1 if ambiguous
 
 ## 2. Description Quality (25 pts)
 
@@ -45,7 +69,12 @@ Detailed scoring criteria from Anthropic's "The Complete Guide to Building Skill
 |-------|-----|-------------|
 | Under 1024 characters | 3 | Count characters. 0 if over |
 | No XML tags | 2 | No `<` or `>` in description. 0 if present |
-| Follows WHAT + WHEN + capabilities pattern | 3 | Structured. 1 if partial, 0 if random |
+| Follows `[What it does] + [When to use it] + [Key capabilities]` pattern | 3 | Structured per Anthropic's formula. 1 if partial, 0 if random |
+
+### Bonuses
+
+- Includes negative triggers ("Do NOT use for...", scope limitations): +1 bonus (cap at 25) -- prevents overtriggering
+- Mentions relevant file types when applicable: +1 bonus (cap at 25)
 
 ### Red flags (auto-deduct)
 
@@ -59,7 +88,7 @@ Detailed scoring criteria from Anthropic's "The Complete Guide to Building Skill
 
 | Check | Pts | Criteria |
 |-------|-----|---------|
-| ## / ### heading hierarchy | 3 | Clean Markdown levels, max 4 deep |
+| ## / ### heading hierarchy | 3 | Clean Markdown levels, max 4 deep. Critical instructions at top of sections. |
 | Step-by-step workflow | 4 | Numbered steps or clear phases |
 | Response format defined | 3 | Template or example output shown |
 
@@ -81,10 +110,17 @@ Detailed scoring criteria from Anthropic's "The Complete Guide to Building Skill
 
 ### Scoring guidelines
 
-- **5/5 actionability**: Every instruction is a concrete verb + target. "Run X", "Check Y", "If Z then W"
+- **5/5 actionability**: Every instruction is a concrete verb + target. "Run X", "Check Y", "If Z then W". Non-absolute rules include contextual qualifiers.
 - **3/5 actionability**: Mix of concrete and vague. "Process the data" alongside specific commands
 - **1/5 actionability**: Mostly vague. "Handle errors appropriately", "Validate things"
 - **0/5 actionability**: No actionable instructions at all
+
+### Instruction quality signals (from Anthropic's troubleshooting guide)
+
+- **Instructions too verbose**: Prose-heavy instructions get buried. Prefer bullet points and numbered lists.
+- **Instructions buried**: Critical rules should be at the top of sections, use ## Important or ## Critical headers if needed.
+- **Ambiguous language**: "Make sure to validate things properly" is bad. "CRITICAL: Before calling X, verify: [list]" is good.
+- **No redundancy**: Do NOT include instructions that duplicate Claude's built-in system prompt behavior.
 
 ## 4. Token Efficiency (15 pts)
 
@@ -124,13 +160,14 @@ Detailed scoring criteria from Anthropic's "The Complete Guide to Building Skill
 |-------|-----|---------|
 | Clear scope boundaries | 4 | States what it does AND what it does NOT handle |
 | No exclusivity assumption | 3 | Works alongside other skills. No "I am the only..." |
-| allowed-tools appropriate | 3 | Only lists tools actually used in instructions |
+| allowed-tools appropriate | 3 | Cross-reference with pattern detection table in Category 1. All declared tools used, all needed tools declared. |
 
 ### Composability red flags
 
 - Overly broad description that could conflict with other skills -> -3
-- Assumes access to tools not in allowed-tools -> -2
+- Tool needed but not in allowed-tools (detected via pattern table) -> -2
 - Instructions that override or conflict with system behavior -> -3
+- `disable-model-invocation: true` but description uses auto-trigger language without "Use when" framing -> -1
 
 ## Grade Scale
 
