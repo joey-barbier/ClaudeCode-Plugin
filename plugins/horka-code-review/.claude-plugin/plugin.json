@@ -7,5 +7,5 @@
   },
   "keywords": ["code-review", "pull-request", "pr-review", "quality", "security", "tech-lead"],
   "agents": ["./agents/review-pr.md"],
-  "skills": ["./skills/horka-review-changes/SKILL.md"]
+  "skills": "./skills/"
 }
