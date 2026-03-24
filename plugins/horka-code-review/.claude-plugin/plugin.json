@@ -1,10 +1,11 @@
 {
   "name": "horka-code-review",
-  "version": "2.0.0",
-  "description": "Senior Tech Lead PR review agent with structured feedback and quality enforcement",
+  "version": "2.1.0",
+  "description": "Senior Tech Lead PR review agent with structured feedback, quality enforcement, and on-demand change review",
   "author": {
     "name": "Orka"
   },
   "keywords": ["code-review", "pull-request", "pr-review", "quality", "security", "tech-lead"],
-  "agents": ["./agents/review-pr.md"]
+  "agents": ["./agents/review-pr.md"],
+  "skills": ["./skills/horka-review-changes/SKILL.md"]
 }
