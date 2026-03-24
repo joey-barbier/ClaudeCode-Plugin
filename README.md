@@ -59,7 +59,7 @@ Pick what fits your workflow. Each plugin works independently.
 
 ---
 
-#### code-review — *Autonomous*
+#### code-review — *Mixed (autonomous + command)*
 
 **Your personal Senior Tech Lead.** Activates automatically when you say "review PR" or when Claude detects code ready to push. Does a full first pass (architecture, security, quality) so when you review, you focus on what matters — not typos and misplaced ifs.
 
@@ -67,6 +67,11 @@ Pick what fits your workflow. Each plugin works independently.
 # make sure you've added the marketplace first (see Prerequisites)
 claude plugin install horka-code-review
 ```
+
+| Component | How it works |
+|---|---|
+| Code review agent | Autonomous — activates on "review PR", analyzes architecture, security, performance, and conventions |
+| `/horka-code-review:horka-review-changes` | On-demand review of your current changes (uncommitted, staged, or branch commits). Runs the Tech Lead agent in an isolated context so your main conversation stays clean |
 
 > Hook included (runs automatically, no command needed): Blocks push to main/master. Reminds you to review before pushing feature branches.
 
