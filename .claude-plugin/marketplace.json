@@ -5,52 +5,52 @@
   },
   "plugins": [
     {
-      "name": "code-review",
-      "source": "./plugins/code-review",
+      "name": "horka-code-review",
+      "source": "./plugins/horka-code-review",
       "description": "Senior Tech Lead PR review agent with push guard hook",
-      "version": "1.0.0"
+      "version": "2.0.0"
     },
     {
-      "name": "qa-testing",
-      "source": "./plugins/qa-testing",
+      "name": "horka-qa-testing",
+      "source": "./plugins/horka-qa-testing",
       "description": "QA validation and business-focused unit test generation",
-      "version": "1.1.0"
+      "version": "2.0.0"
     },
     {
-      "name": "dev-workflow",
-      "source": "./plugins/dev-workflow",
+      "name": "horka-dev-workflow",
+      "source": "./plugins/horka-dev-workflow",
       "description": "Structured development methodology, MVP time management, and git safety",
-      "version": "1.1.0"
+      "version": "2.0.0"
     },
     {
-      "name": "cc-memory",
-      "source": "./plugins/cc-memory",
+      "name": "horka-memory",
+      "source": "./plugins/horka-memory",
       "description": "Project memory management: auto-restore context between sessions",
-      "version": "1.1.0"
+      "version": "2.0.0"
     },
     {
-      "name": "cc-setup",
-      "source": "./plugins/cc-setup",
+      "name": "horka-setup",
+      "source": "./plugins/horka-setup",
       "description": "Interactive CLAUDE.md generator with best practices",
-      "version": "1.1.0"
+      "version": "2.0.0"
     },
     {
-      "name": "analytics",
-      "source": "./plugins/analytics",
+      "name": "horka-analytics",
+      "source": "./plugins/horka-analytics",
       "description": "SaaS analytics tracking strategy design and optimization",
-      "version": "1.0.0"
+      "version": "2.0.0"
     },
     {
-      "name": "openclaw",
-      "source": "./plugins/openclaw",
+      "name": "horka-openclaw",
+      "source": "./plugins/horka-openclaw",
       "description": "Context management and session optimization for OpenClaw gateway",
-      "version": "1.1.0"
+      "version": "2.0.0"
     },
     {
-      "name": "skill-eval",
-      "source": "./plugins/skill-eval",
+      "name": "horka-skill-eval",
+      "source": "./plugins/horka-skill-eval",
       "description": "Evaluate skills against Anthropic's official best practices with scoring and fixes",
-      "version": "1.0.0"
+      "version": "2.0.0"
     }
   ]
 }

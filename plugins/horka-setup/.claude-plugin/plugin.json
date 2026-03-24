@@ -1,0 +1,10 @@
+{
+  "name": "horka-setup",
+  "version": "2.0.0",
+  "description": "Interactive CLAUDE.md generator with best practices and personalized workflow configuration",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["setup", "configuration", "claude-md", "onboarding", "best-practices"],
+  "skills": "./skills/"
+}

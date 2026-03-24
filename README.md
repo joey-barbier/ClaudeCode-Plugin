@@ -38,9 +38,9 @@ Install `cc-setup` and run the setup wizard.
 
 ```bash
 # make sure you've added the marketplace first (see Prerequisites)
-claude plugin install cc-setup
+claude plugin install horka-setup
 ```
-Then type `/cc-setup:orka-claude-setup` — it asks about your git workflow, communication style, security preferences, and installed plugins, then generates a personalized `CLAUDE.md` that tells Claude how YOU work.
+Then type `/horka-setup:claude-setup` — it asks about your git workflow, communication style, security preferences, and installed plugins, then generates a personalized `CLAUDE.md` that tells Claude how YOU work.
 
 ### Step 2: Give Claude a memory
 
@@ -48,10 +48,10 @@ Install `cc-memory` so Claude remembers your project between sessions. No more r
 
 ```bash
 # make sure you've added the marketplace first (see Prerequisites)
-claude plugin install cc-memory
+claude plugin install horka-memory
 ```
 
-**What happens:** When you open Claude, it automatically detects your project files and restores full context — what's done, what's not, what to work on next. Type `/cc-memory:memory` to initialize memory on a new project (it scans your codebase and creates PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS, and COMMANDS files) or restore context manually at session start.
+**What happens:** When you open Claude, it automatically detects your project files and restores full context — what's done, what's not, what to work on next. Type `/horka-memory:restore` to initialize memory on a new project (it scans your codebase and creates PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS, and COMMANDS files) or restore context manually at session start.
 
 ### Step 3: Add the tools you need
 
@@ -65,7 +65,7 @@ Pick what fits your workflow. Each plugin works independently.
 
 ```bash
 # make sure you've added the marketplace first (see Prerequisites)
-claude plugin install code-review
+claude plugin install horka-code-review
 ```
 
 > Hook included (runs automatically, no command needed): Blocks push to main/master. Reminds you to review before pushing feature branches.
@@ -78,13 +78,13 @@ claude plugin install code-review
 
 ```bash
 # make sure you've added the marketplace first (see Prerequisites)
-claude plugin install qa-testing
+claude plugin install horka-qa-testing
 ```
 
 | Component | How it works |
 |---|---|
 | QA validation agent | Autonomous — activates when you claim a feature is done, challenges your assertions and tests edge cases |
-| `/qa-testing:orka-unit-test-generate` | Generates business-focused unit tests: permissions, limits, data consistency. Reads your existing test conventions first, then writes tests that match your patterns. Supports any language/framework |
+| `/horka-qa-testing:unit-test-generate` | Generates business-focused unit tests: permissions, limits, data consistency. Reads your existing test conventions first, then writes tests that match your patterns. Supports any language/framework |
 
 ---
 
@@ -94,15 +94,15 @@ claude plugin install qa-testing
 
 ```bash
 # make sure you've added the marketplace first (see Prerequisites)
-claude plugin install dev-workflow
+claude plugin install horka-dev-workflow
 ```
 
 | Component | How it works |
 |---|---|
 | Dev methodology agent | Autonomous — analyzes your architecture and conventions from code, then implements complex multi-layer changes in the right dependency order |
-| `/dev-workflow:orka-git-new-feature` | Prepares git for a new feature: switches to main/develop, pulls latest, offers to delete merged branches, then creates a `feature/` branch |
-| `/dev-workflow:orka-mvp-time-guardian` | Detects when you're stuck in a loop: same error 3+ times, over-engineering, debates without decisions. Proposes the fastest working solution with a clear action plan |
-| `/dev-workflow:orka-init-docs` | Creates architecture docs (ARCHITECTURE.md, CONVENTIONS.md, etc.) from your codebase, or surgically updates existing docs when patterns change |
+| `/horka-dev-workflow:git-new-feature` | Prepares git for a new feature: switches to main/develop, pulls latest, offers to delete merged branches, then creates a `feature/` branch |
+| `/horka-dev-workflow:mvp-time-guardian` | Detects when you're stuck in a loop: same error 3+ times, over-engineering, debates without decisions. Proposes the fastest working solution with a clear action plan |
+| `/horka-dev-workflow:init-docs` | Creates architecture docs (ARCHITECTURE.md, CONVENTIONS.md, etc.) from your codebase, or surgically updates existing docs when patterns change |
 
 > Hook included (runs automatically, no command needed): Blocks dangerous git commands (force push, hard reset, checkout ., restore ., clean, branch -D).
 
@@ -114,7 +114,7 @@ claude plugin install dev-workflow
 
 ```bash
 # make sure you've added the marketplace first (see Prerequisites)
-claude plugin install analytics
+claude plugin install horka-analytics
 ```
 
 ---
@@ -125,13 +125,13 @@ claude plugin install analytics
 
 ```bash
 # make sure you've added the marketplace first (see Prerequisites)
-claude plugin install openclaw
+claude plugin install horka-openclaw
 ```
 
 | Component | How it works |
 |---|---|
-| `/openclaw:orka-openclaw-session-compact` | Compresses large AI sessions: scans for files over 20MB, extracts decisions/configs/learnings, archives the original, and clears the session to minimal size |
-| `/openclaw:orka-openclaw-session-extract` | Extracts learnings from the current session and saves them to memory files — use before deleting sessions or when context is getting heavy |
+| `/horka-openclaw:session-compact` | Compresses large AI sessions: scans for files over 20MB, extracts decisions/configs/learnings, archives the original, and clears the session to minimal size |
+| `/horka-openclaw:session-extract` | Extracts learnings from the current session and saves them to memory files — use before deleting sessions or when context is getting heavy |
 | Shell scripts | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
 
 > Hook included (runs automatically, no command needed): Warns you to save learnings before large sessions get compacted.
@@ -142,12 +142,12 @@ claude plugin install openclaw
 
 ```bash
 # make sure you've added the marketplace first (see Prerequisites)
-claude plugin install skill-eval
+claude plugin install horka-skill-eval
 ```
 
 | Component | How it works |
 |---|---|
-| `/skill-eval:orka-skill-evaluate` | Audits one or all skills: scores structure, description, instructions, token efficiency, and composability. Shows a grade (A+ to F), lists issues by severity, proposes concrete fixes, then re-evaluates to show improvement |
+| `/horka-skill-eval:evaluate` | Audits one or all skills: scores structure, description, instructions, token efficiency, and composability. Shows a grade (A+ to F), lists issues by severity, proposes concrete fixes, then re-evaluates to show improvement |
 
 ---
 
@@ -158,7 +158,7 @@ Three types of components, three behaviors:
 | Type | Behavior | Example |
 |---|---|---|
 | **Agents** | Autonomous — Claude activates them when relevant | Code review agent triggers on "review PR" |
-| **Skills** | Commands — you type them when needed | `/cc-memory:memory` to restore context |
+| **Skills** | Commands — you type them when needed | `/horka-memory:restore` to restore context |
 | **Hooks** | Silent — run in background, protect you from mistakes | Blocks `git push --force` automatically |
 
 ## Questions?

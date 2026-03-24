@@ -1,0 +1,10 @@
+{
+  "name": "horka-memory",
+  "version": "2.0.0",
+  "description": "Project memory management: restore context (/horka-memory) and save progression (/horka-save)",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["memory", "context", "session", "restore", "project-state"],
+  "skills": "./skills/"
+}
