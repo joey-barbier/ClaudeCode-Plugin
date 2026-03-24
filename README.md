@@ -40,7 +40,7 @@ Install `cc-setup` and run the setup wizard.
 # make sure you've added the marketplace first (see Prerequisites)
 claude plugin install cc-setup
 ```
-Then type `/cc-setup:setup` — it asks about your git workflow, communication style, security preferences, and installed plugins, then generates a personalized `CLAUDE.md` that tells Claude how YOU work.
+Then type `/cc-setup:orka-claude-setup` — it asks about your git workflow, communication style, security preferences, and installed plugins, then generates a personalized `CLAUDE.md` that tells Claude how YOU work.
 
 ### Step 2: Give Claude a memory
 
@@ -84,7 +84,7 @@ claude plugin install qa-testing
 | Component | How it works |
 |---|---|
 | QA validation agent | Autonomous — activates when you claim a feature is done, challenges your assertions and tests edge cases |
-| `/qa-testing:unit-test-expert` | Generates business-focused unit tests: permissions, limits, data consistency. Reads your existing test conventions first, then writes tests that match your patterns. Supports any language/framework |
+| `/qa-testing:orka-unit-test-generate` | Generates business-focused unit tests: permissions, limits, data consistency. Reads your existing test conventions first, then writes tests that match your patterns. Supports any language/framework |
 
 ---
 
@@ -100,9 +100,9 @@ claude plugin install dev-workflow
 | Component | How it works |
 |---|---|
 | Dev methodology agent | Autonomous — analyzes your architecture and conventions from code, then implements complex multi-layer changes in the right dependency order |
-| `/dev-workflow:new-feature` | Prepares git for a new feature: switches to main/develop, pulls latest, offers to delete merged branches, then creates a `feature/` branch |
-| `/dev-workflow:time-check` | Detects when you're stuck in a loop: same error 3+ times, over-engineering, debates without decisions. Proposes the fastest working solution with a clear action plan |
-| `/dev-workflow:init-docs` | Creates architecture docs (ARCHITECTURE.md, CONVENTIONS.md, etc.) from your codebase, or surgically updates existing docs when patterns change |
+| `/dev-workflow:orka-git-new-feature` | Prepares git for a new feature: switches to main/develop, pulls latest, offers to delete merged branches, then creates a `feature/` branch |
+| `/dev-workflow:orka-mvp-time-guardian` | Detects when you're stuck in a loop: same error 3+ times, over-engineering, debates without decisions. Proposes the fastest working solution with a clear action plan |
+| `/dev-workflow:orka-init-docs` | Creates architecture docs (ARCHITECTURE.md, CONVENTIONS.md, etc.) from your codebase, or surgically updates existing docs when patterns change |
 
 > Hook included (runs automatically, no command needed): Blocks dangerous git commands (force push, hard reset, checkout ., restore ., clean, branch -D).
 
@@ -130,8 +130,8 @@ claude plugin install openclaw
 
 | Component | How it works |
 |---|---|
-| `/openclaw:compact` | Compresses large AI sessions: scans for files over 20MB, extracts decisions/configs/learnings, archives the original, and clears the session to minimal size |
-| `/openclaw:extract` | Extracts learnings from the current session and saves them to memory files — use before deleting sessions or when context is getting heavy |
+| `/openclaw:orka-openclaw-session-compact` | Compresses large AI sessions: scans for files over 20MB, extracts decisions/configs/learnings, archives the original, and clears the session to minimal size |
+| `/openclaw:orka-openclaw-session-extract` | Extracts learnings from the current session and saves them to memory files — use before deleting sessions or when context is getting heavy |
 | Shell scripts | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
 
 > Hook included (runs automatically, no command needed): Warns you to save learnings before large sessions get compacted.
@@ -147,7 +147,7 @@ claude plugin install skill-eval
 
 | Component | How it works |
 |---|---|
-| `/skill-eval:evaluate` | Audits one or all skills: scores structure, description, instructions, token efficiency, and composability. Shows a grade (A+ to F), lists issues by severity, proposes concrete fixes, then re-evaluates to show improvement |
+| `/skill-eval:orka-skill-evaluate` | Audits one or all skills: scores structure, description, instructions, token efficiency, and composability. Shows a grade (A+ to F), lists issues by severity, proposes concrete fixes, then re-evaluates to show improvement |
 
 ---
 

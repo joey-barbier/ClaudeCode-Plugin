@@ -40,7 +40,7 @@ Installiere `cc-setup` und führe den Setup-Assistenten aus.
 # stelle sicher, dass du zuerst den Marketplace hinzugefuegt hast (siehe Voraussetzungen)
 claude plugin install cc-setup
 ```
-Dann gebe `/cc-setup:setup` ein — fragt nach deinem Git-Workflow, Kommunikationsstil, Sicherheitspräferenzen und installierten Plugins, dann generiert eine personalisierte `CLAUDE.md`, die Claude sagt wie DU arbeitest.
+Dann gebe `/cc-setup:orka-claude-setup` ein — fragt nach deinem Git-Workflow, Kommunikationsstil, Sicherheitspräferenzen und installierten Plugins, dann generiert eine personalisierte `CLAUDE.md`, die Claude sagt wie DU arbeitest.
 
 ### Schritt 2: Gib Claude ein Gedächtnis
 
@@ -84,7 +84,7 @@ claude plugin install qa-testing
 | Komponente | Funktionsweise |
 |---|---|
 | QA-Validierungs-Agent | Autonom — aktiviert sich wenn du behauptest eine Funktion sei fertig, hinterfragt deine Aussagen und testet Grenzfälle |
-| `/qa-testing:unit-test-expert` | Generiert geschäftsorientierte Unit-Tests: Berechtigungen, Limits, Datenkonsistenz. Liest zuerst deine bestehenden Test-Konventionen, schreibt dann Tests die zu deinen Patterns passen. Unterstützt jede Sprache/Framework |
+| `/qa-testing:orka-unit-test-generate` | Generiert geschäftsorientierte Unit-Tests: Berechtigungen, Limits, Datenkonsistenz. Liest zuerst deine bestehenden Test-Konventionen, schreibt dann Tests die zu deinen Patterns passen. Unterstützt jede Sprache/Framework |
 
 ---
 
@@ -100,9 +100,9 @@ claude plugin install dev-workflow
 | Komponente | Funktionsweise |
 |---|---|
 | Dev-Methodik-Agent | Autonom — analysiert deine Architektur und Konventionen aus dem Code, implementiert dann komplexe mehrschichtige Änderungen in der richtigen Abhängigkeitsreihenfolge |
-| `/dev-workflow:new-feature` | Bereitet Git für eine neue Funktion vor: wechselt zu main/develop, zieht den neuesten Stand, bietet an gemergte Branches zu löschen, erstellt dann einen `feature/`-Branch |
-| `/dev-workflow:time-check` | Erkennt wenn du dich im Kreis drehst: gleicher Fehler 3+ mal, Over-Engineering, Debatten ohne Entscheidung. Schlägt die schnellste funktionierende Lösung mit konkretem Aktionsplan vor |
-| `/dev-workflow:init-docs` | Erstellt Architektur-Doku (ARCHITECTURE.md, CONVENTIONS.md, etc.) aus deiner Codebase, oder aktualisiert bestehende Doku chirurgisch wenn sich Patterns ändern |
+| `/dev-workflow:orka-git-new-feature` | Bereitet Git für eine neue Funktion vor: wechselt zu main/develop, zieht den neuesten Stand, bietet an gemergte Branches zu löschen, erstellt dann einen `feature/`-Branch |
+| `/dev-workflow:orka-mvp-time-guardian` | Erkennt wenn du dich im Kreis drehst: gleicher Fehler 3+ mal, Over-Engineering, Debatten ohne Entscheidung. Schlägt die schnellste funktionierende Lösung mit konkretem Aktionsplan vor |
+| `/dev-workflow:orka-init-docs` | Erstellt Architektur-Doku (ARCHITECTURE.md, CONVENTIONS.md, etc.) aus deiner Codebase, oder aktualisiert bestehende Doku chirurgisch wenn sich Patterns ändern |
 
 > Hook enthalten (läuft automatisch, kein Befehl nötig): Blockiert gefährliche Git-Befehle (Force Push, Hard Reset, Checkout ., Restore ., Clean, Branch -D).
 
@@ -130,8 +130,8 @@ claude plugin install openclaw
 
 | Komponente | Funktionsweise |
 |---|---|
-| `/openclaw:compact` | Komprimiert große KI-Sitzungen: scannt Dateien über 20 MB, extrahiert Entscheidungen/Configs/Erkenntnisse, archiviert das Original und reduziert die Sitzung auf ein Minimum |
-| `/openclaw:extract` | Extrahiert Erkenntnisse aus der aktuellen Sitzung und speichert sie in Memory-Dateien — vor dem Löschen von Sitzungen oder wenn der Kontext schwer wird verwenden |
+| `/openclaw:orka-openclaw-session-compact` | Komprimiert große KI-Sitzungen: scannt Dateien über 20 MB, extrahiert Entscheidungen/Configs/Erkenntnisse, archiviert das Original und reduziert die Sitzung auf ein Minimum |
+| `/openclaw:orka-openclaw-session-extract` | Extrahiert Erkenntnisse aus der aktuellen Sitzung und speichert sie in Memory-Dateien — vor dem Löschen von Sitzungen oder wenn der Kontext schwer wird verwenden |
 | Shell-Skripte | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
 
 > Hook enthalten (läuft automatisch, kein Befehl nötig): Erinnert dich daran, Erkenntnisse zu speichern, bevor große Sitzungen komprimiert werden.
@@ -147,7 +147,7 @@ claude plugin install skill-eval
 
 | Komponente | Funktionsweise |
 |---|---|
-| `/skill-eval:evaluate` | Prueft einen oder alle Skills: bewertet Struktur, Beschreibung, Anweisungen, Token-Effizienz und Komposierbarkeit. Zeigt eine Note (A+ bis F), listet Probleme nach Schweregrad, schlaegt konkrete Korrekturen vor, bewertet dann erneut um die Verbesserung zu zeigen |
+| `/skill-eval:orka-skill-evaluate` | Prueft einen oder alle Skills: bewertet Struktur, Beschreibung, Anweisungen, Token-Effizienz und Komposierbarkeit. Zeigt eine Note (A+ bis F), listet Probleme nach Schweregrad, schlaegt konkrete Korrekturen vor, bewertet dann erneut um die Verbesserung zu zeigen |
 
 ---
 
