@@ -1,15 +1,15 @@
 # PixelClaw - Useful Commands
 
 ## Evaluation
-- `/skill-eval:orka-skill-evaluate` - Run skill evaluator on all SKILL.md files
+- `/horka-skill-eval:evaluate` - Run skill evaluator on all SKILL.md files
 - `/skill-creator:skill-creator` - Generate or improve skills with A/B testing
 
 ## Memory
-- `/cc-memory:orka-memory` - Restore or init project context
-- `/cc-memory:orka-save` - Save session progression
+- `/horka-memory:horka-memory` - Restore or init project context
+- `/horka-memory:save` - Save session progression
 
 ## Development
-- `/dev-workflow:orka-git-new-feature` (or `GNF`) - Prepare git for new feature
+- `/horka-dev-workflow:git-new-feature` (or `GNF`) - Prepare git for new feature
 - `wc -w plugins/*/skills/*/SKILL.md` - Word count all skills
 
 ## Git

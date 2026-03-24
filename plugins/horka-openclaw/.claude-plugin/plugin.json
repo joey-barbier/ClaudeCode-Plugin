@@ -1,0 +1,10 @@
+{
+  "name": "horka-openclaw",
+  "version": "2.0.0",
+  "description": "Context management and session optimization tools for OpenClaw gateway",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["openclaw", "session", "context", "compression", "gateway", "memory"],
+  "skills": "./skills/"
+}

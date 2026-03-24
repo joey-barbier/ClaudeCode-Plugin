@@ -1,0 +1,11 @@
+{
+  "name": "horka-dev-workflow",
+  "version": "2.0.0",
+  "description": "Structured development methodology, MVP time management, documentation initialization, and feature scaffolding",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["workflow", "methodology", "mvp", "architecture", "documentation", "git", "productivity"],
+  "agents": ["./agents/structured-dev-methodology.md"],
+  "skills": "./skills/"
+}

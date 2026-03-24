@@ -17,7 +17,7 @@ Post-optimization. All 10 skills + 4 agents evaluated and upgraded via A/B test 
   - Average score: 89.2 -> 92.7 (+3.5)
   - Biggest wins: unit-test-expert (+8), review-pr (+8), qa-validate (+8)
   - All SC versions adopted
-- [x] orka-memory made fully autonomous (no confirmation prompt)
+- [x] horka-memory made fully autonomous (no confirmation prompt)
 - [x] SessionStart hook added to ~/.claude/settings.json for auto-context restore
 - [x] unit-test-expert: code examples moved to references/framework-examples.md
 
