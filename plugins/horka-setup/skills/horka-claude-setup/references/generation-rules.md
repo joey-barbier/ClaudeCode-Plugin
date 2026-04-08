@@ -86,7 +86,8 @@ If `quality-first` philosophy, replace Code Quality with:
 |--------|-------------|
 | code-review | `review-pr agent`: Invoke before any PR. NEVER create PR without review pass. |
 | qa-testing | `qa-validate agent`: Challenge implementation claims. `/horka-qa-testing:horka-unit-test-generate`: Generate tests. |
-| dev-workflow | `structured-dev-methodology agent`: For complex multi-file implementations. `/horka-dev-workflow:horka-mvp-time-guardian`: Over-engineering detection. `/horka-dev-workflow:horka-init-docs`: Architecture docs. `/horka-dev-workflow:horka-git-new-feature`: Git prep. |
+| dev-workflow | `structured-dev-methodology agent`: For complex multi-file implementations. `/horka-dev-workflow:horka-mvp-time-guardian`: Over-engineering detection. `/horka-dev-workflow:horka-git-new-feature`: Git prep. |
+| setup | `/horka-setup:horka-claude-setup`: Generate CLAUDE.md. `/horka-setup:horka-init-docs`: Architecture docs. |
 | cc-memory | `/horka-memory:horka-memory-restore`: Session start context restore. Update memory after significant work. |
 | analytics | `saas-analytics-architect agent`: Analytics tracking strategy. |
 | openclaw | `/horka-openclaw:horka-openclaw-session-compact`: Compress sessions. `/horka-openclaw:horka-openclaw-session-extract`: Extract learnings. |
