@@ -1,6 +1,6 @@
 ---
 name: horka-init-docs
-description: Initialize or maintain technical architecture documentation with surgical, targeted modifications. Use for creating project docs from scratch, detecting inconsistencies between doc files, or updating architecture docs after code changes. Trigger on "init docs", "create documentation", "update architecture docs", "document this project", "docs out of date".
+description: Initialize or maintain technical architecture documentation with surgical, targeted modifications. Auto-detects tech stack and extracts real patterns from code. Use for creating project docs from scratch, detecting inconsistencies between doc files, or updating architecture docs after code changes. Trigger on "init docs", "create documentation", "update architecture docs", "document this project", "docs out of date".
 argument-hint: describe the documentation change or leave empty to initialize
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Glob, Grep
@@ -40,7 +40,12 @@ Determine the request type:
 
 ## Phase 2: Initialize Documentation
 
-Use Glob and Read to analyze the project, then create:
+Detect project type first:
+1. Use Glob to find config files (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `Package.swift`, `composer.json`, `Gemfile`, `pom.xml`)
+2. Use Grep to identify frameworks (`import Express`, `from flask`, `import Vapor`, `@angular`, `from django`)
+3. Read entry points and main config to understand architecture (monolith, microservices, CLI, library)
+
+Then create documentation adapted to the detected stack:
 
 ```
 documentations/ (or docs/)
@@ -51,7 +56,12 @@ documentations/ (or docs/)
 +-- TEST_GUIDE.md         # Testing philosophy
 ```
 
-Fill each file with real data from project analysis. Use Grep to find patterns, conventions, and structure.
+For each file, extract real data using Grep and Read:
+- **ARCHITECTURE.md**: entry points, dependency graph, data flow, external services, DB schema patterns
+- **CONVENTIONS.md**: naming patterns (Grep for class/function declarations), file organization, import style, error handling patterns
+- **WORKFLOW_PATTERNS.md**: git branch strategy (from git log), CI/CD config, deployment patterns
+- **COMPONENT_MAPPING.md**: map features to directories/files using Glob + Read
+- **TEST_GUIDE.md**: test framework (from config), test file patterns, coverage expectations
 
 ## Phase 3: Modify Documentation
 
@@ -69,6 +79,17 @@ For each proposed change, use this format:
 - After: [new version]
 
 **Token Impact**: [+/- X tokens]
+```
+
+Example:
+```
+**File**: `CONVENTIONS.md`
+**Section**: `## Naming` (lines 12-18)
+**Reason**: New service layer uses camelCase instead of documented snake_case
+**Change**:
+- Before: All functions use snake_case
+- After: All functions use snake_case. Exception: service adapters use camelCase for external API compatibility
+**Token Impact**: +12 tokens
 ```
 
 Apply changes only after user confirmation.

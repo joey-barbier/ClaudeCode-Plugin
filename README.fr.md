@@ -42,6 +42,8 @@ claude plugin install horka-setup
 ```
 Puis tapez `/horka-setup:horka-claude-setup` — il vous interroge sur votre workflow git, style de communication, préférences de sécurité et plugins installés, puis génère un `CLAUDE.md` personnalisé qui dit à Claude comment VOUS travaillez.
 
+Également disponible : `/horka-setup:horka-init-docs` — crée la documentation d'architecture (ARCHITECTURE.md, CONVENTIONS.md, etc.) depuis votre codebase, ou met à jour chirurgicalement la doc existante quand les patterns changent.
+
 ### Étape 2 : Donner une mémoire à Claude
 
 Installez `cc-memory` afin que Claude se souvienne de votre projet entre les sessions. Fini d'expliquer où vous en étiez après une compression ou une nouvelle conversation.
@@ -107,7 +109,6 @@ claude plugin install horka-dev-workflow
 | Agent de méthodologie de développement | Autonome — analyse votre architecture et conventions depuis le code, puis implémente les changements multicouches dans le bon ordre de dépendances |
 | `/horka-dev-workflow:horka-git-new-feature` | Prépare git pour une nouvelle fonctionnalité : bascule sur main/develop, pull le dernier état, propose de supprimer les branches mergées, puis crée une branche `feature/` |
 | `/horka-dev-workflow:horka-mvp-time-guardian` | Détecte quand vous tournez en rond : même erreur 3+ fois, sur-ingénierie, débats sans décision. Propose la solution la plus rapide avec un plan d'action concret |
-| `/horka-dev-workflow:horka-init-docs` | Crée la documentation d'architecture (ARCHITECTURE.md, CONVENTIONS.md, etc.) depuis votre codebase, ou met à jour chirurgicalement la doc existante quand les patterns changent |
 
 > Hook inclus (se lance automatiquement, aucune commande requise) : Bloque les commandes git dangereuses (force push, hard reset, checkout ., restore ., clean, branch -D).
 
