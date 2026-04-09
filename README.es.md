@@ -2,174 +2,161 @@
 
 **[EN](README.md)** | **[FR](README.fr.md)** | **[DE](README.de.md)**
 
-Plugins listos para usar que hacen Claude Code realmente útil en proyectos reales. Memoria, revisión de código, flujo de desarrollo, guardias de seguridad — construidos a partir de meses de uso diario.
+Plugins listos para usar de Claude Code: memoria, revisión de código, flujo dev, guardias de seguridad. Construidos a partir de meses de uso diario.
 
-> Además, para seguir tus librerías externas, los CVEs y más, descubre [LibTracker](https://app.libtracker.io/).
+> ¿Sigues tus librerías externas, CVEs y más? Descubre [LibTracker](https://app.libtracker.io/).
 
 ![Demo](assets/demo.gif)
 
-## Instala todos los plugins de una vez
-
-Explora e instala todo desde Claude Code:
+## Instalación
 
 ```bash
 /plugin marketplace add joey-barbier/ClaudeCode-Plugin
 ```
 
-Luego usa `/plugin` → pestaña **Discover** para explorar e instalar lo que necesites.
+Luego `/plugin` → pestaña **Discover** para explorar, o instala plugins individualmente abajo.
 
-O instala plugins individualmente siguiendo los pasos a continuación.
+## Catálogo de plugins
+
+| Plugin | Función | Componentes |
+|---|---|---|
+| **[horka-setup](#horka-setup)** | `CLAUDE.md` personalizado + docs de arquitectura | 2 skills |
+| **[horka-memory](#horka-memory)** | Memoria de proyecto persistente entre sesiones | 1 skill |
+| **[horka-code-review](#horka-code-review)** | Revisión de PR por un Senior Tech Lead | agent + skill + hook |
+| **[horka-qa-testing](#horka-qa-testing)** | Validación QA + tests unitarios de negocio | agent + skill |
+| **[horka-dev-workflow](#horka-dev-workflow)** | Metodología dev + seguridad git | agent + 2 skills + hook |
+| **[horka-analytics](#horka-analytics)** | Experto en tracking / funnels SaaS | agent |
+| **[horka-openclaw](#horka-openclaw)** | Gestión de sesiones largas de IA | 2 skills + hook |
+| **[horka-skill-eval](#horka-skill-eval)** | Auditor de calidad de skills | skill |
+
+---
 
 ## Primeros pasos
 
-Sigue los pasos en orden. Cada uno se basa en el anterior.
-
-### Requisitos previos
-
-Agrega primero el marketplace (solo una vez):
+### 1. Configurar Claude — `horka-setup`
 
 ```bash
-/plugin marketplace add joey-barbier/ClaudeCode-Plugin
-```
-
-### Paso 1: Configura Claude Code (solo la primera vez)
-
-Instala `cc-setup` y ejecuta el asistente de configuración.
-
-```bash
-# asegurate de agregar primero el marketplace (ver Requisitos previos)
 claude plugin install horka-setup
 ```
-Luego escribe `/horka-setup:horka-claude-setup` — te pregunta sobre tu flujo git, estilo de comunicación, preferencias de seguridad y plugins instalados, luego genera un `CLAUDE.md` personalizado que le dice a Claude cómo TRABAJAS.
 
-También disponible: `/horka-setup:horka-init-docs` — crea documentación de arquitectura (ARCHITECTURE.md, CONVENTIONS.md, etc.) desde tu codebase, o actualiza quirúrgicamente la doc existente cuando cambian los patrones.
+- `/horka-setup:horka-claude-setup` — cuestionario interactivo → `CLAUDE.md` personalizado
+- `/horka-setup:horka-init-docs` — genera docs de arquitectura desde tu código (ARCHITECTURE, CONVENTIONS, WORKFLOW_PATTERNS...)
 
-### Paso 2: Dale a Claude una memoria
-
-Instala `cc-memory` para que Claude recuerde tu proyecto entre sesiones. No más re-explicar dónde te quedaste después de una compactación o una nueva conversación.
+### 2. Dale memoria a Claude — `horka-memory`
 
 ```bash
-# asegurate de agregar primero el marketplace (ver Requisitos previos)
 claude plugin install horka-memory
 ```
 
-**Qué sucede:** Cuando abres Claude, detecta automáticamente los archivos de tu proyecto y restaura el contexto completo — qué está hecho, qué no, en qué trabajar a continuación. Escribe `/horka-memory:horka-memory-restore` para inicializar la memoria en un nuevo proyecto (escanea tu codebase y crea los archivos PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS y COMMANDS) o restaurar el contexto manualmente al inicio de sesión.
+Restaura automáticamente el contexto del proyecto al iniciar sesión. `/horka-memory:horka-memory-restore` para inicializar en un nuevo proyecto — escanea tu codebase y crea los archivos PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS, COMMANDS.
 
-### Paso 3: Añade las herramientas que necesitas
+### 3. Elige las herramientas abajo
 
-Elige lo que se ajuste a tu flujo de trabajo. Cada plugin funciona de forma independiente.
+Cada plugin funciona de forma independiente.
 
 ---
 
-#### code-review — *Mixto (autónomo + comando)*
+## horka-code-review
 
-**Tu Líder Técnico Sénior personal.** Se activa automáticamente cuando dices "review PR" o cuando Claude detecta código listo para enviar. Realiza un primer pase completo (arquitectura, seguridad, calidad) para que cuando revises, te concentres en lo que importa — no en errores tipográficos e ifs mal colocados.
+**Revisión de PR por un Senior Tech Lead.** Se activa automáticamente con "review PR" o antes de hacer push.
 
 ```bash
-# asegurate de agregar primero el marketplace (ver Requisitos previos)
 claude plugin install horka-code-review
 ```
 
-| Componente | Funcionamiento |
-|---|---|
-| Agente code review | Autónomo — se activa con "review PR", analiza arquitectura, seguridad, rendimiento y convenciones |
-| `/horka-code-review:horka-review-changes` | Revisión bajo demanda de tus cambios actuales (sin commit, en staging o commits de rama). Ejecuta el agente Tech Lead en un contexto aislado para mantener limpia tu conversación principal |
-
-> Hook incluido (se ejecuta automáticamente, sin necesidad de comando): Bloquea el envío a main/master. Te recuerda que revises antes de enviar ramas de características.
+| Componente | Activación | Función |
+|---|---|---|
+| Agente `review-pr` | "review PR" / pre-push | Pasada completa: arquitectura + seguridad + calidad |
+| `/horka-code-review:horka-review-changes` | comando | Revisión bajo demanda de cambios actuales en contexto aislado |
+| Hook push | auto | Bloquea push a main/master, avisa en feature branches |
 
 ---
 
-#### qa-testing — *Mixto (autónomo + comando)*
+## horka-qa-testing
 
-**Validación de QA y generación de pruebas.** Dos componentes — uno autónomo, uno manual.
+**Validación QA + generación de tests unitarios de negocio.**
 
 ```bash
-# asegurate de agregar primero el marketplace (ver Requisitos previos)
 claude plugin install horka-qa-testing
 ```
 
-| Componente | Cómo funciona |
-|---|---|
-| Agente de validación de QA | Autónomo — se activa cuando afirmas que una característica está completa, cuestiona tus afirmaciones y prueba casos extremos |
-| `/horka-qa-testing:horka-unit-test-generate` | Genera tests unitarios orientados al negocio: permisos, límites, consistencia de datos. Lee primero tus convenciones de test existentes, luego escribe tests que coincidan con tus patrones. Soporta cualquier lenguaje/framework |
+| Componente | Activación | Función |
+|---|---|---|
+| Agente `qa-validate` | afirmación "feature terminada" | Cuestiona afirmaciones, prueba casos límite |
+| `/horka-qa-testing:horka-unit-test-generate` | comando | Genera tests alineados con tus convenciones (permisos, límites, consistencia) |
 
 ---
 
-#### dev-workflow — *Comandos + agente autónomo*
+## horka-dev-workflow
 
-**Metodología de desarrollo estructurada.** El agente se activa para implementaciones complejas. Las habilidades son comandos que escribes cuando sea necesario.
+**Metodología dev estructurada + seguridad git.**
 
 ```bash
-# asegurate de agregar primero el marketplace (ver Requisitos previos)
 claude plugin install horka-dev-workflow
 ```
 
-| Componente | Cómo funciona |
-|---|---|
-| Agente de metodología de desarrollo | Autónomo — analiza tu arquitectura y convenciones desde el código, luego implementa cambios multicapa en el orden correcto de dependencias |
-| `/horka-dev-workflow:horka-git-new-feature` | Prepara git para una nueva característica: cambia a main/develop, hace pull del último estado, ofrece eliminar ramas mergeadas, luego crea una rama `feature/` |
-| `/horka-dev-workflow:horka-mvp-time-guardian` | Detecta cuando estás dando vueltas: mismo error 3+ veces, exceso de ingeniería, debates sin decisión. Propone la solución más rápida con un plan de acción concreto |
-
-> Hook incluido (se ejecuta automáticamente, sin necesidad de comando): Bloquea comandos de git peligrosos (force push, hard reset, checkout ., restore ., clean, branch -D).
+| Componente | Activación | Función |
+|---|---|---|
+| Agente `dev-methodology` | implementaciones complejas | Coordina cambios multicapa en el orden correcto |
+| `/horka-dev-workflow:horka-git-new-feature` | comando | Prepara git: main → pull → elimina mergeadas → nueva rama `feature/` |
+| `/horka-dev-workflow:horka-mvp-time-guardian` | comando | Detecta bucles, propone la solución más rápida |
+| Hook seguridad git | auto | Bloquea force push, hard reset, checkout ., clean, branch -D |
 
 ---
 
-#### analytics — *Autónomo*
+## horka-analytics
 
-**Experto en análisis de SaaS.** Se activa cuando trabajas en seguimiento, embudos o conversión. Diseña qué medir, cómo configurarlo y qué paneles construir.
+**Experto en analytics SaaS.** Se activa automáticamente en temas de tracking / funnels / conversión. Diseña qué medir, implementación y dashboards.
 
 ```bash
-# asegurate de agregar primero el marketplace (ver Requisitos previos)
 claude plugin install horka-analytics
 ```
 
 ---
 
-#### openclaw — *Comandos*
+## horka-openclaw
 
-**Gestión de sesiones para la puerta de enlace OpenClaw.** Herramientas para sesiones de larga duración — comprimir contexto, extraer aprendizajes, mantener el rendimiento.
+**Gestión de sesiones largas de IA.**
 
 ```bash
-# asegurate de agregar primero el marketplace (ver Requisitos previos)
 claude plugin install horka-openclaw
 ```
 
-| Componente | Cómo funciona |
-|---|---|
-| `/horka-openclaw:horka-openclaw-session-compact` | Comprime sesiones IA grandes: escanea archivos de más de 20 MB, extrae decisiones/configs/aprendizajes, archiva el original y reduce la sesión al mínimo |
-| `/horka-openclaw:horka-openclaw-session-extract` | Extrae aprendizajes de la sesión actual y los guarda en archivos de memoria — usar antes de eliminar sesiones o cuando el contexto se vuelve pesado |
-| Scripts de shell | `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh` |
+| Componente | Activación | Función |
+|---|---|---|
+| `/horka-openclaw:horka-openclaw-session-compact` | comando | Comprime sesiones >20 MB, extrae decisiones/configs, archiva el original |
+| `/horka-openclaw:horka-openclaw-session-extract` | comando | Extrae aprendizajes a archivos de memoria |
+| Hook sesión | auto | Avisa antes de compactación pesada |
 
-> Hook incluido (se ejecuta automáticamente, sin necesidad de comando): Te advierte que guardes los aprendizajes antes de que se compacten sesiones grandes.
+Herramientas shell: `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh`.
 
-#### skill-eval — *Comando*
+---
 
-**Auditor de calidad de skills.** Evalua tus skills segun la guia oficial de buenas practicas de Anthropic. Puntua 5 categorias sobre 100 puntos, propone correcciones y muestra la mejora antes/despues.
+## horka-skill-eval
+
+**Auditor de calidad de skills** contra las best practices oficiales de Anthropic.
 
 ```bash
-# asegurate de agregar primero el marketplace (ver Requisitos previos)
 claude plugin install horka-skill-eval
 ```
 
-| Componente | Como funciona |
-|---|---|
-| `/horka-skill-eval:horka-skill-evaluate` | Audita uno o todos los skills: puntua estructura, descripcion, instrucciones, eficiencia de tokens y composabilidad. Muestra una nota (A+ a F), lista problemas por severidad, propone correcciones concretas, luego re-evalua para mostrar la mejora |
+| Componente | Activación | Función |
+|---|---|---|
+| `/horka-skill-eval:horka-skill-evaluate` | comando | Puntúa 5 categorías sobre 100, propone correcciones, re-evalúa antes/después |
 
 ---
 
 ## Cómo funcionan los plugins
 
-Tres tipos de componentes, tres comportamientos:
-
 | Tipo | Comportamiento | Ejemplo |
 |---|---|---|
-| **Agentes** | Autónomos — Claude los activa cuando son relevantes | El agente de revisión de código se activa en "review PR" |
-| **Habilidades** | Comandos — los escribes cuando sea necesario | `/horka-memory:horka-memory-restore` para restaurar el contexto |
-| **Hooks** | Silenciosos — se ejecutan en segundo plano, te protegen de errores | Bloquea `git push --force` automáticamente |
+| **Agents** | Autónomos — Claude los activa cuando es relevante | `review-pr` en "review PR" |
+| **Skills** | Comandos que escribes | `/horka-memory:horka-memory-restore` |
+| **Hooks** | Guardias silenciosos en segundo plano | Bloquea `git push --force` |
 
 ## ¿Preguntas?
 
-Transmito en vivo en Twitch mientras construyo con Claude Code. Ven a hacer preguntas, ver los plugins en acción, o sugerir nuevos.
+Hago stream en vivo en Twitch mientras construyo con Claude Code. Ven a hacer preguntas, ver los plugins en acción o sugerir nuevos.
 
 **[twitch.tv/horka_tv](https://twitch.tv/horka_tv)**
 
