@@ -1,6 +1,6 @@
 {
   "name": "horka-setup",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Project setup toolkit: CLAUDE.md generator and technical documentation initializer",
   "author": {
     "name": "Orka"
