@@ -3,7 +3,7 @@ name: horka-init-docs
 description: Initialize or maintain technical architecture documentation with surgical, targeted modifications. Auto-detects tech stack and extracts real patterns from code. Use for creating project docs from scratch, detecting inconsistencies between doc files, or updating architecture docs after code changes. Trigger on "init docs", "create documentation", "update architecture docs", "document this project", "docs out of date".
 argument-hint: describe the documentation change or leave empty to initialize
 disable-model-invocation: true
-allowed-tools: Read, Write, Edit, Glob, Grep
+allowed-tools: AskUserQuestion, Read, Write, Edit, Glob, Grep
 ---
 
 # Technical Documentation Maintainer
@@ -32,6 +32,8 @@ Determine the request type:
 - **Refuse** (vague or unnecessary): Demand clarification
 
 ### When to Refuse
+
+Use `AskUserQuestion` to request the missing information instead of guessing:
 
 - "Improve the docs" -> Demand specific sections and objectives
 - Info already exists elsewhere -> Point to existing location
@@ -92,7 +94,7 @@ Example:
 **Token Impact**: +12 tokens
 ```
 
-Apply changes only after user confirmation.
+Apply changes only after user confirmation via `AskUserQuestion` (Apply / Refine / Cancel).
 
 ## Output Format
 
@@ -132,6 +134,6 @@ Before applying, confirm:
 
 ## Error Handling
 
-- **No project files found**: Ask user to describe the project or point to source code
+- **No project files found**: Use `AskUserQuestion` to have the user describe the project or point to source code
 - **Conflicting documentation**: Flag contradiction, identify source of truth, propose resolution
 - **Request would create duplication**: Point to existing content, suggest cross-reference instead

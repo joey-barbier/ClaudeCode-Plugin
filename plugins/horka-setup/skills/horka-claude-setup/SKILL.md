@@ -31,7 +31,7 @@ Consult `references/questionnaire.md` for the full question tables.
 
 Run 3 rounds via `AskUserQuestion`:
 1. **Profile & Philosophy**: usage type, work philosophy, communication style, language
-2. **Workflow**: git strategy, commit format, push safety, security (adapts to profile)
+2. **Workflow**: security (common for all profiles) + git/commit conventions for dev or git usage/file organization for PM/writing
 3. **Integration**: file headers, context management, output destination, installed plugins
 
 If a question is skipped or answered vaguely ("I don't know", "whatever"), re-ask once with: "This choice affects your CLAUDE.md quality. Here's what each option means: [brief impact of each]". If skipped a second time, apply the `(Recommended)` default.

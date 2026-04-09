@@ -32,7 +32,7 @@
       "name": "horka-setup",
       "source": "./plugins/horka-setup",
       "description": "Interactive CLAUDE.md generator with best practices",
-      "version": "2.0.0"
+      "version": "2.2.0"
     },
     {
       "name": "horka-analytics",

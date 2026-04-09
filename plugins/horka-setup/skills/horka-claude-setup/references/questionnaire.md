@@ -13,25 +13,32 @@ Use `AskUserQuestion` in 3 rounds. Adapt questions based on user profile.
 
 ## Round 2: Workflow
 
-Adapt based on profile from Round 1.
+**Routing** based on Round 1 profile (the **Common** block is always asked):
+- `Software development` → ask **Common** + **Dev table**
+- `Project management` or `Writing & content` → ask **Common** + **PM/Writing table**
+- `Mixed usage` → ask **Common** + **Dev table** + **PM/Writing table** in sequence
 
-### If software development:
+### Common (all profiles)
+
+| # | Question | Options |
+|---|----------|---------|
+| 1 | Security practices? | `Strict (Recommended)` - Never display secrets or sensitive data in terminal, use Read tool for sensitive files / `Standard` - Basic security awareness |
+
+### Dev table (software development, mixed)
 
 | # | Question | Options |
 |---|----------|---------|
 | 1 | Git branch strategy? | `Feature branches + PRs (Recommended)` - Separate branch per feature, merge via PR / `Trunk-based` - Commit directly to main branch / `Gitflow` - develop/release/hotfix branches |
 | 2 | Commit message format? | `Scoped: add/update/fix(scope) - desc (Recommended)` - Clear action + scope prefix / `Conventional: feat/fix(scope): desc` - Standard conventional commits / `Freeform` - No enforced format |
 | 3 | Push to remote safety? | `Always ask before pushing (Recommended)` - Claude asks "Ready to push?" every time / `Push freely` - No confirmation needed |
-| 4 | Security practices? | `Strict (Recommended)` - Never display secrets in terminal, use Read tool for sensitive files / `Standard` - Basic security awareness |
 
-### If project management / writing / mixed:
+### PM/Writing table (project management, writing, mixed)
 
 | # | Question | Options |
 |---|----------|---------|
 | 1 | Do you use git in your workflow? | `Yes, regularly` / `Sometimes` / `No` |
 | 2 | File organization? | `Structured` - Folders and naming conventions matter / `Flexible` - Whatever works |
 | 3 | Review workflow? | `Always review before finalizing` - Claude shows work before saving / `Trust and save` - Save directly |
-| 4 | Security practices? | `Strict (Recommended)` - Never display sensitive data in terminal / `Standard` - Basic awareness |
 
 If git = yes/sometimes, follow up with git-specific questions in this round or Round 3.
 
