@@ -22,7 +22,7 @@ Then `/plugin` → **Discover** tab to browse, or install plugins individually b
 |---|---|---|
 | **[horka-setup](#horka-setup)** | Personalized `CLAUDE.md` + architecture docs | 2 skills |
 | **[horka-memory](#horka-memory)** | Persistent project memory across sessions | 1 skill |
-| **[horka-code-review](#horka-code-review)** | Senior Tech Lead PR review | agent + skill + hook |
+| **[horka-review](#horka-review)** | Antagonist + Tech Lead code review | agent + 2 skills + hook |
 | **[horka-qa-testing](#horka-qa-testing)** | QA validation + business unit tests | agent + skill |
 | **[horka-dev-workflow](#horka-dev-workflow)** | Dev methodology + git safety | agent + 2 skills + hook |
 | **[horka-analytics](#horka-analytics)** | SaaS tracking / funnel expert | agent |
@@ -56,19 +56,22 @@ Each plugin works standalone.
 
 ---
 
-## horka-code-review
+## horka-review
 
-**Senior Tech Lead PR review.** Auto-activates on "review PR" or pre-push.
+**Complete code review toolkit.** Two-pass review: antagonist finds flaws first, then Tech Lead validates.
 
 ```bash
-claude plugin install horka-code-review
+claude plugin install horka-review
 ```
 
 | Component | Trigger | Does |
 |---|---|---|
+| `/horka-review:antagonist-reviewer` | "roast", "critique", "find flaws" | Ruthless flaw finder — zero compliments, outputs BLOCKED/WARNINGS/WASTE |
+| `/horka-review:horka-review-changes` | "review changes", "code review" | Senior Tech Lead structured review in isolated context |
 | `review-pr` agent | "review PR" / pre-push | Architecture + security + quality pass |
-| `/horka-code-review:horka-review-changes` | command | On-demand review of current changes in isolated context |
-| Push hook | auto | Blocks push to main/master, warns on feature branches |
+| Review guard hook | auto | Blocks push to default branch, enforces review order on feature branches |
+
+**Review order:** Antagonist (find flaws) → Fix → Tech Lead (validate) → Push/PR
 
 ---
 

@@ -1,0 +1,11 @@
+{
+  "name": "horka-review",
+  "version": "3.0.0",
+  "description": "Complete code review toolkit: Tech Lead PR review agent + Jean-Pierre antagonist reviewer. Catches quality, security, and architecture issues before they reach production.",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["code-review", "pull-request", "pr-review", "quality", "security", "tech-lead", "antagonist", "critique", "devil-advocate"],
+  "agents": ["./agents/review-pr.md"],
+  "skills": "./skills/"
+}
