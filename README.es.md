@@ -22,7 +22,7 @@ Luego `/plugin` → pestaña **Discover** para explorar, o instala plugins indiv
 |---|---|---|
 | **[horka-setup](#horka-setup)** | `CLAUDE.md` personalizado + docs de arquitectura | 2 skills |
 | **[horka-memory](#horka-memory)** | Memoria de proyecto persistente entre sesiones | 1 skill |
-| **[horka-code-review](#horka-code-review)** | Revisión de PR por un Senior Tech Lead | agent + skill + hook |
+| **[horka-review](#horka-review)** | Antagonist + Tech Lead code review | agent + 2 skills + hook |
 | **[horka-qa-testing](#horka-qa-testing)** | Validación QA + tests unitarios de negocio | agent + skill |
 | **[horka-dev-workflow](#horka-dev-workflow)** | Metodología dev + seguridad git | agent + 2 skills + hook |
 | **[horka-analytics](#horka-analytics)** | Experto en tracking / funnels SaaS | agent |
@@ -56,19 +56,22 @@ Cada plugin funciona de forma independiente.
 
 ---
 
-## horka-code-review
+## horka-review
 
-**Revisión de PR por un Senior Tech Lead.** Se activa automáticamente con "review PR" o antes de hacer push.
+**Toolkit completo de code review.** Doble pasada: el antagonist encuentra fallos, luego el Tech Lead valida.
 
 ```bash
-claude plugin install horka-code-review
+claude plugin install horka-review
 ```
 
-| Componente | Activación | Función |
+| Componente | Activacion | Funcion |
 |---|---|---|
+| `/horka-review:antagonist-reviewer` | "roast", "critique", "find flaws" | Cazador de fallos implacable — cero cumplidos, output BLOCKED/WARNINGS/WASTE |
+| `/horka-review:horka-review-changes` | "review changes", "code review" | Revision Tech Lead estructurada en contexto aislado |
 | Agente `review-pr` | "review PR" / pre-push | Pasada completa: arquitectura + seguridad + calidad |
-| `/horka-code-review:horka-review-changes` | comando | Revisión bajo demanda de cambios actuales en contexto aislado |
-| Hook push | auto | Bloquea push a main/master, avisa en feature branches |
+| Hook review guard | auto | Bloquea push a rama por defecto, impone orden de review en feature branches |
+
+**Orden de review:** Antagonist (encontrar fallos) → Fix → Tech Lead (validar) → Push/PR
 
 ---
 

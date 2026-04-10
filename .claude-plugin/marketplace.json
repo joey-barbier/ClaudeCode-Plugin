@@ -5,10 +5,10 @@
   },
   "plugins": [
     {
-      "name": "horka-code-review",
-      "source": "./plugins/horka-code-review",
-      "description": "Senior Tech Lead PR review agent with push guard hook",
-      "version": "2.0.0"
+      "name": "horka-review",
+      "source": "./plugins/horka-review",
+      "description": "Complete code review toolkit: antagonist reviewer + Tech Lead PR review + unified review guard",
+      "version": "3.0.0"
     },
     {
       "name": "horka-qa-testing",

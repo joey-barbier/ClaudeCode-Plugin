@@ -22,7 +22,7 @@ Puis `/plugin` → onglet **Discover** pour parcourir, ou installe les plugins i
 |---|---|---|
 | **[horka-setup](#horka-setup)** | `CLAUDE.md` personnalisé + docs d'architecture | 2 skills |
 | **[horka-memory](#horka-memory)** | Mémoire projet persistante entre sessions | 1 skill |
-| **[horka-code-review](#horka-code-review)** | Revue PR par un Senior Tech Lead | agent + skill + hook |
+| **[horka-review](#horka-review)** | Antagonist + Tech Lead code review | agent + 2 skills + hook |
 | **[horka-qa-testing](#horka-qa-testing)** | Validation QA + tests unitaires métier | agent + skill |
 | **[horka-dev-workflow](#horka-dev-workflow)** | Méthodologie dev + sécurité git | agent + 2 skills + hook |
 | **[horka-analytics](#horka-analytics)** | Expert tracking / funnels SaaS | agent |
@@ -56,19 +56,22 @@ Chaque plugin fonctionne indépendamment.
 
 ---
 
-## horka-code-review
+## horka-review
 
-**Revue PR par un Senior Tech Lead.** S'active automatiquement sur "review PR" ou avant push.
+**Toolkit complet de code review.** Double passe : l'antagonist trouve les failles, puis le Tech Lead valide.
 
 ```bash
-claude plugin install horka-code-review
+claude plugin install horka-review
 ```
 
 | Composant | Déclenchement | Rôle |
 |---|---|---|
-| Agent `review-pr` | "review PR" / pré-push | Passe complète architecture + sécurité + qualité |
-| `/horka-code-review:horka-review-changes` | commande | Revue à la demande des changements en cours dans un contexte isolé |
-| Hook push | auto | Bloque les push vers main/master, alerte sur les feature branches |
+| `/horka-review:antagonist-reviewer` | "roast", "critique", "find flaws" | Chasseur de failles impitoyable — zero compliment, output BLOCKED/WARNINGS/WASTE |
+| `/horka-review:horka-review-changes` | "review changes", "code review" | Revue Tech Lead structuree dans un contexte isole |
+| Agent `review-pr` | "review PR" / pre-push | Passe complete architecture + securite + qualite |
+| Hook review guard | auto | Bloque push vers branche par defaut, impose l'ordre de review sur feature branches |
+
+**Ordre de review :** Antagonist (trouver les failles) → Fix → Tech Lead (valider) → Push/PR
 
 ---
 

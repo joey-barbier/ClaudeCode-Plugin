@@ -22,7 +22,7 @@ Dann `/plugin` → **Discover** Tab zum Durchsuchen, oder installiere Plugins ei
 |---|---|---|
 | **[horka-setup](#horka-setup)** | Personalisierte `CLAUDE.md` + Architektur-Docs | 2 Skills |
 | **[horka-memory](#horka-memory)** | Persistente Projekt-Memory zwischen Sitzungen | 1 Skill |
-| **[horka-code-review](#horka-code-review)** | PR-Review von einem Senior Tech Lead | Agent + Skill + Hook |
+| **[horka-review](#horka-review)** | Antagonist + Tech Lead Code Review | Agent + 2 Skills + Hook |
 | **[horka-qa-testing](#horka-qa-testing)** | QA-Validierung + Business Unit Tests | Agent + Skill |
 | **[horka-dev-workflow](#horka-dev-workflow)** | Dev-Methodik + Git-Sicherheit | Agent + 2 Skills + Hook |
 | **[horka-analytics](#horka-analytics)** | SaaS Tracking / Funnel Experte | Agent |
@@ -56,19 +56,22 @@ Jedes Plugin funktioniert unabhängig.
 
 ---
 
-## horka-code-review
+## horka-review
 
-**PR-Review von einem Senior Tech Lead.** Aktiviert sich automatisch bei "review PR" oder vor dem Push.
+**Komplettes Code-Review-Toolkit.** Zwei Durchgange: der Antagonist findet Fehler, dann validiert der Tech Lead.
 
 ```bash
-claude plugin install horka-code-review
+claude plugin install horka-review
 ```
 
-| Komponente | Auslöser | Funktion |
+| Komponente | Ausloser | Funktion |
 |---|---|---|
-| Agent `review-pr` | "review PR" / Pre-Push | Vollständige Durchsicht: Architektur + Sicherheit + Qualität |
-| `/horka-code-review:horka-review-changes` | Befehl | On-Demand-Review aktueller Änderungen in isoliertem Kontext |
-| Push-Hook | auto | Blockiert Push zu main/master, warnt bei Feature Branches |
+| `/horka-review:antagonist-reviewer` | "roast", "critique", "find flaws" | Gnadenloser Fehlerfinder — null Komplimente, Output BLOCKED/WARNINGS/WASTE |
+| `/horka-review:horka-review-changes` | "review changes", "code review" | Strukturiertes Tech-Lead-Review in isoliertem Kontext |
+| Agent `review-pr` | "review PR" / Pre-Push | Vollstandige Durchsicht: Architektur + Sicherheit + Qualitat |
+| Review-Guard-Hook | auto | Blockiert Push zum Default-Branch, erzwingt Review-Reihenfolge auf Feature Branches |
+
+**Review-Reihenfolge:** Antagonist (Fehler finden) → Fix → Tech Lead (validieren) → Push/PR
 
 ---
 
