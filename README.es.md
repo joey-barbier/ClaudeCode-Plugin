@@ -20,6 +20,7 @@ Luego `/plugin` → pestaña **Discover** para explorar, o instala plugins indiv
 
 | Plugin | Función | Componentes |
 |---|---|---|
+| **[horka-coach-ia](#horka-coach-ia)** | Coach IA: diagnostica tu necesidad, da un veredicto, redirige al plugin correcto | skill |
 | **[horka-setup](#horka-setup)** | `CLAUDE.md` personalizado + docs de arquitectura | 2 skills |
 | **[horka-memory](#horka-memory)** | Memoria de proyecto persistente entre sesiones | 1 skill |
 | **[horka-review](#horka-review)** | Antagonist + Tech Lead code review | agent + 2 skills + hook |
@@ -32,6 +33,22 @@ Luego `/plugin` → pestaña **Discover** para explorar, o instala plugins indiv
 ---
 
 ## Primeros pasos
+
+### 0. No sabes por donde empezar? — `horka-coach-ia`
+
+```bash
+claude plugin install horka-coach-ia
+```
+
+Coach IA pragmatico que te dice la verdad: necesitas IA para esto, o no?
+
+- Describe tu problema → veredicto claro: **"no necesitas IA"** / **"si, asi es como"** / **"mala idea, por esto"**
+- Te ayuda a distinguir agente vs skill vs script vs nada
+- Redirige al plugin HORKA correcto segun TU necesidad especifica
+- Para devs, POs, tech leads y managers
+- Tambien funciona en Claude Desktop — [ver instrucciones](plugins/horka-coach-ia/README.md)
+
+Activadores: `coach`, `coach ia`, `aide-moi avec l'IA`, `par ou commencer`
 
 ### 1. Configurar Claude — `horka-setup`
 

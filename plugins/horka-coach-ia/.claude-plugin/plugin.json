@@ -1,0 +1,10 @@
+{
+  "name": "horka-coach-ia",
+  "version": "1.0.0",
+  "description": "Pragmatic AI coach: diagnoses your real need, gives a clear verdict (no AI needed / yes here's how / bad idea here's why), and redirects to the right HORKA plugin",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["coach", "ia", "ai", "guide", "setup", "agent", "skill", "decision", "onboarding", "best-practices"],
+  "skills": "./skills/"
+}
