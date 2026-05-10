@@ -21,6 +21,7 @@ Puis `/plugin` → onglet **Discover** pour parcourir, ou installe les plugins i
 | Plugin | Rôle | Composants |
 |---|---|---|
 | **[horka-coach-ia](#horka-coach-ia)** | Coach IA : diagnostique ton besoin, donne un verdict, redirige vers le bon plugin | skill |
+| **[horka-mentor](#horka-mentor)** | IA pedagogique pour devs juniors : evalue, enseigne, code pas-a-pas, suit la progression | 2 skills |
 | **[horka-setup](#horka-setup)** | `CLAUDE.md` personnalisé + docs d'architecture | 2 skills |
 | **[horka-memory](#horka-memory)** | Mémoire projet persistante entre sessions | 1 skill |
 | **[horka-review](#horka-review)** | Antagonist + Tech Lead code review | agent + 2 skills + hook |
@@ -70,6 +71,24 @@ Restaure automatiquement le contexte projet au début de session. `/horka-memory
 ### 3. Choisis les outils ci-dessous
 
 Chaque plugin fonctionne indépendamment.
+
+---
+
+## horka-mentor
+
+**IA pedagogique pour developpeurs juniors.** T'accompagne pendant que tu codes au lieu de coder a ta place. Necessite le serveur MCP [Context7](https://github.com/upstash/context7).
+
+```bash
+claude plugin install horka-mentor
+```
+
+| Composant | Declenchement | Role |
+|---|---|---|
+| `/horka-mentor:horka-mentor` | "mentor", "mentor learn", "mentor build" | Evalue ta comprehension, enseigne les concepts, code pas-a-pas. Deux modes : learn (Socratique complet) et build (code ensemble — defaut) |
+| `/horka-mentor:horka-mentor-quiz` | "mentor quiz", "teste-moi", "revision" | Quiz a repetition espacee sur les sujets couverts (J+1, J+3, J+7, J+14, J+30) |
+| Mode proactif | auto (si active) | Detecte les concepts fondamentaux inconnus dans tes demandes — max 2 par session, skippable |
+
+**Points cles :** suivi par topic (unknown/learning/understood/confident), anti-gaming (questions ouvertes uniquement), mode directif pour les sujets securite, traduction cross-stack pour les devs qui apprennent un nouveau stack.
 
 ---
 
