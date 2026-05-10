@@ -21,6 +21,7 @@ Then `/plugin` → **Discover** tab to browse, or install plugins individually b
 | Plugin | What it does | Components |
 |---|---|---|
 | **[horka-coach-ia](#horka-coach-ia)** | AI coach: diagnoses your need, gives a verdict, redirects to the right plugin | skill |
+| **[horka-mentor](#horka-mentor)** | Teaching AI for junior devs: assesses, teaches, builds step-by-step, tracks progress | 2 skills |
 | **[horka-setup](#horka-setup)** | Personalized `CLAUDE.md` + architecture docs | 2 skills |
 | **[horka-memory](#horka-memory)** | Persistent project memory across sessions | 1 skill |
 | **[horka-review](#horka-review)** | Antagonist + Tech Lead code review | agent + 2 skills + hook |
@@ -70,6 +71,24 @@ Auto-restores project context at session start. `/horka-memory:horka-memory-rest
 ### 3. Pick tools below
 
 Each plugin works standalone.
+
+---
+
+## horka-mentor
+
+**Teaching AI for junior developers.** Accompanies you while you code instead of coding for you. Requires [Context7](https://github.com/upstash/context7) MCP server.
+
+```bash
+claude plugin install horka-mentor
+```
+
+| Component | Trigger | Does |
+|---|---|---|
+| `/horka-mentor:horka-mentor` | "mentor", "mentor learn", "mentor build" | Assesses understanding, teaches concepts, builds step-by-step. Two modes: learn (full Socratic) and build (code together — default) |
+| `/horka-mentor:horka-mentor-quiz` | "mentor quiz", "teste-moi", "revision" | Spaced repetition quiz on covered topics (D+1, D+3, D+7, D+14, D+30) |
+| Proactive mode | auto (when enabled) | Detects unknown foundational concepts in your requests — max 2 per session, skippable |
+
+**Key features:** per-topic skill tracking (unknown/learning/understood/confident), anti-gaming (open questions only), security-critical topics get directive mode, cross-stack translation for devs learning a new stack.
 
 ---
 

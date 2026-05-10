@@ -1,0 +1,10 @@
+{
+  "name": "horka-mentor",
+  "version": "1.0.0",
+  "description": "Teaching AI mentor for junior developers. Accompanies devs during coding: assesses understanding, teaches concepts before coding, builds step-by-step, tracks skill progression per topic, quizzes with spaced repetition. Requires Context7 MCP server.",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["mentor", "teaching", "junior", "learning", "pedagogy", "quiz", "onboarding", "skills", "progression", "context7"],
+  "skills": "./skills/"
+}
