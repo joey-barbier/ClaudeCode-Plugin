@@ -22,7 +22,7 @@ Luego `/plugin` → pestaña **Discover** para explorar, o instala plugins indiv
 |---|---|---|
 | **[horka-coach-ia](#horka-coach-ia)** | Coach IA: diagnostica tu necesidad, da un veredicto, redirige al plugin correcto | skill |
 | **[horka-mentor](#horka-mentor)** | IA pedagogica para devs juniors: evalua, ensena, construye paso a paso, sigue el progreso | 2 skills |
-| **[horka-setup](#horka-setup)** | `CLAUDE.md` personalizado + docs de arquitectura | 2 skills |
+| **[horka-setup](#horka-setup)** | `CLAUDE.md` personalizado + docs de arquitectura + extractor de design system | 3 skills |
 | **[horka-memory](#horka-memory)** | Memoria de proyecto persistente entre sesiones | 1 skill |
 | **[horka-review](#horka-review)** | Antagonist + Tech Lead code review | agent + 2 skills + hook |
 | **[horka-qa-testing](#horka-qa-testing)** | Validación QA + tests unitarios de negocio | agent + skill |
@@ -59,6 +59,7 @@ claude plugin install horka-setup
 
 - `/horka-setup:horka-claude-setup` — cuestionario interactivo → `CLAUDE.md` personalizado
 - `/horka-setup:horka-init-docs` — genera docs de arquitectura desde tu código (ARCHITECTURE, CONVENTIONS, WORKFLOW_PATTERNS...)
+- `/horka-setup:horka-ds-extractor` — extrae el design system de un proyecto frontend en Markdown (tokens, componentes, layout, guía de estilo)
 
 ### 2. Dale memoria a Claude — `horka-memory`
 
