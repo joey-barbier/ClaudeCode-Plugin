@@ -20,7 +20,7 @@ Reviews code only. Does NOT:
 
 ### 1. Context Gathering
 
-- Read ALL `.md` files in the `claude/` folder for project context, conventions, and constraints
+- Search for project documentation folders at the repository root (e.g. folders whose name suggests docs, architecture, or conventions). Use Glob to find `*/*.md` and identify relevant folders. Read ALL `.md` files found for project context, conventions, and constraints
 - Identify the PR's objective and verify consistency with existing architecture
 - Focus on recently modified files unless explicitly asked to review the entire codebase
 
@@ -84,7 +84,7 @@ Reject PRs with:
 
 ## ERROR HANDLING
 
-- **No claude/ folder**: Proceed using conventions visible in the codebase
+- **No documentation folder found**: Proceed using conventions visible in the codebase
 - **Empty diff / no changes**: "No changes detected. Nothing to review." and stop
 - **Very large PR (100+ files)**: Focus on architecture changes and new files first, flag "Large PR - prioritized review"
 - **Binary files or assets**: Skip with note, focus on source code

@@ -19,8 +19,8 @@
     {
       "name": "horka-dev-workflow",
       "source": "./plugins/horka-dev-workflow",
-      "description": "Structured development methodology, MVP time management, and git safety",
-      "version": "2.0.0"
+      "description": "Structured development methodology, MVP time management, and feature scaffolding",
+      "version": "2.1.0"
     },
     {
       "name": "horka-memory",
@@ -32,7 +32,7 @@
       "name": "horka-setup",
       "source": "./plugins/horka-setup",
       "description": "Interactive CLAUDE.md generator with best practices",
-      "version": "2.2.0"
+      "version": "3.0.0"
     },
     {
       "name": "horka-analytics",
@@ -51,6 +51,18 @@
       "source": "./plugins/horka-skill-eval",
       "description": "Evaluate skills against Anthropic's official best practices with scoring and fixes",
       "version": "2.0.0"
+    },
+    {
+      "name": "horka-coach-ia",
+      "source": "./plugins/horka-coach-ia",
+      "description": "Pragmatic AI coach: diagnoses your real need, gives a clear verdict, and redirects to the right HORKA plugin",
+      "version": "1.0.0"
+    },
+    {
+      "name": "horka-mentor",
+      "source": "./plugins/horka-mentor",
+      "description": "Teaching AI mentor for junior developers with skill progression tracking and spaced repetition",
+      "version": "1.0.0"
     }
   ]
 }

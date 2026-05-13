@@ -14,6 +14,6 @@ Launch the `review-pr` agent (subagent_type: `pr-tech-lead-reviewer`) with the f
 > 3. If uncommitted changes exist, review `git diff` + `git diff --cached`
 > 4. If no uncommitted changes but branch has commits, review `git diff main...HEAD`
 > 5. If nothing found, report "No changes detected." and stop
-> 6. Read `claude/*.md` and `docs-architecture/*.md` for project context before reviewing
+> 6. Search for documentation folders at the repo root (any folder whose name suggests docs, architecture, or conventions). Read all `.md` files found for project context before reviewing
 
 Do NOT gather the diff yourself. The agent handles everything in its own isolated context.
