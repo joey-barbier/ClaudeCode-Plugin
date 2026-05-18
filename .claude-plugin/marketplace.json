@@ -63,6 +63,12 @@
       "source": "./plugins/horka-mentor",
       "description": "Teaching AI mentor for junior developers with skill progression tracking and spaced repetition",
       "version": "1.0.0"
+    },
+    {
+      "name": "horka-agent-forge",
+      "source": "./plugins/horka-agent-forge",
+      "description": "Enforced methodology for creating production-grade AI agent skills. Mandates skill-creator for drafting and skill-evaluate for optimization, with A/B testing at each gate. No shortcuts, no bypass.",
+      "version": "1.0.0"
     }
   ]
 }

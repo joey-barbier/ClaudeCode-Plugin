@@ -30,6 +30,7 @@ Then `/plugin` → **Discover** tab to browse, or install plugins individually b
 | **[horka-analytics](#horka-analytics)** | SaaS tracking / funnel expert | agent |
 | **[horka-openclaw](#horka-openclaw)** | Long AI session management | 2 skills + hook |
 | **[horka-skill-eval](#horka-skill-eval)** | Skill quality auditor | skill |
+| **[horka-agent-forge](#horka-agent-forge)** | Production-grade skill factory with enforced quality gates | skill |
 
 ---
 
@@ -183,6 +184,24 @@ claude plugin install horka-skill-eval
 | Component | Trigger | Does |
 |---|---|---|
 | `/horka-skill-eval:horka-skill-evaluate` | command | Scores 5 categories /100, proposes fixes, re-evaluates before/after |
+
+---
+
+## horka-agent-forge
+
+**Production-grade skill factory** with enforced quality gates. Mandates skill-creator + skill-evaluate — no bypass.
+
+```bash
+claude plugin install horka-agent-forge
+```
+
+| Component | Trigger | Does |
+|---|---|---|
+| `/horka-agent-forge:horka-agent-forge` | "create agent", "new skill", "forge skill", "build agent" | Full pipeline: draft (skill-creator) + A/B test + optimize (skill-evaluate) + 2nd A/B + validation |
+
+**Prerequisites:** `skill-creator:skill-creator` and `horka-skill-eval:horka-skill-evaluate` must be installed. Hard gate — refuses to run without them.
+
+**Flow:** Draft + A/B (>70% assertions) + Evaluate (>=80/100) + A/B retest (no regression) + Final report.
 
 ---
 
