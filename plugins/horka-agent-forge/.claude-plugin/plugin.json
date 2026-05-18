@@ -1,0 +1,9 @@
+{
+  "name": "horka-agent-forge",
+  "version": "1.0.0",
+  "description": "Enforced methodology for creating production-grade AI agent skills. Mandates skill-creator for drafting and skill-evaluate for optimization, with A/B testing at each gate. No shortcuts, no bypass.",
+  "author": "Orka",
+  "skills": [
+    "skills/horka-agent-forge"
+  ]
+}

@@ -30,6 +30,7 @@ Dann `/plugin` → **Discover** Tab zum Durchsuchen, oder installiere Plugins ei
 | **[horka-analytics](#horka-analytics)** | SaaS Tracking / Funnel Experte | Agent |
 | **[horka-openclaw](#horka-openclaw)** | Lange KI-Sitzungsverwaltung | 2 Skills + Hook |
 | **[horka-skill-eval](#horka-skill-eval)** | Skill-Qualitätsprüfer | Skill |
+| **[horka-agent-forge](#horka-agent-forge)** | Skill-Fabrik mit verpflichtenden Qualitätsgates | Skill |
 
 ---
 
