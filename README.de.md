@@ -31,6 +31,7 @@ Dann `/plugin` → **Discover** Tab zum Durchsuchen, oder installiere Plugins ei
 | **[horka-openclaw](#horka-openclaw)** | Lange KI-Sitzungsverwaltung | 2 Skills + Hook |
 | **[horka-skill-eval](#horka-skill-eval)** | Skill-Qualitätsprüfer | Skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Skill-Fabrik mit verpflichtenden Qualitätsgates | Skill |
+| **[horka-project-index](#horka-project-index)** | Globaler Projektindex: löst generische Befehle zum richtigen Projekt/Workspace auf | Skill + Skript |
 
 ---
 

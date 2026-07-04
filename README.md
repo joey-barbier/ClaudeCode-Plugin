@@ -31,6 +31,7 @@ Then `/plugin` → **Discover** tab to browse, or install plugins individually b
 | **[horka-openclaw](#horka-openclaw)** | Long AI session management | 2 skills + hook |
 | **[horka-skill-eval](#horka-skill-eval)** | Skill quality auditor | skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Production-grade skill factory with enforced quality gates | skill |
+| **[horka-project-index](#horka-project-index)** | Global project index: resolves generic commands to the right project/workspace | skill + script |
 
 ---
 
@@ -202,6 +203,24 @@ claude plugin install horka-agent-forge
 **Prerequisites:** `skill-creator:skill-creator` and `horka-skill-eval:horka-skill-evaluate` must be installed. Hard gate — refuses to run without them.
 
 **Flow:** Draft + A/B (>70% assertions) + Evaluate (>=80/100) + A/B retest (no regression) + Final report.
+
+---
+
+## horka-project-index
+
+**Global index of your Claude Code projects** for the multi-project view (Agent View / "FleetView"). Resolves a generic command to the right folder — never by guessing.
+
+```bash
+claude plugin install horka-project-index
+```
+
+| Component | Trigger | Does |
+|---|---|---|
+| `horka-project-index` skill | "list my projects", "which project", "new project", "index projects", "do X" without naming a project | Resolves name/alias to path, finds which folder owns a skill/command, detects parent workspaces, creates + indexes new projects |
+
+**How it works:** builds `projects-index.json` from the real `cwd` recorded in your Claude transcripts (never decodes ambiguous folder names like `dev-cc` vs `dev/cc`). Detects **workspaces** — parent folders with a `.claude/` — so a cross-cutting command like "write the changelog" lands on the folder that *owns* the skill/command, not a random subproject. Ambiguous target → it asks, never guesses.
+
+**Requirements:** Python ≥ 3.7 and git on PATH. Honors `CLAUDE_CONFIG_DIR`. Works on macOS / Linux / WSL / Windows.
 
 ---
 

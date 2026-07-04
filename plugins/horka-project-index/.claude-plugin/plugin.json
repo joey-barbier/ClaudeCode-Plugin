@@ -1,0 +1,10 @@
+{
+  "name": "horka-project-index",
+  "version": "1.0.0",
+  "description": "Global index of your Claude Code projects. Disambiguates generic commands (\"write the changelog\") by resolving a name/alias to a path, knowing which folder owns a skill/command, detecting parent workspaces (monorepos), and creating + indexing new projects in the right place.",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["project", "index", "workspace", "monorepo", "multi-project", "agent-view", "fleet", "changelog", "disambiguation", "catalog"],
+  "skills": "./skills/"
+}
