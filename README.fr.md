@@ -31,6 +31,7 @@ Puis `/plugin` → onglet **Discover** pour parcourir, ou installe les plugins i
 | **[horka-openclaw](#horka-openclaw)** | Gestion des longues sessions IA | 2 skills + hook |
 | **[horka-skill-eval](#horka-skill-eval)** | Auditeur qualité de skills | skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Usine à skills avec gates de qualité obligatoires | skill |
+| **[horka-project-index](#horka-project-index)** | Index global des projets : résout les commandes génériques vers le bon projet/workspace | skill + script |
 
 ---
 

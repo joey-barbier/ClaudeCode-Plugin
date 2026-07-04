@@ -69,6 +69,12 @@
       "source": "./plugins/horka-agent-forge",
       "description": "Enforced methodology for creating production-grade AI agent skills. Mandates skill-creator for drafting and skill-evaluate for optimization, with A/B testing at each gate. No shortcuts, no bypass.",
       "version": "1.0.1"
+    },
+    {
+      "name": "horka-project-index",
+      "source": "./plugins/horka-project-index",
+      "description": "Global index of your Claude Code projects. Disambiguates generic commands (\"write the changelog\") by resolving a name/alias to a path, knowing which folder owns a skill/command, detecting parent workspaces (monorepos), and creating + indexing new projects in the right place.",
+      "version": "1.0.0"
     }
   ]
 }
