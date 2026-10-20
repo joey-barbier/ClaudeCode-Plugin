@@ -8,7 +8,7 @@
       "name": "horka-review",
       "source": "./plugins/horka-review",
       "description": "Complete code review toolkit: antagonist reviewer + Tech Lead PR review + unified review guard",
-      "version": "3.0.0"
+      "version": "3.1.0"
     },
     {
       "name": "horka-qa-testing",

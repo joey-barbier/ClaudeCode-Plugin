@@ -27,6 +27,18 @@ if [ -z "$DEFAULT_BRANCH" ]; then
 fi
 [ -z "$DEFAULT_BRANCH" ] && DEFAULT_BRANCH="main"
 
+# Allowlist (outside any repo, so a repo can't allow itself): one entry per line,
+# matched against the origin repo name, e.g. "libtracker-qalead". Lines starting
+# with # are ignored. Those repos may push to their default branch.
+ALLOW_FILE="${HORKA_REVIEW_ALLOW_FILE:-$HOME/.claude/allow-push-default-branch}"
+if [ -f "$ALLOW_FILE" ]; then
+  ORIGIN=$(git remote get-url origin 2>/dev/null)
+  REPO_NAME=$(basename "${ORIGIN%.git}" | tr '[:upper:]' '[:lower:]')
+  if [ -n "$REPO_NAME" ] && grep -v '^[[:space:]]*#' "$ALLOW_FILE" | tr '[:upper:]' '[:lower:]' | sed 's/[[:space:]]//g' | grep -qxF -- "$REPO_NAME"; then
+    exit 0
+  fi
+fi
+
 # Block push to default branch
 if echo "$COMMAND" | grep -qE 'git\s+push'; then
   if [ "$BRANCH" = "$DEFAULT_BRANCH" ]; then
