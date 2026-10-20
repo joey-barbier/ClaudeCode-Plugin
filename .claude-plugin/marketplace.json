@@ -7,7 +7,7 @@
     {
       "name": "horka-review",
       "source": "./plugins/horka-review",
-      "description": "Complete code review toolkit: antagonist reviewer + Tech Lead PR review + unified review guard",
+      "description": "Complete code review toolkit: Tech Lead PR review agent + antagonist reviewer + review guard hook (blocks push to the default branch, with a per-machine allowlist). Catches quality, security, and architecture issues before they reach production.",
       "version": "3.1.0"
     },
     {
