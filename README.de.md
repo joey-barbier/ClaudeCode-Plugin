@@ -108,7 +108,7 @@ claude plugin install horka-review
 | `/horka-review:antagonist-reviewer` | "roast", "critique", "find flaws" | Gnadenloser Fehlerfinder — null Komplimente, Output BLOCKED/WARNINGS/WASTE |
 | `/horka-review:horka-review-changes` | "review changes", "code review" | Strukturiertes Tech-Lead-Review in isoliertem Kontext |
 | Agent `review-pr` | "review PR" / Pre-Push | Vollstandige Durchsicht: Architektur + Sicherheit + Qualitat |
-| Review-Guard-Hook | auto | Blockiert Push zum Default-Branch, erzwingt Review-Reihenfolge auf Feature Branches |
+| Review-Guard-Hook | auto | Blockiert Push zum Default-Branch (außer in `~/.claude/allow-push-default-branch` gelisteten Repos), erzwingt Review-Reihenfolge auf Feature Branches |
 
 **Review-Reihenfolge:** Antagonist (Fehler finden) → Fix → Tech Lead (validieren) → Push/PR
 

@@ -18,6 +18,20 @@ Fires on `git push` and `gh pr create`:
 - **Push to default branch** → blocked (create a feature branch instead)
 - **Push/PR on feature branch** → reminds the review order
 
+#### Allowing a repo to push to its default branch
+
+Some repos are meant to be pushed directly (e.g. a repo an autonomous agent owns).
+List them, one repo name per line, in `~/.claude/allow-push-default-branch`
+(outside any repo, so a project can't allow itself; override the path with
+`HORKA_REVIEW_ALLOW_FILE`):
+
+```
+# repo name from the origin URL, case-insensitive
+libtracker-qalead
+```
+
+The match is exact on the origin repo name. Every other repo stays blocked.
+
 ### Review order
 
 ```

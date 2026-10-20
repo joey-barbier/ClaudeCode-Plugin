@@ -108,7 +108,7 @@ claude plugin install horka-review
 | `/horka-review:antagonist-reviewer` | "roast", "critique", "find flaws" | Chasseur de failles impitoyable — zero compliment, output BLOCKED/WARNINGS/WASTE |
 | `/horka-review:horka-review-changes` | "review changes", "code review" | Revue Tech Lead structuree dans un contexte isole |
 | Agent `review-pr` | "review PR" / pre-push | Passe complete architecture + securite + qualite |
-| Hook review guard | auto | Bloque push vers branche par defaut, impose l'ordre de review sur feature branches |
+| Hook review guard | auto | Bloque push vers branche par defaut (sauf dépôts listés dans `~/.claude/allow-push-default-branch`), impose l'ordre de review sur feature branches |
 
 **Ordre de review :** Antagonist (trouver les failles) → Fix → Tech Lead (valider) → Push/PR
 
