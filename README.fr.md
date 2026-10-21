@@ -199,9 +199,9 @@ claude plugin install horka-research-plan
 
 | Composant | Déclencheur | Rôle |
 |---|---|---|
-| `/horka-research-plan:horka-research-plan` | « check complet et un plan », « plan sourcé », « comment se faire découvrir », « go-to-market » | État réel en trois états (prod / develop / PR ouvertes), puis vagues courtes : personas + demande réelle d'abord, chercheurs par type d'action, dédoublonnage par code, validateurs qui ouvrent chaque URL, critique antagoniste, faisabilité + complétude, une page HTML |
+| `/horka-research-plan:horka-research-plan` | « check complet et un plan », « plan sourcé », « comment se faire découvrir », « go-to-market » | État réel en trois états (prod / develop / PR ouvertes), puis vagues courtes : personas + demande réelle d'abord, chercheurs par type d'action, dédoublonnage par code, validateurs qui ouvrent chaque URL, critique antagoniste, faisabilité + complétude, une page HTML, puis une rétrospective par un agent séparé qui réécrit un fichier de leçons relu au run suivant |
 
-**Trois règles :** aucun chiffre de mémoire (URL, date, chip de statut sur chaque nombre) · aucun agent ne note son propre travail · rien n'est créé ni planifié (besoins produit et tâches dans un onglet « à transmettre »). Fournit les briefs par rôle, les schémas JSON, les squelettes `Workflow` et la structure de page dans `references/`. Modèle et effort par rôle : modèle le plus capable pour orchestration / critique / personas, expert pour les chercheurs, généraliste pour les validateurs.
+**Trois règles :** aucun chiffre de mémoire (URL, date, chip de statut sur chaque nombre) · aucun agent ne note son propre travail · rien n'est créé ni planifié (besoins produit et tâches dans un onglet « à transmettre »). Fournit les briefs par rôle, les schémas JSON, les squelettes `Workflow`, la structure de page et la méthode de rétrospective (scorecard, fichier de leçons, une expérience par run) dans `references/`. Modèle et effort par rôle : modèle le plus capable pour orchestration / critique / personas, expert pour les chercheurs, généraliste pour les validateurs.
 
 ---
 

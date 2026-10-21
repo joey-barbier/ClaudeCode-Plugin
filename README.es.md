@@ -199,9 +199,9 @@ claude plugin install horka-research-plan
 
 | Componente | Disparador | Hace |
 |---|---|---|
-| `/horka-research-plan:horka-research-plan` | "full check and a plan", "plan con fuentes", "cómo nos descubren", "go-to-market" | Estado real en tres niveles (prod / develop / PR abiertas), luego oleadas cortas: personas + sondeo de demanda real primero, investigadores por tipo de acción, deduplicación en código, validadores que abren cada URL, crítico antagonista, factibilidad + completitud, una página HTML |
+| `/horka-research-plan:horka-research-plan` | "full check and a plan", "plan con fuentes", "cómo nos descubren", "go-to-market" | Estado real en tres niveles (prod / develop / PR abiertas), luego oleadas cortas: personas + sondeo de demanda real primero, investigadores por tipo de acción, deduplicación en código, validadores que abren cada URL, crítico antagonista, factibilidad + completitud, una página HTML, y después una retrospectiva por un agente separado que reescribe un archivo de lecciones leído en la siguiente ejecución |
 
-**Tres reglas:** ningún número de memoria (URL, fecha y chip de estado en cada cifra) · ningún agente califica su propio trabajo · nada se crea ni se programa (necesidades de producto y tareas van a una pestaña « para transmitir »). Incluye briefs por rol, esquemas JSON, esqueletos `Workflow` y la estructura de la página en `references/`.
+**Tres reglas:** ningún número de memoria (URL, fecha y chip de estado en cada cifra) · ningún agente califica su propio trabajo · nada se crea ni se programa (necesidades de producto y tareas van a una pestaña « para transmitir »). Incluye briefs por rol, esquemas JSON, esqueletos `Workflow`, la estructura de la página y el método de retrospectiva (scorecard, archivo de lecciones, un experimento por ejecución) en `references/`.
 
 ---
 
