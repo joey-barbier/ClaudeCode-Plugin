@@ -7,6 +7,7 @@ description: >
   personas and a real-demand probe FIRST, researchers briefed per action type, code-level dedup,
   independent validators that open every URL, an antagonist critic, then feasibility and completeness.
   Every number carries a source URL, a date and a status chip; nothing is created or scheduled.
+  Ends with a retrospective that rewrites a lessons file, read again at the start of the next run.
   Invoke when the user asks for "a full check and a plan", "how do we get discovered", "which channel",
   "a go-to-market", "a sourced plan", "un check complet et un plan", "plan sourcé", "fais-moi un plan
   chiffré", or any strategy / marketing / product question that needs evidence rather than opinion.
@@ -25,6 +26,7 @@ Three rules that never bend:
 
 ## Phase 0 — Framing and reality check (you, no agent, ~15 min)
 
+0. **Read the lessons file** if it exists (`research-plan-lessons.md`, locations in `references/retrospective.md`). Apply its "Rules that held" to the common brief and run its "Next experiment". This is how the skill improves: the previous run wrote it for you.
 1. Restate the question in one sentence. List constraints from CLAUDE.md, project memory and neighbouring work (do not duplicate another thread's actions: name them and link to them instead).
 2. **Reality check in three states.** People confuse "what is shipped" with "what is merged". Build a table with, per topic: what a visitor sees in prod today / what is merged in `develop` (or the integration branch) but not deployed / what is still in an open PR.
    - Open the live site, sitemap, robots, `llms.txt`, pricing, changelog.
@@ -75,10 +77,21 @@ Expectations borrowed from bigger players are presented as orders of magnitude w
 - [ ] Nothing created or scheduled.
 - [ ] Rendering checked on desktop and phone; links point to the right domain.
 - [ ] Summary in the thread under 80 words: link, verdict, what waits on the user.
-- [ ] **Orchestration scorecard** saved to project memory: duration per wave, agents and models, validator corrections (count and examples), actions dropped, what went wrong and what you changed. This is what makes the next run better; read it at the start of the next one.
+- [ ] Phase 5 done: lessons file rewritten, three lines "what I learned" in the summary.
+
+## Phase 5 — Step back, then write the lessons file (mandatory, ~15 min)
+
+The run is not finished when the page is delivered. It is finished when the next run can start smarter. Full method and templates in `references/retrospective.md`; the short version:
+
+1. **Facts (you).** Write the scorecard: per wave, agents, models and effort, minutes, failures, what you changed in the brief mid-run; candidates → kept actions; figures opened / verified / partial / false / not found; what was discovered late; cost only if the harness reported it, otherwise `unknown`.
+2. **Judgement (a fresh agent, not you).** Rule 2 applies to the orchestrator too: a critic agent that did not write the page reads the brief, the scorecard, the page and the previous lessons file, and returns at most five lessons (`situation → what we did → next time`), a verdict on the previous run's experiment (kept or dropped, why), and **one** experiment for the next run with the measure that will tell if it worked.
+3. **Merge (you).** Rewrite the lessons file in full: next experiment, rules that held, rules that changed, mistakes to watch, last 10 scorecard lines. Under 4 KB, no secret, nothing the user could not read. Then put three lines "what I learned" in the delivery summary, with the file's path.
+
+One experiment per run, never two: a change that is not measured alone cannot be kept or dropped on evidence.
 
 ## What you say when something is not available
 
 - The local `doc-style`, `marketingSkills` or `Jean-Pierre` skills are not reachable from a cloud session: say that their roles were played by agents.
 - Reddit, socket.dev, PageSpeed and similar may be blocked: say which figures are therefore secondary.
 - No search-volume tool: demand is measured with indices, not volumes, and the page says so.
+- No memory folder and no repository: the lessons file goes to `~/.claude/research-plan-lessons.md`, and the summary says so.
