@@ -1,0 +1,10 @@
+{
+  "name": "horka-research-plan",
+  "version": "1.0.0",
+  "description": "Multi-agent research that ends in a sourced action plan: reality check (prod / develop / open PRs), personas and real-demand probe first, researchers briefed per action type, independent validators that open every URL, antagonist critic, feasibility and completeness pass, delivered as a single doc-style HTML page. No number without a source, no agent grading its own work.",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["research", "plan", "strategy", "marketing", "go-to-market", "multi-agent", "orchestration", "validators", "sources", "personas", "doc-style"],
+  "skills": "./skills/"
+}

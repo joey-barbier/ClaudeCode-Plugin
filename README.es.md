@@ -32,6 +32,7 @@ Luego `/plugin` → pestaña **Discover** para explorar, o instala plugins indiv
 | **[horka-skill-eval](#horka-skill-eval)** | Auditor de calidad de skills | skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Factory de skills con quality gates obligatorios | skill |
 | **[horka-project-index](#horka-project-index)** | Índice global de proyectos: resuelve comandos genéricos al proyecto/workspace correcto | skill + script |
+| **[horka-research-plan](#horka-research-plan)** | Investigación multi-agente → plan de acción con fuentes (personas, investigadores, validadores, crítico antagonista) entregado como página doc-style | skill |
 
 ---
 
@@ -185,6 +186,22 @@ claude plugin install horka-skill-eval
 | Componente | Activación | Función |
 |---|---|---|
 | `/horka-skill-eval:horka-skill-evaluate` | comando | Puntúa 5 categorías sobre 100, propone correcciones, re-evalúa antes/después |
+
+---
+
+## horka-research-plan
+
+**Investigación multi-agente que termina en un plan de acción con fuentes**, entregado como una página HTML doc-style. Para peticiones tipo « un check completo y un plan »: go-to-market, qué canal, cómo darse a conocer, cómo responder a una regulación.
+
+```bash
+claude plugin install horka-research-plan
+```
+
+| Componente | Disparador | Hace |
+|---|---|---|
+| `/horka-research-plan:horka-research-plan` | "full check and a plan", "plan con fuentes", "cómo nos descubren", "go-to-market" | Estado real en tres niveles (prod / develop / PR abiertas), luego oleadas cortas: personas + sondeo de demanda real primero, investigadores por tipo de acción, deduplicación en código, validadores que abren cada URL, crítico antagonista, factibilidad + completitud, una página HTML |
+
+**Tres reglas:** ningún número de memoria (URL, fecha y chip de estado en cada cifra) · ningún agente califica su propio trabajo · nada se crea ni se programa (necesidades de producto y tareas van a una pestaña « para transmitir »). Incluye briefs por rol, esquemas JSON, esqueletos `Workflow` y la estructura de la página en `references/`.
 
 ---
 
