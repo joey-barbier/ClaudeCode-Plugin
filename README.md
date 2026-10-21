@@ -32,6 +32,7 @@ Then `/plugin` → **Discover** tab to browse, or install plugins individually b
 | **[horka-skill-eval](#horka-skill-eval)** | Skill quality auditor | skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Production-grade skill factory with enforced quality gates | skill |
 | **[horka-project-index](#horka-project-index)** | Global project index: resolves generic commands to the right project/workspace | skill + script |
+| **[horka-research-plan](#horka-research-plan)** | Multi-agent research → sourced action plan (personas, researchers, validators, antagonist critic) delivered as a doc-style page | skill |
 
 ---
 
@@ -221,6 +222,22 @@ claude plugin install horka-project-index
 **How it works:** builds `projects-index.json` from the real `cwd` recorded in your Claude transcripts (never decodes ambiguous folder names like `dev-cc` vs `dev/cc`). Detects **workspaces** — parent folders with a `.claude/` — so a cross-cutting command like "write the changelog" lands on the folder that *owns* the skill/command, not a random subproject. Ambiguous target → it asks, never guesses.
 
 **Requirements:** Python ≥ 3.7 and git on PATH. Honors `CLAUDE_CONFIG_DIR`. Works on macOS / Linux / WSL / Windows.
+
+---
+
+## horka-research-plan
+
+**Multi-agent research that ends in a sourced action plan**, delivered as one doc-style HTML page. For "give me a full check and a plan" questions: go-to-market, which channel, how to get discovered, how to answer a regulation.
+
+```bash
+claude plugin install horka-research-plan
+```
+
+| Component | Trigger | Does |
+|---|---|---|
+| `/horka-research-plan:horka-research-plan` | "full check and a plan", "how do we get discovered", "go-to-market", "sourced plan", "check complet et un plan", "plan sourcé" | Reality check in three states (prod / develop / open PRs), then short waves: personas + real-demand probe first, researchers per action type, code-level dedup, validators that open every URL, antagonist critic, feasibility + completeness, one HTML page |
+
+**Three rules:** no number from memory (URL, date, status chip on every figure) · no agent grades its own work · nothing is created or scheduled (product needs and tasks go in a hand-over tab). Ships brief templates, JSON schemas, `Workflow` skeletons and the page structure in `references/`. Model and effort per role: most capable model for orchestration / critic / personas, expert tier for researchers, generalist tier for validators.
 
 ---
 

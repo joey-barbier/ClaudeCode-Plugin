@@ -32,6 +32,7 @@ Dann `/plugin` → **Discover** Tab zum Durchsuchen, oder installiere Plugins ei
 | **[horka-skill-eval](#horka-skill-eval)** | Skill-Qualitätsprüfer | Skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Skill-Fabrik mit verpflichtenden Qualitätsgates | Skill |
 | **[horka-project-index](#horka-project-index)** | Globaler Projektindex: löst generische Befehle zum richtigen Projekt/Workspace auf | Skill + Skript |
+| **[horka-research-plan](#horka-research-plan)** | Multi-Agenten-Recherche → belegter Aktionsplan (Personas, Rechercheure, Validatoren, antagonistischer Kritiker) als Doc-Style-Seite | Skill |
 
 ---
 
@@ -185,6 +186,22 @@ claude plugin install horka-skill-eval
 | Komponente | Auslöser | Funktion |
 |---|---|---|
 | `/horka-skill-eval:horka-skill-evaluate` | Befehl | Bewertet 5 Kategorien auf 100, schlägt Korrekturen vor, bewertet vor/nach |
+
+---
+
+## horka-research-plan
+
+**Multi-Agenten-Recherche, die in einem belegten Aktionsplan endet**, geliefert als eine Doc-Style-HTML-Seite. Für Anfragen wie „ein kompletter Check und ein Plan“: Go-to-Market, welcher Kanal, wie wir entdeckt werden, wie wir auf eine Regulierung reagieren.
+
+```bash
+claude plugin install horka-research-plan
+```
+
+| Komponente | Auslöser | Macht |
+|---|---|---|
+| `/horka-research-plan:horka-research-plan` | "full check and a plan", "belegter Plan", "wie werden wir entdeckt", "go-to-market" | Realitätscheck in drei Zuständen (prod / develop / offene PRs), dann kurze Wellen: Personas + Nachfrage-Sonde zuerst, Rechercheure pro Aktionstyp, Deduplizierung im Code, Validatoren, die jede URL öffnen, antagonistischer Kritiker, Machbarkeit + Vollständigkeit, eine HTML-Seite |
+
+**Drei Regeln:** keine Zahl aus dem Gedächtnis (URL, Datum, Status-Chip an jeder Zahl) · kein Agent bewertet seine eigene Arbeit · nichts wird erstellt oder geplant (Produktbedarf und Aufgaben kommen in einen Übergabe-Tab). Enthält Briefs pro Rolle, JSON-Schemas, `Workflow`-Gerüste und die Seitenstruktur in `references/`.
 
 ---
 

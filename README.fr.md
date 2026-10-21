@@ -32,6 +32,7 @@ Puis `/plugin` → onglet **Discover** pour parcourir, ou installe les plugins i
 | **[horka-skill-eval](#horka-skill-eval)** | Auditeur qualité de skills | skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Usine à skills avec gates de qualité obligatoires | skill |
 | **[horka-project-index](#horka-project-index)** | Index global des projets : résout les commandes génériques vers le bon projet/workspace | skill + script |
+| **[horka-research-plan](#horka-research-plan)** | Recherche multi-agents → plan d'actions sourcé (personas, chercheurs, validateurs, critique antagoniste) livré en page doc-style | skill |
 
 ---
 
@@ -185,6 +186,22 @@ claude plugin install horka-skill-eval
 | Composant | Déclenchement | Rôle |
 |---|---|---|
 | `/horka-skill-eval:horka-skill-evaluate` | commande | Note 5 catégories sur 100, propose des corrections, ré-évalue avant/après |
+
+---
+
+## horka-research-plan
+
+**Recherche multi-agents qui finit en plan d'actions sourcé**, livré en une page HTML doc-style. Pour les demandes « un check complet et un plan » : go-to-market, quel canal, comment se faire découvrir, comment répondre à une réglementation.
+
+```bash
+claude plugin install horka-research-plan
+```
+
+| Composant | Déclencheur | Rôle |
+|---|---|---|
+| `/horka-research-plan:horka-research-plan` | « check complet et un plan », « plan sourcé », « comment se faire découvrir », « go-to-market » | État réel en trois états (prod / develop / PR ouvertes), puis vagues courtes : personas + demande réelle d'abord, chercheurs par type d'action, dédoublonnage par code, validateurs qui ouvrent chaque URL, critique antagoniste, faisabilité + complétude, une page HTML |
+
+**Trois règles :** aucun chiffre de mémoire (URL, date, chip de statut sur chaque nombre) · aucun agent ne note son propre travail · rien n'est créé ni planifié (besoins produit et tâches dans un onglet « à transmettre »). Fournit les briefs par rôle, les schémas JSON, les squelettes `Workflow` et la structure de page dans `references/`. Modèle et effort par rôle : modèle le plus capable pour orchestration / critique / personas, expert pour les chercheurs, généraliste pour les validateurs.
 
 ---
 
