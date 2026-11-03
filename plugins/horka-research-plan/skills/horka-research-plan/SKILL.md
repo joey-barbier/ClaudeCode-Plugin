@@ -3,6 +3,8 @@ name: horka-research-plan
 allowed-tools: Agent, Workflow, Bash, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch
 description: >
   Multi-agent research that ends in a sourced action plan, delivered as one doc-style HTML page.
+  Picks the model and effort of every agent by role (most capable model for judgement, expert tier
+  for research, generalist tier for validation and counting) so tokens go where judgement matters.
   Runs a reality check in three states (prod / develop / open PRs), then short waves of agents:
   personas and a real-demand probe FIRST, researchers briefed per action type, code-level dedup,
   independent validators that open every URL, an antagonist critic, then feasibility and completeness.

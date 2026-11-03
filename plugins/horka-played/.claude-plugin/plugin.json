@@ -1,0 +1,10 @@
+{
+  "name": "horka-played",
+  "version": "1.0.0",
+  "description": "/played for Claude Code, as in WoW: how many tokens you burned. Measures your local transcripts (30 days by default), merges your other machines, and builds a doc-style page with per-day, per-machine and per-model charts, subagent share, record day, a shareable card and a 9:16 story PNG. Read-only, no estimated number.",
+  "author": {
+    "name": "Orka"
+  },
+  "keywords": ["tokens", "usage", "played", "consumption", "subagents", "models", "dashboard", "share", "instagram", "doc-style"],
+  "skills": "./skills/"
+}
