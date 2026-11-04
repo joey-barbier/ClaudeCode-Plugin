@@ -20,39 +20,21 @@ Dann `/plugin` → **Discover** Tab zum Durchsuchen, oder installiere Plugins ei
 
 | Plugin | Funktion | Komponenten |
 |---|---|---|
-| **[horka-coach-ia](#horka-coach-ia)** | KI-Coach: diagnostiziert deinen Bedarf, gibt ein Urteil, leitet zum richtigen Plugin weiter | Skill |
 | **[horka-mentor](#horka-mentor)** | Padagogische KI fur Junior-Devs: bewertet, lehrt, baut Schritt fur Schritt, verfolgt Fortschritt | 2 Skills |
 | **[horka-setup](#horka-setup)** | Personalisierte `CLAUDE.md` + Architektur-Docs + Design System Extraktor | 3 Skills |
 | **[horka-memory](#horka-memory)** | Persistente Projekt-Memory zwischen Sitzungen | 1 Skill |
 | **[horka-review](#horka-review)** | Antagonist + Tech Lead Code Review | Agent + 2 Skills + Hook |
-| **[horka-qa-testing](#horka-qa-testing)** | QA-Validierung + Business Unit Tests | Agent + Skill |
 | **[horka-dev-workflow](#horka-dev-workflow)** | Dev-Methodik + Git-Sicherheit | Agent + 2 Skills + Hook |
 | **[horka-analytics](#horka-analytics)** | SaaS Tracking / Funnel Experte | Agent |
-| **[horka-openclaw](#horka-openclaw)** | Lange KI-Sitzungsverwaltung | 2 Skills + Hook |
 | **[horka-skill-eval](#horka-skill-eval)** | Skill-Qualitätsprüfer | Skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Skill-Fabrik mit verpflichtenden Qualitätsgates | Skill |
 | **[horka-project-index](#horka-project-index)** | Globaler Projektindex: löst generische Befehle zum richtigen Projekt/Workspace auf | Skill + Skript |
-| **[horka-research-plan](#horka-research-plan)** | Multi-Agenten-Recherche → belegter Aktionsplan (Personas, Rechercheure, Validatoren, antagonistischer Kritiker) als Doc-Style-Seite | Skill |
+| **[horka-research-plan](#horka-research-plan)** | Das richtige Modell und der richtige Aufwand pro Agentenrolle → Multi-Agenten-Recherche, die Tokens spart und in einem belegten Aktionsplan endet (Doc-Style-Seite) | skill |
+| **[horka-played](#horka-played)** | `/played` wie in WoW: dein Claude-Code-Tokenverbrauch pro Tag, Maschine und Modell, mit teilbarer Karte und Story-PNG | skill + scripts |
 
 ---
 
 ## Erste Schritte
-
-### 0. Weisst nicht wo du anfangen sollst? — `horka-coach-ia`
-
-```bash
-claude plugin install horka-coach-ia
-```
-
-Pragmatischer KI-Coach, der dir die Wahrheit sagt: brauchst du KI dafur, oder nicht?
-
-- Beschreib dein Problem → klares Urteil: **"keine KI notig"** / **"ja, so geht's"** / **"schlechte Idee, darum"**
-- Hilft dir zwischen Agent vs Skill vs Skript vs nichts zu unterscheiden
-- Leitet dich zum richtigen HORKA-Plugin basierend auf DEINEM Bedarf weiter
-- Fur Devs, POs, Tech Leads und Manager
-- Funktioniert auch in Claude Desktop — [Anleitung lesen](plugins/horka-coach-ia/README.md)
-
-Ausloser: `coach`, `coach ia`, `aide-moi avec l'IA`, `par ou commencer`
 
 ### 1. Claude konfigurieren — `horka-setup`
 
@@ -115,21 +97,6 @@ claude plugin install horka-review
 
 ---
 
-## horka-qa-testing
-
-**QA-Validierung + Generierung von Business Unit Tests.**
-
-```bash
-claude plugin install horka-qa-testing
-```
-
-| Komponente | Auslöser | Funktion |
-|---|---|---|
-| Agent `qa-validate` | "Feature fertig"-Behauptungen | Hinterfragt Aussagen, testet Grenzfälle |
-| `/horka-qa-testing:horka-unit-test-generate` | Befehl | Generiert Tests passend zu deinen Konventionen (Berechtigungen, Limits, Konsistenz) |
-
----
-
 ## horka-dev-workflow
 
 **Strukturierte Dev-Methodik + Git-Sicherheit.**
@@ -157,24 +124,6 @@ claude plugin install horka-analytics
 
 ---
 
-## horka-openclaw
-
-**Verwaltung langer KI-Sitzungen.**
-
-```bash
-claude plugin install horka-openclaw
-```
-
-| Komponente | Auslöser | Funktion |
-|---|---|---|
-| `/horka-openclaw:horka-openclaw-session-compact` | Befehl | Komprimiert Sitzungen >20 MB, extrahiert Entscheidungen/Configs, archiviert Original |
-| `/horka-openclaw:horka-openclaw-session-extract` | Befehl | Extrahiert Erkenntnisse in Memory-Dateien |
-| Session-Hook | auto | Warnt vor schwerer Kompaktierung |
-
-Shell-Tools: `context-monitor.sh`, `context-guardian-daemon.sh`, `self-reboot.sh`, `clean-session-blobs.sh`.
-
----
-
 ## horka-skill-eval
 
 **Skill-Qualitätsprüfer** gegen Anthropics offizielle Best Practices.
@@ -191,7 +140,9 @@ claude plugin install horka-skill-eval
 
 ## horka-research-plan
 
-**Multi-Agenten-Recherche, die in einem belegten Aktionsplan endet**, geliefert als eine Doc-Style-HTML-Seite. Für Anfragen wie „ein kompletter Check und ein Plan“: Go-to-Market, welcher Kanal, wie wir entdeckt werden, wie wir auf eine Regulierung reagieren.
+**Das richtige Modell, der richtige Aufwand, zum richtigen Zeitpunkt.** Standardmäßig erbt jeder Subagent das Modell der Sitzung; dieser Skill vergibt eines pro Rolle: das leistungsstärkste Modell für Orchestrierung, Kritik und Personas, die Expertenstufe für Rechercheure, die Generalistenstufe für Validatoren und Zählungen, jeweils mit eigenem Aufwand. Das Urteil bleibt beim besten Modell, mechanische Arbeit wandert zu günstigeren Modellen, und die tatsächlichen Kosten jeder Welle stehen in der Bilanz des Laufs.
+
+Was er liefert: **Multi-Agenten-Recherche, die in einem belegten Aktionsplan endet**, geliefert als eine Doc-Style-HTML-Seite. Für Anfragen wie „ein kompletter Check und ein Plan“: Go-to-Market, welcher Kanal, wie wir entdeckt werden, wie wir auf eine Regulierung reagieren.
 
 ```bash
 claude plugin install horka-research-plan
@@ -202,6 +153,22 @@ claude plugin install horka-research-plan
 | `/horka-research-plan:horka-research-plan` | "full check and a plan", "belegter Plan", "wie werden wir entdeckt", "go-to-market" | Realitätscheck in drei Zuständen (prod / develop / offene PRs), dann kurze Wellen: Personas + Nachfrage-Sonde zuerst, Rechercheure pro Aktionstyp, Deduplizierung im Code, Validatoren, die jede URL öffnen, antagonistischer Kritiker, Machbarkeit + Vollständigkeit, eine HTML-Seite, danach eine Retrospektive durch einen separaten Agenten, der eine Lessons-Datei neu schreibt, die der nächste Lauf zuerst liest |
 
 **Drei Regeln:** keine Zahl aus dem Gedächtnis (URL, Datum, Status-Chip an jeder Zahl) · kein Agent bewertet seine eigene Arbeit · nichts wird erstellt oder geplant (Produktbedarf und Aufgaben kommen in einen Übergabe-Tab). Enthält Briefs pro Rolle, JSON-Schemas, `Workflow`-Gerüste, die Seitenstruktur und die Retrospektiven-Methode (Scorecard, Lessons-Datei, ein Experiment pro Lauf) in `references/`.
+
+---
+
+## horka-played
+
+**`/played` für Claude Code, wie in World of Warcraft**: wie viele Tokens du verbraucht hast. Liest deine lokalen Transcripts (standardmäßig 30 Tage), führt deine anderen Maschinen zusammen und öffnet eine Doc-Style-Seite.
+
+```bash
+claude plugin install horka-played
+```
+
+| Komponente | Auslöser | Macht |
+|---|---|---|
+| `/horka-played:played` | "/played", "how many tokens did I use", "wie viele Tokens habe ich verbraucht" | Summen, pro Tag / Maschine / Modell, Anteil der Subagenten, Rekordtag, Zeitraumwahl (letzter Tag, 7 Tage, freier Bereich, −1/+1 Tag), teilbare Karte und Story-PNG 1080×1920 |
+
+Nur lesend, keine geschätzte Zahl. Mehrere Maschinen: auf jeder ausführen und `~/.claude/played/<label>.json` auf die Maschine kopieren, auf der du die Seite öffnest. Cloud-Sitzungen sind nicht messbar, und die Seite sagt das.
 
 ---
 

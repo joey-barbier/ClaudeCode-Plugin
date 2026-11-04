@@ -1,0 +1,546 @@
+<title>Consommation de tokens</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- /played · style doc-style (néo-brutaliste, thème clair uniquement). Created by Orka. -->
+<style>
+/* Layout : une colonne de 1020px, encart L'essentiel, tuiles chiffres, graphique, tables. */
+:root {
+  --bg: #FAF4F0; --card: #FFFFFF; --ink: #111111; --muted: #55504C;
+  --accent: #AE7AFF; --accent2: #FF8ACD; --ok: #8FE388; --warn: #FFDB58; --ko: #FF6B6B; --info: #87CEEB;
+  --mut-bg: #E8E0DA; --code-bg: #F3EAE4; --hair: #DDD3CC;
+  --border: 2px solid #111111; --shadow: 4px 4px 0 #111111; --shadow-sm: 3px 3px 0 #111111;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--ink); margin: 0;
+  font: 14px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+}
+a { color: var(--ink); }
+code { font-family: var(--mono); font-size: 0.88em; background: var(--code-bg); padding: 1px 5px; border-radius: 2px; white-space: nowrap; }
+main {
+  max-width: 1020px; margin: 0 auto; padding-block: 28px 80px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.top { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+.brand {
+  font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--accent2); border: var(--border); box-shadow: var(--shadow-sm);
+  display: inline-block; padding: 4px 10px; border-radius: 2px;
+}
+.eyebrow {
+  font-size: 11px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase;
+  background: var(--accent); border: var(--border); box-shadow: var(--shadow-sm);
+  display: inline-block; padding: 3px 9px; border-radius: 2px;
+}
+h1 { font-size: clamp(26px, 4vw, 38px); font-weight: 900; line-height: 1.12; margin: 0 0 6px; letter-spacing: -0.02em; text-wrap: balance; }
+.tl { color: var(--muted); font-size: 14px; margin: 0 0 20px; max-width: 68ch; }
+h2 { font-size: 19px; font-weight: 900; margin: 34px 0 10px; letter-spacing: -0.01em; }
+p { max-width: 72ch; }
+.ess { background: var(--card); border: var(--border); box-shadow: var(--shadow); border-radius: 4px; padding: 14px 18px; margin: 0 0 8px; font-size: 14px; }
+.ess .chip { margin-right: 6px; }
+.chip {
+  display: inline-block; font-size: 11px; font-weight: 800; letter-spacing: 0.04em; padding: 2px 8px;
+  border: 2px solid #111; border-radius: 2px; white-space: nowrap; color: #111; vertical-align: 1px; text-transform: uppercase;
+}
+.c-ia { background: var(--accent); } .c-code { background: var(--warn); } .c-ok { background: var(--ok); }
+.c-ko { background: var(--ko); } .c-info { background: var(--info); } .c-mut { background: var(--mut-bg); }
+
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin: 18px 0 6px; }
+.kpi { background: var(--card); border: var(--border); box-shadow: var(--shadow); border-radius: 4px; padding: 12px 16px; min-width: 0; }
+.kpi.hl { background: var(--warn); }
+.kpi .lab { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.kpi.hl .lab { color: #111; }
+.kpi .val { font-size: 30px; font-weight: 900; letter-spacing: -0.02em; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.kpi .sub { font-size: 12.5px; color: var(--muted); }
+.kpi.hl .sub { color: #111; }
+
+.card { background: var(--card); border: var(--border); box-shadow: var(--shadow); border-radius: 4px; margin: 8px 0 4px; }
+.chart-card { padding: 14px 16px 10px; position: relative; }
+.chart-head { display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 8px; }
+.seg { display: inline-flex; border: var(--border); border-radius: 2px; box-shadow: var(--shadow-sm); }
+.seg button {
+  font: inherit; font-size: 12.5px; font-weight: 800; padding: 5px 12px; border: 0; background: var(--card); color: var(--ink); cursor: pointer;
+}
+.seg button + button { border-left: var(--border); }
+.seg button[aria-pressed="true"] { background: #111; color: #fff; }
+.seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.cwrap { overflow-x: auto; }
+svg.chart { display: block; width: 100%; min-width: 640px; height: auto; }
+svg.chart .grid { stroke: var(--hair); stroke-width: 1; }
+svg.chart .base { stroke: #111; stroke-width: 2; }
+svg.chart .ax { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+svg.chart .bar { stroke: #111; stroke-width: 1.5; }
+svg.chart .hit { fill: transparent; cursor: crosshair; }
+svg.chart .hit:hover { fill: rgba(17,17,17,0.06); }
+.tip {
+  position: absolute; pointer-events: none; background: var(--card); border: var(--border); box-shadow: var(--shadow-sm);
+  border-radius: 2px; padding: 6px 9px; font-size: 12px; white-space: pre; font-variant-numeric: tabular-nums; z-index: 5;
+}
+.legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--muted); }
+.sw { display: inline-block; width: 12px; height: 12px; border: 2px solid #111; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+.period-seg { margin: 4px 0 16px; }
+.per { font-size: 13px; font-weight: 800; margin: 0 0 10px; }
+.note { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; }
+
+.twrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th { text-align: left; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; padding: 10px 12px; border-bottom: var(--border); background: var(--code-bg); white-space: nowrap; }
+th.r, td.num { text-align: right; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--hair); vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+td:first-child { white-space: nowrap; font-weight: 700; }
+.col td:first-child { white-space: normal; word-break: break-all; }
+.col td:first-child code { white-space: normal; }
+td.num { font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+tr.sum td { background: var(--code-bg); font-weight: 900; border-top: var(--border); }
+details > summary { cursor: pointer; font-weight: 800; padding: 10px 14px; list-style: none; }
+details > summary::before { content: "+ "; font-weight: 900; }
+details[open] > summary::before { content: "– "; }
+details[open] > summary { border-bottom: var(--border); }
+summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 10px 0; }
+.col { min-width: 0; }
+.col h3 { margin: 0 0 6px; font-size: 14px; font-weight: 900; }
+.warnbox { background: var(--card); border: var(--border); box-shadow: var(--shadow-sm); border-radius: 4px; padding: 12px 16px; margin: 12px 0; font-size: 13.5px; }
+.warnbox .chip { margin-right: 8px; }
+ul.facts { margin: 8px 0; padding-left: 18px; max-width: 80ch; }
+ul.facts li { margin-bottom: 6px; }
+.foot { max-width: none; color: var(--muted); font-size: 12.5px; border-top: var(--border); padding-top: 14px; margin-top: 40px; }
+@media (max-width: 600px) { .kpi .val { font-size: 26px; } }
+.range { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; margin: 0 0 14px; }
+.range-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.range label { font-size: 12.5px; font-weight: 800; display: inline-flex; gap: 6px; align-items: center; }
+.range input[type="date"] {
+  font: inherit; font-size: 13px; font-weight: 700; padding: 4px 8px; border: var(--border); border-radius: 2px;
+  background: var(--card); color: var(--ink); font-variant-numeric: tabular-nums;
+}
+.btn {
+  font: inherit; font-size: 12.5px; font-weight: 900; padding: 5px 11px; border: var(--border); border-radius: 2px;
+  background: var(--warn); color: #111; box-shadow: var(--shadow-sm); cursor: pointer; white-space: nowrap;
+}
+.btn:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 #111; }
+.btn:disabled { background: var(--mut-bg); color: var(--muted); cursor: not-allowed; box-shadow: none; }
+.btn:focus-visible, .range input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.presets { flex-wrap: wrap; }
+.range .hint { font-size: 12px; color: var(--muted); }
+.share-wrap { display: grid; grid-template-columns: minmax(0, 560px) minmax(0, 1fr); gap: 20px; align-items: start; margin: 6px 0 26px; }
+@media (max-width: 860px) { .share-wrap { grid-template-columns: minmax(0, 1fr); } }
+.share {
+  background: var(--accent); border: 3px solid #111; box-shadow: 8px 8px 0 #111; border-radius: 6px;
+  padding: 22px 24px 18px; color: #111; position: relative; overflow: hidden; min-width: 0;
+}
+.share .pov { font-size: clamp(19px, 3.4vw, 24px); font-weight: 900; letter-spacing: -0.01em; line-height: 1.2; margin: 0 0 16px; text-wrap: balance; }
+.share .hero { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.share .poulpi { width: clamp(96px, 26vw, 150px); height: auto; flex: none; margin: 0 0 8px; filter: drop-shadow(4px 4px 0 #111); }
+.share .big { font-size: clamp(64px, 13vw, 112px); font-weight: 900; line-height: 1; letter-spacing: -0.03em; margin-bottom: 6px; font-variant-numeric: tabular-nums; }
+.share .unit { font-size: clamp(26px, 5vw, 40px); font-weight: 900; text-transform: uppercase; letter-spacing: 0.01em; line-height: 1.05; }
+.share .of { font-size: 17px; font-weight: 800; margin: 6px 0 16px; }
+.share .stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0 0 14px; }
+.share .st { background: var(--card); border: 2px solid #111; border-radius: 3px; padding: 8px 10px; min-width: 0; }
+.share .st b { display: block; font-size: 21px; font-weight: 900; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.share .st span { font-size: 12px; font-weight: 700; color: #3a3540; }
+.share .sig { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; margin-top: 14px; }
+.share-side { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.share-side .btns { display: flex; gap: 10px; flex-wrap: wrap; }
+.btn.save { background: var(--accent2); font-size: 14px; padding: 9px 14px; align-self: flex-start; }
+.story-prev { width: 180px; max-width: 100%; aspect-ratio: 9 / 16; border: var(--border); box-shadow: var(--shadow-sm); border-radius: 4px; background: var(--accent); }
+.share-side .copied { font-size: 12.5px; font-weight: 800; color: var(--muted); min-height: 1.2em; }
+.share-side .txt { font-size: 13px; background: var(--card); border: var(--border); border-radius: 3px; padding: 10px 12px; }
+</style>
+
+<main>
+  <div class="top"><span class="brand">Created by Orka</span><span class="eyebrow">Claude Code · {{EYEBROW}}</span></div>
+  <h1>Consommation de tokens</h1>
+  <p class="tl">Usage mesuré en heure locale, à partir des transcripts Claude Code de {{MEASURED}}, {{FENETRE}}.{{MISSING}} Les sessions cloud ne sont pas mesurables et ne sont pas comptées.</p>
+
+  <div class="card range">
+    <div class="range-row">
+      <button type="button" class="btn" id="prev" aria-label="Reculer la période d'un jour">‹ −1 jour</button>
+      <label for="from">Du <input type="date" id="from"></label>
+      <label for="to">au <input type="date" id="to"></label>
+      <button type="button" class="btn" id="next" aria-label="Avancer la période d'un jour">+1 jour ›</button>
+    </div>
+    <div class="range-row">
+      <div class="seg presets" role="group" aria-label="Périodes rapides">
+        <button type="button" data-preset="today">Dernier jour</button>
+        <button type="button" data-preset="yesterday">Veille</button>
+        <button type="button" data-preset="since">Depuis la veille</button>
+        <button type="button" data-preset="7">7 jours</button>
+        <button type="button" data-preset="30">Tout ({{NBJ}} j)</button>
+      </div>
+      <span class="hint" id="hint"></span>
+    </div>
+  </div>
+
+  <h2>À partager</h2>
+  <div class="share-wrap">
+    <div class="share" id="share" aria-live="polite">
+      <div class="pov">POV : tu rushes tes projets perso</div>
+      <div class="hero"><div class="big" id="s-big"></div><img class="poulpi" src="{{POULPI}}" alt="Mascotte poulpe avec un casque et une tablette de tableaux de bord"></div>
+      <div class="unit" id="s-unit"></div>
+      <div class="of" id="s-of"></div>
+      <div class="stats">
+        <div class="st"><b id="s-day"></b><span>tokens par jour, en moyenne</span></div>
+        <div class="st"><b id="s-sec"></b><span>tokens par seconde, jour et nuit</span></div>
+        <div class="st"><b id="s-rep"></b><span>de stagiaires (sous-agents)</span></div>
+        <div class="st"><b id="s-cache"></b><span id="s-cache-l">jour record</span></div>
+      </div>
+      <div class="sig"><span>Claude Code · 1 humain · {{NMACH}}</span><span>Created by Orka</span></div>
+    </div>
+    <div class="share-side">
+      <p class="note" style="margin:0">La carte suit la période choisie plus haut. Elle ne montre que des totaux, sans nom de projet ni de dossier : une capture d'écran suffit pour la partager.</p>
+      <div class="txt" id="s-txt"></div>
+      <div class="btns">
+        <button type="button" class="btn" id="s-copy">Copier le texte</button>
+        <button type="button" class="btn" id="s-replay">Rejouer le compteur</button>
+      </div>
+      <button type="button" class="btn save" id="s-save">Enregistrer l'image · story 9:16</button>
+      <img class="story-prev" id="s-prev" alt="Aperçu de l'image story 1080 × 1920">
+      <p class="note" style="margin:0">Image PNG 1080 × 1920, prête pour une story Instagram. Sur mobile, un appui long sur l'aperçu permet aussi de l'enregistrer.</p>
+      <div class="copied" id="s-copied" aria-live="polite"></div>
+    </div>
+  </div>
+
+  <p class="per" id="per"></p>
+  <div class="ess"><span class="chip c-info">L'essentiel</span> <span id="ess"></span></div>
+
+  <div class="kpis">
+    <div class="kpi hl"><div class="lab">Total mesuré</div><div class="val" id="k-total"></div><div class="sub" id="k-total-x"></div></div>
+    <div class="kpi"><div class="lab">Hors lectures de cache</div><div class="val" id="k-nocr"></div><div class="sub">entrées + sorties + écritures de cache</div></div>
+    <div class="kpi"><div class="lab">Tokens de sortie</div><div class="val" id="k-out"></div><div class="sub">texte et outils générés par Claude</div></div>
+    <div class="kpi"><div class="lab">Réponses de l'API</div><div class="val" id="k-msgs"></div><div class="sub">messages assistant dédoublonnés</div></div>
+  </div>
+
+  <h2>Par jour et par machine</h2>
+  <div class="card chart-card" id="chart">
+    <div class="chart-head">
+      <div class="legend" id="legend"></div>
+      <div class="seg" role="group" aria-label="Mesure affichée" id="metric">
+        <button type="button" aria-pressed="true" data-metric="all">Tous les tokens</button>
+        <button type="button" aria-pressed="false" data-metric="nocr">Hors lectures de cache</button>
+      </div>
+    </div>
+    <div class="cwrap" id="svg"></div>
+    <p class="note">Survoler une barre pour le détail du jour. Les lectures de cache écrasent le reste : la vue « hors lectures de cache » montre le travail réellement nouveau.</p>
+    <div class="tip" id="tip" hidden></div>
+  </div>
+
+  <h2>Par machine</h2>
+  <div class="card twrap"><table>
+    <thead><tr><th>Source</th><th class="r">Entrée</th><th class="r">Sortie</th><th class="r">Écriture cache</th><th class="r">Lecture cache</th><th class="r">Total</th><th class="r">Réponses</th></tr></thead>
+    <tbody id="t-machine"></tbody>
+  </table></div>
+
+  <h2>Par modèle</h2>
+  <div class="card twrap"><table>
+    <thead><tr><th>Modèle</th><th class="r">Entrée</th><th class="r">Sortie</th><th class="r">Écriture cache</th><th class="r">Lecture cache</th><th class="r">Total</th><th class="r">Part</th><th>Répartition</th></tr></thead>
+    <tbody id="t-model"></tbody>
+  </table></div>
+
+  <h2>Détail jour par jour</h2>
+  <details class="card">
+    <summary id="t-day-sum">Afficher les jours</summary>
+    <div class="twrap"><table>
+      <thead><tr id="t-day-head"></tr></thead>
+      <tbody id="t-day"></tbody>
+    </table></div>
+  </details>
+
+  <h2>Dossiers les plus consommateurs</h2>
+  <div class="cols">
+{{PROJ_COLS}}
+  </div>
+  <p class="note">Ces tableaux couvrent toujours la fenêtre complète, quel que soit le choix de période. Le pourcentage « sous-agents » est la part des tokens produite par des sous-agents (Agent, workflows). Les dossiers temporaires sont regroupés parmi les 15 dossiers les plus consommateurs de chaque machine.</p>
+
+  <h2>Méthode et limites</h2>
+  <div class="warnbox"><span class="chip c-ko">Cloud non mesuré</span> Les sessions cloud (Claude Code sur le web, fils de projet claude.ai) tournent dans des conteneurs éphémères : leurs transcripts disparaissent avec le conteneur. Leur consommation n'est donc pas dans ces chiffres, et elle n'est pas estimée. Les sessions Remote Control tournent sur la machine où elles sont lancées et sont comptées avec elle.</div>
+  <div class="card twrap"><table>
+    <thead><tr><th>Machine</th><th>Dossier lu</th><th class="r">Fichiers</th><th>Plus ancien transcript</th><th>Mesuré le</th></tr></thead>
+    <tbody>{{SRC_ROWS}}</tbody>
+  </table></div>
+  <ul class="facts">
+    <li>Source : chaque ligne <code>assistant</code> des fichiers <code>.jsonl</code> de <code>~/.claude/projects</code>, sous-agents compris, champ <code>message.usage</code>.</li>
+    <li>Une même réponse apparaît sur plusieurs lignes : elle est comptée une fois, par couple <code>message.id</code> + <code>requestId</code>.</li>
+    <li>Les quatre compteurs sont ceux de l'API : <b>entrée</b> (non cachée), <b>sortie</b>, <b>écriture de cache</b> et <b>lecture de cache</b>. Le total les additionne tels quels, sans pondération de prix.</li>
+    <li>Le dernier jour s'arrête à l'heure de la mesure. Le choix de période ne peut pas sortir de la fenêtre mesurée.</li>
+    <li>Aucun coût n'est calculé : la page compte des tokens, pas des euros.</li>
+  </ul>
+
+  <p class="foot">Created by Orka · page générée à partir de mesures locales, sans chiffre estimé.</p>
+</main>
+
+<script type="application/json" id="data">{{DATA}}</script>
+<script>
+(function () {
+  var D = JSON.parse(document.getElementById("data").textContent);
+  var DAYS = D.days, M = D.machines, S = D.series, SUB = D.sub || {};
+  var MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  var JOURS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+  var state = { a: 0, b: DAYS.length - 1, metric: "all" };
+  try { var saved = JSON.parse(localStorage.getItem("tokens-range") || "null"); if (saved && saved.metric) state.metric = saved.metric; } catch (e) {}
+
+  function z() { return [0, 0, 0, 0, 0]; }
+  function add(a, v) { for (var i = 0; i < 5; i++) a[i] += v[i]; }
+  function s4(v) { return v[0] + v[1] + v[2] + v[3]; }
+  function nocr(v) { return v[0] + v[1] + v[2]; }
+  function fr(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
+  function dec(x, d) { return x.toFixed(d).replace(".", ","); }
+  function short(n) { return n >= 1e9 ? dec(n / 1e9, 2) + " Md" : n >= 1e6 ? dec(n / 1e6, 1) + " M" : n >= 1e3 ? Math.round(n / 1e3) + " k" : String(n); }
+  function pct(a, b) { return b ? dec(100 * a / b, 1) + " %" : "–"; }
+  function dd(iso) { var p = iso.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function dfr(iso, y) { var d = dd(iso); return d.getDate() + " " + MOIS[d.getMonth()] + (y ? " " + d.getFullYear() : ""); }
+  function jour(iso) { return JOURS[dd(iso).getDay()] + " " + dfr(iso); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function day(k, d) { var t = z(), m = (S[k] || {})[d] || {}; for (var x in m) add(t, m[x]); return t; }
+
+  var $ = function (id) { return document.getElementById(id); };
+  var from = $("from"), to = $("to");
+  from.min = to.min = DAYS[0]; from.max = to.max = DAYS[DAYS.length - 1];
+  $("legend").innerHTML = M.map(function (m) { return '<span><span class="sw" style="background:' + m.color + '"></span>' + esc(m.label) + (m.measured ? "" : " (non lu)") + "</span>"; }).join("");
+
+  function setRange(a, b) {
+    var n = DAYS.length - 1;
+    if (a > b) { var t = a; a = b; b = t; }
+    state.a = Math.max(0, Math.min(n, a)); state.b = Math.max(0, Math.min(n, b));
+    render();
+  }
+  function preset(p) {
+    var n = DAYS.length - 1;
+    if (p === "today") setRange(n, n);
+    else if (p === "yesterday") setRange(n - 1, n - 1);
+    else if (p === "since") setRange(n - 1, n);
+    else if (p === "7") setRange(n - 6, n);
+    else setRange(0, n);
+  }
+  $("prev").onclick = function () { if (state.a > 0) setRange(state.a - 1, state.b - 1); };
+  $("next").onclick = function () { if (state.b < DAYS.length - 1) setRange(state.a + 1, state.b + 1); };
+  function fromInput() {
+    var a = DAYS.indexOf(from.value), b = DAYS.indexOf(to.value);
+    if (a < 0) a = from.value < DAYS[0] ? 0 : DAYS.length - 1;
+    if (b < 0) b = to.value < DAYS[0] ? 0 : DAYS.length - 1;
+    setRange(a, b);
+  }
+  from.onchange = fromInput; to.onchange = fromInput;
+  document.querySelector(".presets").onclick = function (e) { var b = e.target.closest("button"); if (b) preset(b.dataset.preset); };
+  $("metric").onclick = function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    state.metric = b.dataset.metric;
+    try { localStorage.setItem("tokens-range", JSON.stringify({ metric: state.metric })); } catch (err) {}
+    render();
+  };
+  document.addEventListener("keydown", function (e) {
+    if (e.target.tagName === "INPUT") return;
+    if (e.key === "ArrowLeft") $("prev").click();
+    if (e.key === "ArrowRight") $("next").click();
+  });
+
+  function niceMax(m) {
+    if (m <= 0) return [4, 1];
+    var raw = m / 4, e = Math.pow(10, Math.floor(Math.log10(raw))), fs = [1, 2, 2.5, 5, 10];
+    for (var i = 0; i < fs.length; i++) if (fs[i] * e >= raw) return [fs[i] * e * 4, fs[i] * e];
+  }
+  function chart(days, metric) {
+    var W = 960, H = 320, L = 64, R = 12, T = 14, B = 40, pw = W - L - R, ph = H - T - B;
+    var vals = days.map(function (d) { return M.map(function (m) { return metric(day(m.key, d)); }); });
+    var mx = Math.max.apply(null, vals.map(function (v) { return v.reduce(function (a, b) { return a + b; }, 0); }).concat([0]));
+    var nm = niceMax(mx), top = nm[0], step = nm[1], bw = pw / days.length;
+    var o = ['<svg class="chart" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="Tokens par jour et par machine">'];
+    for (var i = 0; i < 5; i++) {
+      var y = T + ph - ph * i / 4;
+      o.push('<line x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '" class="grid"/>');
+      o.push('<text x="' + (L - 8) + '" y="' + (y + 4) + '" class="ax" text-anchor="end">' + short(Math.round(step * i)) + "</text>");
+    }
+    days.forEach(function (d, i) {
+      var w = Math.min(bw - 6, 56), x = L + i * bw + (bw - w) / 2, y = T + ph, tip = [jour(d)], tot = 0;
+      M.forEach(function (m, j) {
+        var v = vals[i][j]; tot += v;
+        tip.push(m.label + " : " + (m.measured ? fr(v) : "non lu"));
+        if (v <= 0) return;
+        var h = ph * v / top;
+        o.push('<rect x="' + x.toFixed(1) + '" y="' + (y - h).toFixed(1) + '" width="' + w.toFixed(1) + '" height="' + h.toFixed(1) + '" fill="' + m.color + '" class="bar"/>');
+        y -= h;
+      });
+      tip.push("Total : " + fr(tot));
+      o.push('<rect x="' + (L + i * bw).toFixed(1) + '" y="' + T + '" width="' + bw.toFixed(1) + '" height="' + ph + '" class="hit" data-tip="' + esc(tip.join("\n")) + '"/>');
+      if (days.length <= 14 || dd(d).getDay() === 1 || i === 0 || i === days.length - 1)
+        o.push('<text x="' + (L + i * bw + bw / 2).toFixed(1) + '" y="' + (H - B + 18) + '" class="ax" text-anchor="middle">' + dfr(d) + "</text>");
+    });
+    o.push('<line x1="' + L + '" x2="' + (W - R) + '" y1="' + (T + ph) + '" y2="' + (T + ph) + '" class="base"/></svg>');
+    return o.join("");
+  }
+
+  function render() {
+    var days = DAYS.slice(state.a, state.b + 1), n = days.length;
+    from.value = days[0]; to.value = days[n - 1];
+    $("prev").disabled = state.a === 0; $("next").disabled = state.b === DAYS.length - 1;
+    var last = DAYS.length - 1, map = { today: [last, last], yesterday: [last - 1, last - 1], since: [last - 1, last], "7": [last - 6, last], "30": [0, last] };
+    document.querySelectorAll(".presets button").forEach(function (b) { var r = map[b.dataset.preset]; b.setAttribute("aria-pressed", r[0] === state.a && r[1] === state.b ? "true" : "false"); });
+    document.querySelectorAll("#metric button").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.metric === state.metric ? "true" : "false"); });
+    $("hint").textContent = "Flèches ← → du clavier : −1 / +1 jour";
+
+    var tot = {}, grand = z(), models = {};
+    M.forEach(function (m) { tot[m.key] = z(); });
+    days.forEach(function (d) {
+      M.forEach(function (m) {
+        var mm = (S[m.key] || {})[d] || {};
+        for (var x in mm) { add(tot[m.key], mm[x]); add(grand, mm[x]); models[x] = models[x] || {}; models[x][m.key] = models[x][m.key] || z(); add(models[x][m.key], mm[x]); }
+      });
+    });
+    var label = n === 1 ? "1 jour, le " + jour(days[0]) + " " + dd(days[0]).getFullYear() : n + " jours, du " + dfr(days[0], true) + " au " + dfr(days[n - 1], true);
+    $("per").textContent = label + (state.b === DAYS.length - 1 ? " · le " + dfr(DAYS[DAYS.length - 1]) + " s'arrête à l'heure de la mesure" : "");
+    var busiest = days.reduce(function (best, d) { var v = M.reduce(function (a, m) { return a + s4(day(m.key, d)); }, 0); return v > best[1] ? [d, v] : best; }, [null, -1]);
+    $("ess").innerHTML = "<b>" + short(s4(grand)) + " de tokens</b> sur " + (n === 1 ? "1 jour" : n + " jours") + ", dont <b>" + short(grand[3]) + " de lectures de cache (" + pct(grand[3], s4(grand)) + ")</b>. Ce qui reste, entrées, sorties et écritures de cache, pèse <b>" + short(nocr(grand)) + "</b>." +
+      (n > 1 && busiest[0] ? " Le jour le plus chargé est le " + jour(busiest[0]) + " avec " + short(busiest[1]) + "." : "");
+    $("k-total").textContent = short(s4(grand)); $("k-total-x").textContent = fr(s4(grand)) + " tokens";
+    $("k-nocr").textContent = short(nocr(grand)); $("k-out").textContent = short(grand[1]); $("k-msgs").textContent = fr(grand[4]);
+    // Carte à partager : uniquement des totaux calculés sur la période choisie.
+    var total = s4(grand), secs = n * 86400;
+    shareState = { total: total, rate: secs ? total / secs : 0, t0: Date.now() };
+    var big = total >= 1e9 ? [dec(total / 1e9, 2), total >= 2e9 ? "milliards" : "milliard"] : [dec(total / 1e6, 1), "millions"];
+    $("s-big").textContent = big[0]; $("s-big").dataset.v = big[0];
+    $("s-unit").textContent = big[1] + " de tokens";
+    $("s-of").textContent = "en " + (n === 1 ? "1 jour" : n + " jours") + ", du " + dfr(days[0]) + " au " + dfr(days[n - 1], true);
+    $("s-day").textContent = short(Math.round(total / n));
+    $("s-sec").textContent = fr(Math.round(shareState.rate));
+    // Part des sous-agents : calculée seulement si chaque machine mesurée a le détail par jour.
+    var subOk = M.every(function (m) { return !m.measured || SUB[m.key]; }), subT = 0;
+    if (subOk) days.forEach(function (d) { M.forEach(function (m) { var v = (SUB[m.key] || {})[d]; if (v) subT += s4(v); }); });
+    $("s-rep").textContent = subOk && total ? (subT / total >= 0.1 ? Math.round(100 * subT / total) : dec(100 * subT / total, 1)) + " %" : "–";
+    var recL = n > 1 && busiest[0] ? "jour record, le " + dfr(busiest[0]) : "tokens par heure";
+    $("s-cache").textContent = n > 1 && busiest[0] ? short(busiest[1]) : short(Math.round(total / 24));
+    $("s-cache-l").textContent = recL;
+    storyData = { big: big[0], unit: big[1] + " de tokens", of: $("s-of").textContent, n: n,
+      stats: [[$("s-day").textContent, "tokens par jour"], [$("s-sec").textContent, "tokens par seconde"], [$("s-rep").textContent, "de stagiaires (sous-agents)"], [$("s-cache").textContent, recL]] };
+    drawPreview();
+    $("s-txt").textContent = "POV : tu rushes tes projets perso. " + big[0] + " " + big[1] + " de tokens Claude Code en " + (n === 1 ? "1 jour" : n + " jours") + ". Soit " + fr(Math.round(shareState.rate)) + " tokens par seconde, jour et nuit.";
+
+
+    $("svg").innerHTML = chart(days, state.metric === "all" ? s4 : nocr);
+
+    function cells(v) { return [v[0], v[1], v[2], v[3], s4(v), v[4]].map(function (x) { return '<td class="num">' + fr(x) + "</td>"; }).join(""); }
+    var rows = M.map(function (m) {
+      var sw = '<td><span class="sw" style="background:' + m.color + '"></span>' + esc(m.label) + "</td>";
+      return "<tr>" + sw + (m.measured ? cells(tot[m.key]) : '<td colspan="6"><span class="chip c-ko">non mesuré</span> aucune mesure récente reçue</td>') + "</tr>";
+    }).join("");
+    rows += '<tr class="sum"><td>Total mesuré</td>' + cells(grand) + "</tr>";
+    rows += '<tr><td><span class="sw" style="background:#E8E0DA"></span>Sessions cloud</td><td colspan="6"><span class="chip c-ko">non mesurable</span> transcripts effacés avec le conteneur</td></tr>';
+    $("t-machine").innerHTML = rows;
+
+    var mrows = Object.keys(models).map(function (x) { var t = z(); for (var k in models[x]) add(t, models[x][k]); return [x, t]; })
+      .sort(function (a, b) { return s4(b[1]) - s4(a[1]); })
+      .map(function (r) {
+        var split = M.filter(function (m) { return m.measured; }).map(function (m) { return esc(m.label) + " " + pct(s4(models[r[0]][m.key] || z()), s4(r[1])); }).join(" · ");
+        var v = r[1];
+        return "<tr><td><code>" + esc(r[0]) + "</code></td>" + [v[0], v[1], v[2], v[3], s4(v)].map(function (x) { return '<td class="num">' + fr(x) + "</td>"; }).join("") +
+          '<td class="num">' + pct(s4(v), s4(grand)) + "</td><td>" + split + "</td></tr>";
+      }).join("");
+    $("t-model").innerHTML = mrows || '<tr><td colspan="8">Aucune réponse sur cette période.</td></tr>';
+
+    $("t-day-sum").textContent = "Afficher " + (n === 1 ? "le jour" : "les " + n + " jours");
+    $("t-day-head").innerHTML = "<th>Jour</th>" + M.map(function (m) { return '<th class="r">' + esc(m.label) + "</th>"; }).join("") + '<th class="r">Total</th><th class="r">dont lecture cache</th><th class="r">dont sortie</th>';
+    $("t-day").innerHTML = days.slice().reverse().map(function (d) {
+      var t = z();
+      var c = M.map(function (m) { var v = day(m.key, d); add(t, v); return '<td class="num">' + (m.measured ? fr(s4(v)) : "–") + "</td>"; }).join("");
+      return "<tr><td>" + jour(d) + "</td>" + c + '<td class="num">' + fr(s4(t)) + '</td><td class="num">' + fr(t[3]) + '</td><td class="num">' + fr(t[1]) + "</td></tr>";
+    }).join("");
+  }
+
+
+  var shareState = { total: 0, rate: 0, t0: Date.now() };
+  $("s-copy").onclick = function () {
+    var t = $("s-txt").textContent;
+    function sel() { var r = document.createRange(); r.selectNodeContents($("s-txt")); var w = getSelection(); w.removeAllRanges(); w.addRange(r); $("s-copied").textContent = "Texte sélectionné : copie-le avec ⌘C."; }
+    try { navigator.clipboard.writeText(t).then(function () { $("s-copied").textContent = "Texte copié."; }, sel); } catch (e) { sel(); }
+  };
+  $("s-replay").onclick = function () {
+    var el = $("s-big"), target = parseFloat(el.dataset.v.replace(",", ".")), d = el.dataset.v.split(",")[1] ? el.dataset.v.split(",")[1].length : 0, t0 = performance.now();
+    if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    (function step(t) { var k = Math.min(1, (t - t0) / 1400), e = 1 - Math.pow(1 - k, 3); el.textContent = dec(target * e, d); if (k < 1) requestAnimationFrame(step); else el.textContent = el.dataset.v; })(t0);
+  };
+
+  // Image story 1080 × 1920 dessinée sur un canvas (aucune bibliothèque, fonctionne hors ligne).
+  var storyData = null, FONT = '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif';
+  function fit(ctx, text, weight, size, max) {
+    ctx.font = weight + " " + size + "px " + FONT;
+    while (ctx.measureText(text).width > max && size > 10) { size -= 2; ctx.font = weight + " " + size + "px " + FONT; }
+    return size;
+  }
+  function box(ctx, x, y, w, h, fill, shadow) {
+    ctx.fillStyle = "#111"; ctx.fillRect(x + shadow, y + shadow, w, h);
+    ctx.fillStyle = fill; ctx.fillRect(x, y, w, h);
+    ctx.lineWidth = 6; ctx.strokeStyle = "#111"; ctx.strokeRect(x + 3, y + 3, w - 6, h - 6);
+  }
+  function drawStory() {
+    var c = document.createElement("canvas"); c.width = 1080; c.height = 1920;
+    var ctx = c.getContext("2d"), d = storyData, L = 90, W = 900;
+    ctx.fillStyle = "#AE7AFF"; ctx.fillRect(0, 0, 1080, 1920);
+    ctx.textBaseline = "alphabetic"; ctx.fillStyle = "#111";
+    // Étiquette
+    ctx.font = "800 30px " + FONT; var tag = "CREATED BY ORKA", tw = ctx.measureText(tag).width + 44;
+    box(ctx, L, 150, tw, 64, "#FF8ACD", 8); ctx.fillStyle = "#111"; ctx.fillText(tag, L + 22, 193);
+    // Accroche
+    fit(ctx, "tes projets perso", "900", 92, W);
+    ctx.fillText("POV : tu rushes", L, 335); ctx.fillText("tes projets perso", L, 435);
+    // Poulpi
+    var img = document.querySelector(".poulpi");
+    if (img && img.complete && img.naturalWidth) {
+      var ih = 440, iw = ih * img.naturalWidth / img.naturalHeight;
+      ctx.save(); ctx.shadowColor = "#111"; ctx.shadowOffsetX = 10; ctx.shadowOffsetY = 10; ctx.shadowBlur = 0;
+      ctx.drawImage(img, (1080 - iw) / 2, 495, iw, ih); ctx.restore();
+    }
+    // Chiffre
+    ctx.fillStyle = "#111";
+    fit(ctx, d.big, "900", 300, W); ctx.fillText(d.big, L - 8, 1225);
+    fit(ctx, d.unit.toUpperCase(), "900", 92, W); ctx.fillText(d.unit.toUpperCase(), L, 1365);
+    fit(ctx, d.of, "700", 44, W); ctx.fillText(d.of, L, 1430);
+    // Statistiques
+    var bw = 435, bh = 132;
+    d.stats.forEach(function (st, i) {
+      var x = L + (i % 2) * (bw + 30), y = 1475 + Math.floor(i / 2) * (bh + 24);
+      box(ctx, x, y, bw, bh, "#FFFFFF", 8);
+      ctx.fillStyle = "#111"; fit(ctx, st[0], "900", 62, bw - 48); ctx.fillText(st[0], x + 24, y + 70);
+      ctx.fillStyle = "#3a3540"; fit(ctx, st[1], "700", 30, bw - 48); ctx.fillText(st[1], x + 24, y + 110);
+    });
+    return c;
+  }
+  function drawPreview() {
+    if (!storyData) return;
+    try { $("s-prev").src = drawStory().toDataURL("image/png"); } catch (e) {}
+  }
+  var pimg = document.querySelector(".poulpi"); if (pimg && !pimg.complete) pimg.addEventListener("load", drawPreview);
+  var dlP = (window.claude && window.claude.use) ? window.claude.use("downloads") : Promise.resolve(null);
+  $("s-save").onclick = function () {
+    if (!storyData) return;
+    var name = "tokens-claude-code-" + storyData.n + "j-story.png";
+    drawStory().toBlob(function (blob) {
+      dlP.then(function (dl) {
+        if (dl) {
+          return dl.save({ filename: name, data: blob }).then(function () { $("s-copied").textContent = "Image enregistrée."; }, function (e) {
+            $("s-copied").textContent = e && e.code === "declined" ? "Enregistrement annulé." : "Enregistrement impossible ici : fais un appui long ou un clic droit sur l'aperçu.";
+          });
+        }
+        var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
+        $("s-copied").textContent = "Si rien ne se télécharge, fais un appui long ou un clic droit sur l'aperçu.";
+      });
+    }, "image/png");
+  };
+  var card = $("chart"), tip = $("tip");
+  card.addEventListener("mousemove", function (e) {
+    var t = e.target.closest ? e.target.closest(".hit") : null;
+    if (!t) { tip.hidden = true; return; }
+    tip.textContent = t.getAttribute("data-tip"); tip.hidden = false;
+    var r = card.getBoundingClientRect(), x = e.clientX - r.left + 14, y = e.clientY - r.top + 14;
+    if (x + tip.offsetWidth > r.width - 8) x = e.clientX - r.left - tip.offsetWidth - 14;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  });
+  card.addEventListener("mouseleave", function () { tip.hidden = true; });
+
+  var h = location.hash.replace("#", "");
+  if (h === "j7") preset("7"); else if (h === "hier") preset("since"); else preset("30");
+})();
+</script>

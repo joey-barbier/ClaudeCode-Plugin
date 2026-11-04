@@ -54,8 +54,8 @@ If git = yes/sometimes, follow up with git-specific questions in this round or R
 
 | # | Question | Options |
 |---|----------|---------|
-| 4 | Which ClaudeCode-Plugin plugins do you use? (select all) | `code-review` / `qa-testing` / `dev-workflow` / `cc-memory` / `analytics` / `openclaw` |
+| 4 | Which ClaudeCode-Plugin plugins do you use? (select all) | `code-review` / `dev-workflow` / `cc-memory` / `analytics` |
 
 Since AskUserQuestion supports max 4 options, split into two multiSelect questions:
-- Question A: `code-review` / `qa-testing` / `dev-workflow` / `cc-memory`
-- Question B: `analytics` / `openclaw` / `None of the above`
+- Question A: `code-review` / `dev-workflow` / `cc-memory`
+- Question B: `analytics` / `None of the above`

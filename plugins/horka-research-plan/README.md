@@ -1,6 +1,16 @@
 # horka-research-plan
 
-Multi-agent research that ends in a **sourced action plan**, delivered as one doc-style HTML page.
+**Right model, right effort, right moment.** By default Claude Code gives every subagent the session's model, so a ten-agent run on the top model pays top price for work that is mostly opening pages and counting. This skill assigns a model and an effort level to each role:
+
+| Role | Model | Effort |
+|---|---|---|
+| Orchestrator, critic, personas, synthesis | most capable (Fable) | high |
+| Researchers | expert tier (Opus) | high |
+| Validators, demand probe, counting | generalist tier (Sonnet) | medium |
+
+Judgement stays on the best model; mechanical work moves to cheaper tiers. The real cost of each wave goes in the run's scorecard, so the split is adjusted with numbers, not guesses.
+
+What it produces: multi-agent research that ends in a **sourced action plan**, delivered as one doc-style HTML page.
 
 Built after a real run: 18 agents in two waves, 44 candidate actions, 329 figures opened at the source by validators (0 false, 9 corrections), 10 actions kept by an antagonist critic. The skill encodes what that run taught: readers (personas, real demand) *before* researchers, one brief per action type, validators separate from researchers, short waves with reading in between, and a retrospective that rewrites a **lessons file** so the next run starts smarter (one experiment per run, judged by an agent that did not write the page).
 
@@ -38,14 +48,6 @@ Built after a real run: 18 agents in two waves, 44 candidate actions, 329 figure
 ## Self-improvement loop
 
 Each run ends with `references/retrospective.md`: the orchestrator writes the facts (agents, models, minutes, figures verified, what was found late), a separate agent writes the judgement (at most five lessons, a verdict on the previous experiment, one experiment for the next run), and the orchestrator rewrites `research-plan-lessons.md` in full (project memory, `.claude/memory/` in the repo, or `~/.claude/`). Phase 0 of the next run reads it first.
-
-## Model and effort per role
-
-| Role | Model | Effort |
-|---|---|---|
-| Orchestrator, critic, personas, synthesis | most capable (Fable) | high |
-| Researchers | expert tier (Opus) | high |
-| Validators, demand probe, counting | generalist tier (Sonnet) | medium |
 
 ## Requirements
 
