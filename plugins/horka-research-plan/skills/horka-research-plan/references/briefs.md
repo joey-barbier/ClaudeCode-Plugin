@@ -81,6 +81,7 @@ Context economy: for any wide search, or a read of several files of which you ke
 an Explore sub-agent on the cheapest tier and keep only its answer; read in full only what you modify or port.
 Do not delegate: content you need in full (it would be read twice), a single grep or ls (the sub-agent costs
 more), or anything that needs exactness (a summary can be wrong; verify yourself).
+Context cap: at ~150k tokens of context, stop, write a hand-over report (done, state, next steps, open questions) and let a fresh agent continue.
 Proof before "done": full test run and the reference gate green, last lines pasted. No test skipped, no retry,
 no assertion loosened. Report ≤ 300 words: branch, commits, done, old → new mapping, deliberate deviations,
 not done or not found, questions. Do not declare yourself validated: others do that.

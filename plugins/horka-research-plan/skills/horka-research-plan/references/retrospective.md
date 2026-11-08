@@ -86,3 +86,5 @@ Rules for the file:
 2. In the scorecard of that run, fill `previous_experiment` with what happened: kept or dropped, and why.
 
 If the file does not exist, this is run 1: write it at the end anyway.
+
+**Next experiment for code mode (from the Guild run):** cap every agent's context (~150k). Past it the agent writes a hand-over report and a fresh agent continues; the orchestrator is relieved each wave with a state file. Measure: Opus cache-read/output ratio (174 on the Guild run) and orchestrator share of tokens (16 %).
