@@ -29,7 +29,7 @@ Luego `/plugin` → pestaña **Discover** para explorar, o instala plugins indiv
 | **[horka-skill-eval](#horka-skill-eval)** | Auditor de calidad de skills | skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Factory de skills con quality gates obligatorios | skill |
 | **[horka-project-index](#horka-project-index)** | Índice global de proyectos: resuelve comandos genéricos al proyecto/workspace correcto | skill + script |
-| **[horka-research-plan](#horka-research-plan)** | El modelo y el esfuerzo adecuados para cada rol de agente → investigación multi-agente que ahorra tokens y termina en un plan de acción con fuentes (página doc-style) | skill |
+| **[horka-research-plan](#horka-research-plan)** | El modelo y el esfuerzo adecuados para cada rol de agente → investigación multi-agente que ahorra tokens y termina en un plan de acción con fuentes (página doc-style); variante código para una migración llevada por muchos agentes (testers ciegos antes de los implementadores, rama de integración verde en una puerta, hilos de validación separados) | skill |
 | **[horka-played](#horka-played)** | `/played` como en WoW: tu consumo de tokens de Claude Code por día, máquina y modelo, con tarjeta para compartir y PNG para stories | skill + scripts |
 
 ---

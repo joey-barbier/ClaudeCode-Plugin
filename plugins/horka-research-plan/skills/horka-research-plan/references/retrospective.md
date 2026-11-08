@@ -35,12 +35,18 @@ Step B is the step people skip. Do not skip it: an orchestrator reviewing its ow
   "actions": {"candidates": 44, "after_dedup": 34, "kept": 10},
   "figures": {"opened": 329, "verified": 290, "partial": 30, "false": 0, "not_found": 9},
   "late_discoveries": ["the webhook assumed by action 5 does not exist in code"],
+  "tokens": {"by_model": {"opus": {"all_in": 502363204, "output": 3280662, "turns": 2065},
+                          "fable": {"all_in": 62608453, "output": 209208, "turns": 137}},
+             "source": "transcripts (session + subagents), cache reads included"},
+  "time": {"elapsed_minutes": 85, "cumulated_agent_minutes": 1008, "parallelism": 11.7},
+  "code_variant": {"tests_green_on_gate": 1391, "blocking_found": {"antagonist": 18, "validation_threads": 4},
+                   "agents_relaunched": [{"agent": "guard implementer", "why": "L0 API changed after its spec"}]},
   "cost": "unknown",
   "previous_experiment": {"tried": "personas before researchers", "kept": true, "why": "10 duplicates fewer"}
 }
 ```
 
-`cost` stays `"unknown"` unless the harness reported it. Never estimate it.
+`cost` stays `"unknown"` unless the harness reported it. Never estimate it. `tokens` is read from the transcripts (`message.usage` of every assistant turn, deduplicated by message id), never from the harness's per-agent count, which ignores cache reads and was 5.9 M where the transcripts said 404 M on the Guild run. Record cache reads per agent: it is the figure the delegation rule (Phase 2) is meant to lower.
 
 ## Lessons file template (step C)
 

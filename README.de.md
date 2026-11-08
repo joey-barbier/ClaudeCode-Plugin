@@ -29,7 +29,7 @@ Dann `/plugin` → **Discover** Tab zum Durchsuchen, oder installiere Plugins ei
 | **[horka-skill-eval](#horka-skill-eval)** | Skill-Qualitätsprüfer | Skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Skill-Fabrik mit verpflichtenden Qualitätsgates | Skill |
 | **[horka-project-index](#horka-project-index)** | Globaler Projektindex: löst generische Befehle zum richtigen Projekt/Workspace auf | Skill + Skript |
-| **[horka-research-plan](#horka-research-plan)** | Das richtige Modell und der richtige Aufwand pro Agentenrolle → Multi-Agenten-Recherche, die Tokens spart und in einem belegten Aktionsplan endet (Doc-Style-Seite) | skill |
+| **[horka-research-plan](#horka-research-plan)** | Das richtige Modell und der richtige Aufwand pro Agentenrolle → Multi-Agenten-Recherche, die Tokens spart und in einem belegten Aktionsplan endet (Doc-Style-Seite); Code-Variante für eine Migration mit vielen Agenten (blinde Tester vor Implementierern, grüner Integrations-Branch an einem Gate, getrennte Validierungs-Threads) | skill |
 | **[horka-played](#horka-played)** | `/played` wie in WoW: dein Claude-Code-Tokenverbrauch pro Tag, Maschine und Modell, mit teilbarer Karte und Story-PNG | skill + scripts |
 
 ---
