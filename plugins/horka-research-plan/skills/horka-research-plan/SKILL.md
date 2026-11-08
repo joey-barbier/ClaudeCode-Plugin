@@ -34,6 +34,8 @@ Same orchestrator, same "no agent grades its own work". Read `references/code-va
 4. **Two-hand TDD**: blind testers (never open `Sources/`) write `Spec/API.md` then the tests; implementers make them pass without changing an assertion; a reconciliation agent resolves the drift between specs.
 5. **Validation by separate threads** (code, AI behaviour, security) that receive only the branch and the base; a BLOCKED first pass is the expected result.
 
+Probe every external dependency for real before any spec that depends on it (wave S), and run the gate as the CI will (same user, cores, runner) from wave 1.
+
 ## Phase 0 — Framing and reality check (you, no agent, ~15 min)
 
 0. **Read the lessons file** if it exists (`research-plan-lessons.md`, locations in `references/retrospective.md`). Apply its "Rules that held" to the common brief and run its "Next experiment". This is how the skill improves: the previous run wrote it for you.

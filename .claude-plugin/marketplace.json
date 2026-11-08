@@ -62,7 +62,7 @@
       "name": "horka-research-plan",
       "source": "./plugins/horka-research-plan",
       "description": "Right model, right effort, right moment: multi-agent research that spends tokens where judgement matters. The most capable model orchestrates and judges, the expert tier researches, the generalist tier validates and counts, each at its own effort level, instead of every subagent inheriting the session's top model. Ends in a sourced action plan: reality check (prod / develop / open PRs), personas and real-demand probe first, independent validators that open every URL, antagonist critic, one doc-style HTML page, then a retrospective that rewrites a lessons file read by the next run. No number without a source, no agent grading its own work. Model routing is recursive and task-agnostic: every agent receives the four-tier rule (top judges, expert codes or researches, generalist merges and verifies, cheapest does lookups) and passes it to its own sub-agents, never launching a tier above its own. Code variant for a migration or rewrite run by many agents: blind test writers before implementers (two-hand TDD), file ownership per agent, an integration branch green on a reference gate instead of a page, validation by separate threads.",
-      "version": "1.3.0"
+      "version": "1.4.0"
     },
     {
       "name": "horka-played",

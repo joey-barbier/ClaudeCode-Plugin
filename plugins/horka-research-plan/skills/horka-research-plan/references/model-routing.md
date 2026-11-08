@@ -45,6 +45,8 @@ A task that mixes the three is split: the expert agent does the judgement part i
 | A small lookup (one `grep`, one `ls`) | No | A sub-agent costs a few thousand tokens and 30 s to 2 min, more than the lookup. |
 | Anything that needs exactness (signatures, formats, numbers) | No, or verify afterwards | A sub-agent's summary can be wrong. |
 
+On the Guild run the routing paid off on mechanics (19 Sonnet tasks, 1 redone on Opus; merges and gates at ~1 % of tokens) but not on the bill: 80 % of tokens were Opus contexts re-read; the cost lever is context length, not model tier.
+
 ## Examples
 
 - Top (Fable) orchestrates a migration: launches expert (Opus) testers and implementers; each implementer launches cheapest (Haiku) `Explore` sub-agents for "where is this type used"; the orchestrator launches generalist (Sonnet) agents to merge branches and rerun the gate.
