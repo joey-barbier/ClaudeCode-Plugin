@@ -2,18 +2,16 @@
 name: horka-research-plan
 allowed-tools: Agent, Workflow, Bash, Read, Write, Edit, Glob, Grep, WebFetch, WebSearch
 description: >
-  Multi-agent research that ends in a sourced action plan, delivered as one doc-style HTML page.
-  Picks the model and effort of every agent by role (most capable model for judgement, expert tier
-  for research, generalist tier for validation and counting) so tokens go where judgement matters.
-  Runs a reality check in three states (prod / develop / open PRs), then short waves of agents:
-  personas and a real-demand probe FIRST, researchers briefed per action type, code-level dedup,
-  independent validators that open every URL, an antagonist critic, then feasibility and completeness.
-  Every number carries a source URL, a date and a status chip; nothing is created or scheduled.
-  Ends with a retrospective that rewrites a lessons file, read again at the start of the next run.
-  Invoke when the user asks for "a full check and a plan", "how do we get discovered", "which channel",
-  "a go-to-market", "a sourced plan", "un check complet et un plan", "plan sourcé", "fais-moi un plan
-  chiffré", or any strategy / marketing / product question that needs evidence rather than opinion.
-  Do NOT use for: code changes, a quick factual lookup, a document with no decisions to make.
+  Right model, right effort, right moment, at every level: routes each sub-task to the cheapest tier
+  that can do it (top tier judges, expert tier researches or codes, generalist validates and merges,
+  cheapest tier does lookups), and every agent launched receives the same rule for its own sub-agents.
+  Runs any multi-agent job in short waves with independent validators, an antagonist critic and a
+  retrospective lessons file. Research mode ends in a sourced action plan (doc-style page, every number
+  with URL and date); code mode runs a migration or rewrite with blind test writers before implementers,
+  an integration branch green on a gate, and separate validation threads. Use when the user wants work
+  split across agents or asks "a full check and a plan", "plan sourcé", "fais-moi un plan chiffré",
+  "migre X vers Y avec plein d'agents", "lance plein d'agents", "quel modèle pour quelle tâche".
+  Do NOT use for a single bug fix, a quick lookup, or a document with no decision to make.
 ---
 
 # Research Plan — sourced action plan by a team of agents
@@ -25,6 +23,16 @@ Three rules that never bend:
 1. **No number from memory.** Every figure has a URL that was opened, a date, and a status: verified / partial / hypothesis / not found. A figure that is not on the cited page is removed, not "fixed".
 2. **No agent grades its own work.** Validators are never the researcher they check. The critic never wrote an action. Personas never saw the researchers' output before judging it.
 3. **Nothing is created or scheduled.** No cron, no board change, no CI change, no PR to a product repo. Product needs and tasks go in a "to hand over" tab.
+
+## Code mode (migration, rewrite, new foundation)
+
+Same orchestrator, same "no agent grades its own work". Read `references/code-variant.md` before Phase 0 when the request is a migration or rewrite run by many agents. The five changes, in one line each:
+
+1. Rule 1 becomes **no behaviour from memory**: the reference is the existing code on the remote `main`; every test cites `file:line`.
+2. Rule 3 relaxes to **branches**: one worktree and branch per agent; a push only on the user's go in the thread; never a PR or merge without it.
+3. The deliverable is an **integration branch green on the reference gate** plus the executable specs and a local progress board, not a page.
+4. **Two-hand TDD**: blind testers (never open `Sources/`) write `Spec/API.md` then the tests; implementers make them pass without changing an assertion; a reconciliation agent resolves the drift between specs.
+5. **Validation by separate threads** (code, AI behaviour, security) that receive only the branch and the base; a BLOCKED first pass is the expected result.
 
 ## Phase 0 — Framing and reality check (you, no agent, ~15 min)
 
@@ -53,17 +61,26 @@ A wave is 3 to 5 agents, 10 to 15 minutes, results written to files (`res/<role>
 
 Keep 8 to 12 actions. Everything dropped goes in a "what we do not do, and why" tab with the reason: several will come back once the funnel has numbers.
 
+Code mode replaces waves 1 to 6 with S (spike and decision records) → T (blind testers) → I (implementers) → R (reconciliation) → V (validation threads) → M (mechanical steps); 5 to 8 agents per wave, one worktree each: table and briefs in `references/code-variant.md` and `references/briefs.md`.
+
 If the `Workflow` tool is available, use `pipeline()` per researcher (researcher → validator) and a barrier only for dedup and the critic; see `references/workflow-skeleton.md`. Without it, use the `Agent` tool with one role per agent and the same schemas. Expect a concurrency cap: plan the waves, do not wait on a monolith.
 
-## Phase 2 — Model and effort per role
+## Phase 2 — Model and effort per role, at every level
+
+The routing rule is general and recursive, not tied to a mode: `references/model-routing.md` gives the four tiers (top, expert, generalist, cheapest), the three questions that pick a tier for any sub-task, and the pass-down line to put at the end of every brief so that an expert agent launches generalist or cheapest sub-agents for its own mechanical steps and lookups, and a generalist agent still launches cheapest ones. An agent never launches a tier above its own; it reports back instead. Give every agent the absolute path of that file.
 
 | Role | Model | Effort | Why |
 |---|---|---|---|
 | Orchestrator (this session), critic, personas, synthesis | the most capable model available | high (medium for pure orchestration) | Judgement. On Fable 5.1 changing effort does not break the prompt cache. |
 | Researchers | the expert tier (e.g. Opus) | high | Long tool sequences. A lazy result ("skipped a source, stopped early") is an effort problem, not a model problem. |
 | Validators, demand probe, counting | the generalist tier (e.g. Sonnet) | medium | Mechanical: open, compare, count. |
+| Code mode: authors, blind testers, implementers, antagonist reviewers, reconciliation | the expert tier (e.g. Opus) | high | Judgement on every line; a lazy spec is an effort problem. |
+| Code mode: merging a branch, rerunning the gate, "is it green?", the progress board | the generalist tier (e.g. Sonnet) | medium | Mechanical, no decision. |
+| Wide lookups inside any agent ("where is X used", inventory of a folder) | a sub-agent of the cheapest tier (e.g. Haiku, the `Explore` agent type), launched by the agent that needs the answer | low | The cost is the context the parent re-reads on every later turn (500 M of 566 M tokens on the Guild run were cache reads), not the output. |
 
-Cost is not measured for this split: write the real cost of each wave in the orchestration scorecard and adjust next time.
+Nothing picks the model automatically: a sub-agent inherits its parent's model unless the brief says otherwise. Put the delegation rule, with its losing cases, in every brief (text in `references/model-routing.md`): delegate a wide search whose conclusion is all you keep; never delegate content you need in full, a single `grep`, or anything that needs exactness. Measure it with tokens per model and cache-read tokens per agent in the scorecard.
+
+Cost is not measured beyond the scorecard: write the real cost of each wave and adjust next time.
 
 ## Phase 3 — The page
 
@@ -73,10 +90,12 @@ Tabs: Essentials (actions table: first datable step, effort, sourced expectation
 
 Expectations borrowed from bigger players are presented as orders of magnitude with a dated stop threshold, never as forecasts. Mobile: no horizontal scroll at 400 px (check with Playwright: `document.documentElement.scrollWidth` ≤ viewport on every tab).
 
+Code variant: no page. The deliverable is the `integration` branch green on the reference gate, the `Spec/` folders, and the local progress board (doc-style HTML regenerated from the worktrees and the transcripts: tokens per model all-in and output, wall time vs cumulated agent time, parallelism factor, tests green, verdicts of the validation threads). The board replaces progress messages in the thread.
+
 ## Phase 4 — Before delivering
 
 - [ ] No price, no unsourced figure, no action that redefines a feature owned by another thread (needs go to the hand-over tab).
-- [ ] Nothing created or scheduled.
+- [ ] Nothing created or scheduled (code variant: nothing pushed, merged or scheduled without the user's go in the thread; commits carry no attribution trailer).
 - [ ] Rendering checked on desktop and phone; links point to the right domain.
 - [ ] Summary in the thread under 80 words: link, verdict, what waits on the user.
 - [ ] Phase 5 done: lessons file rewritten, three lines "what I learned" in the summary.
@@ -85,7 +104,7 @@ Expectations borrowed from bigger players are presented as orders of magnitude w
 
 The run is not finished when the page is delivered. It is finished when the next run can start smarter. Full method and templates in `references/retrospective.md`; the short version:
 
-1. **Facts (you).** Write the scorecard: per wave, agents, models and effort, minutes, failures, what you changed in the brief mid-run; candidates → kept actions; figures opened / verified / partial / false / not found; what was discovered late; cost only if the harness reported it, otherwise `unknown`.
+1. **Facts (you).** Write the scorecard: per wave, agents, models and effort, minutes, failures, what you changed in the brief mid-run; candidates → kept actions; figures opened / verified / partial / false / not found; what was discovered late; tokens per model (all-in and output, read from the transcripts: the harness count ignores cache reads), wall time vs cumulated agent time; code variant: tests green on the gate, blocking points found by reviewers and validation threads, agents relaunched and why.
 2. **Judgement (a fresh agent, not you).** Rule 2 applies to the orchestrator too: a critic agent that did not write the page reads the brief, the scorecard, the page and the previous lessons file, and returns at most five lessons (`situation → what we did → next time`), a verdict on the previous run's experiment (kept or dropped, why), and **one** experiment for the next run with the measure that will tell if it worked.
 3. **Merge (you).** Rewrite the lessons file in full: next experiment, rules that held, rules that changed, mistakes to watch, last 10 scorecard lines. Under 4 KB, no secret, nothing the user could not read. Then put three lines "what I learned" in the delivery summary, with the file's path.
 

@@ -29,7 +29,7 @@ Then `/plugin` → **Discover** tab to browse, or install plugins individually b
 | **[horka-skill-eval](#horka-skill-eval)** | Skill quality auditor | skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Production-grade skill factory with enforced quality gates | skill |
 | **[horka-project-index](#horka-project-index)** | Global project index: resolves generic commands to the right project/workspace | skill + script |
-| **[horka-research-plan](#horka-research-plan)** | Right model and right effort for each agent role → multi-agent research that saves tokens and ends in a sourced action plan (doc-style page) | skill |
+| **[horka-research-plan](#horka-research-plan)** | Right model and right effort for each agent role → multi-agent research that saves tokens and ends in a sourced action plan (doc-style page); code variant for a migration run by many agents (blind testers before implementers, integration branch green on a gate, separate validation threads) | skill |
 | **[horka-played](#horka-played)** | `/played` as in WoW: your Claude Code token usage per day, machine and model, with a shareable card and a story PNG | skill + scripts |
 
 ---

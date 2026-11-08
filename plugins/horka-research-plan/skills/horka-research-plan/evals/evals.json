@@ -1,0 +1,81 @@
+{
+  "skill_name": "horka-research-plan",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "On a un moteur de scoring en Ruby (~6 000 lignes, 4 gems internes : scoring-core, scoring-rules, scoring-io, scoring-cli) qu'on veut réécrire en Kotlin selon notre ADR-012 (couches strictes, imports vers le bas, secrets jamais dans la session). Je veux lancer plein d'agents en parallèle pour convertir, avec des tests qui ne soient pas écrits par celui qui code, et une validation séparée. Prépare-moi le plan de lancement : dépôts cibles, vagues, briefs, qui fait quoi, et ce qu'on livre. Ne lance aucun agent, écris seulement le plan et les briefs dans ./plan/.",
+      "expected_output": "Un plan de migration multi-agents : vagues (spike/ADR, testeurs à l'aveugle avant implémenteurs, implémenteurs, réconciliation, validation séparée), briefs commun/testeur/implémenteur, propriété des fichiers, table modèle/effort avec délégation des recherches, livrable = branche d'intégration verte sur une porte + specs + tableau de bord, règles de push.",
+      "files": [],
+      "assertions": [
+        "Les testeurs écrivent les tests AVANT les implémenteurs et n'ouvrent jamais le code implémenté (Sources/)",
+        "Un contrat d'API (API.md) est écrit par le testeur avant les tests",
+        "L'implémenteur ne modifie aucune assertion des tests de spécification (seuls des renommages mécaniques listés)",
+        "Chaque agent a un worktree/branche propre et une propriété de fichiers déclarée ; types provisoires marqués TEMP à réconcilier",
+        "Une vague ou un agent de réconciliation fusionne les branches dans une branche d'intégration et traite la dérive d'API entre specs",
+        "Le livrable est une branche d'intégration verte sur une porte de référence (build + tests sur plateforme cible), pas un document seul",
+        "La validation (code / comportement / sécurité) est faite par des agents ou fils séparés qui ne reçoivent que la branche et la base, jamais le contexte de l'orchestrateur, et un verdict bloquant en première passe est prévu",
+        "Aucun push, merge ou PR sans le go explicite de l'utilisateur",
+        "Table modèle/effort par rôle : auteurs/testeurs/relecteurs sur le modèle expert, étapes mécaniques (fusion, porte, tableau de bord) sur un modèle moins cher",
+        "Règle de délégation des recherches larges à un sous-agent du modèle le moins cher pour garder court le contexte des agents chers, avec les cas où ça perd",
+        "Mesure : jetons par modèle (sortie et tout compris, cache relu inclus), temps réel vs temps d'agents cumulé, tests verts",
+        "Les briefs exigent une preuve collée (sortie des tests / porte) et un rapport court qui ne se déclare pas validé"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "migre notre backend node (services/payments, services/notifications, services/reporting + lib/common) vers Go avec plein d'agents claude en même temps stp. contrainte : rien ne doit être poussé sur main sans mon ok, et je veux pas qu'un agent valide son propre code. tu me fais le découpage par agent, les règles, et comment on mesure (temps, tokens, tests) ? écris tout dans docs/migration/, lance rien pour l'instant",
+      "expected_output": "Découpage par cible avec testeurs à l'aveugle puis implémenteurs, règle « aucune assertion changée », validation par fils séparés, mesure : jetons par modèle depuis les transcriptions, temps réel vs cumulé, tests verts, verdicts ; push seulement sur go.",
+      "files": [],
+      "assertions": [
+        "Les testeurs écrivent les tests AVANT les implémenteurs et n'ouvrent jamais le code implémenté (Sources/)",
+        "Un contrat d'API (API.md) est écrit par le testeur avant les tests",
+        "L'implémenteur ne modifie aucune assertion des tests de spécification (seuls des renommages mécaniques listés)",
+        "Chaque agent a un worktree/branche propre et une propriété de fichiers déclarée ; types provisoires marqués TEMP à réconcilier",
+        "Une vague ou un agent de réconciliation fusionne les branches dans une branche d'intégration et traite la dérive d'API entre specs",
+        "Le livrable est une branche d'intégration verte sur une porte de référence (build + tests sur plateforme cible), pas un document seul",
+        "La validation (code / comportement / sécurité) est faite par des agents ou fils séparés qui ne reçoivent que la branche et la base, jamais le contexte de l'orchestrateur, et un verdict bloquant en première passe est prévu",
+        "Aucun push, merge ou PR sans le go explicite de l'utilisateur",
+        "Table modèle/effort par rôle : auteurs/testeurs/relecteurs sur le modèle expert, étapes mécaniques (fusion, porte, tableau de bord) sur un modèle moins cher",
+        "Règle de délégation des recherches larges à un sous-agent du modèle le moins cher pour garder court le contexte des agents chers, avec les cas où ça perd",
+        "Mesure : jetons par modèle (sortie et tout compris, cache relu inclus), temps réel vs temps d'agents cumulé, tests verts",
+        "Les briefs exigent une preuve collée (sortie des tests / porte) et un rapport court qui ne se déclare pas validé"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Je dois porter notre SDK Python (package `veilleninja`, 11 modules, suite pytest de 400 tests) vers TypeScript. Je veux une méthode avec beaucoup d'agents mais pas de bazar : chacun son périmètre, du TDD, et un budget en jetons maîtrisé (les recherches dans le code ne doivent pas gonfler le contexte des agents chers). Écris la méthode et les gabarits de brief dans ./migration-method.md, sans lancer d'agent.",
+      "expected_output": "Méthode : worktree et propriété de fichiers par agent, testeurs à l'aveugle (API.md puis tests) avant implémenteurs, réconciliation, validation séparée, table modèle/effort avec sous-agents Haiku pour les recherches larges et quand ça perd, scorecard avec cache relu par agent.",
+      "files": [],
+      "assertions": [
+        "Les testeurs écrivent les tests AVANT les implémenteurs et n'ouvrent jamais le code implémenté (Sources/)",
+        "Un contrat d'API (API.md) est écrit par le testeur avant les tests",
+        "L'implémenteur ne modifie aucune assertion des tests de spécification (seuls des renommages mécaniques listés)",
+        "Chaque agent a un worktree/branche propre et une propriété de fichiers déclarée ; types provisoires marqués TEMP à réconcilier",
+        "Une vague ou un agent de réconciliation fusionne les branches dans une branche d'intégration et traite la dérive d'API entre specs",
+        "Le livrable est une branche d'intégration verte sur une porte de référence (build + tests sur plateforme cible), pas un document seul",
+        "La validation (code / comportement / sécurité) est faite par des agents ou fils séparés qui ne reçoivent que la branche et la base, jamais le contexte de l'orchestrateur, et un verdict bloquant en première passe est prévu",
+        "Aucun push, merge ou PR sans le go explicite de l'utilisateur",
+        "Table modèle/effort par rôle : auteurs/testeurs/relecteurs sur le modèle expert, étapes mécaniques (fusion, porte, tableau de bord) sur un modèle moins cher",
+        "Règle de délégation des recherches larges à un sous-agent du modèle le moins cher pour garder court le contexte des agents chers, avec les cas où ça perd",
+        "Mesure : jetons par modèle (sortie et tout compris, cache relu inclus), temps réel vs temps d'agents cumulé, tests verts",
+        "Les briefs exigent une preuve collée (sortie des tests / porte) et un rapport court qui ne se déclare pas validé"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "J'ai deux chantiers à faire tourner en parallèle avec des agents Claude : réécrire 180 fiches produit de notre boutique (ton et structure imposés, données dans un CSV) et auditer 40 pages de documentation technique pour en sortir les contradictions. Je veux savoir précisément qui tourne sur quel modèle et pourquoi : si Fable orchestre et lance un Opus, comment cet Opus décide-t-il de lancer du Sonnet ou du Haiku pour ses sous-tâches, et comment un Sonnet sait-il qu'il peut lancer du Haiku ? Écris le plan d'équipe et les briefs dans ./equipe.md, sans lancer aucun agent.",
+      "expected_output": "Plan d'équipe avec les quatre niveaux, critères par sous-tâche, règle récursive et ligne de transmission dans chaque brief, délégation des recherches au moins cher avec ses cas perdants, mesure par modèle depuis les transcriptions.",
+      "files": [],
+      "assertions": [
+        "Quatre niveaux de modèle (le plus capable / expert / généraliste / le moins cher) avec le type de travail et l'effort de chacun",
+        "Des critères de décision par sous-tâche (ex. : coût d'une erreur, vérification mécanique possible, seule la conclusion compte) et non une attribution figée par rôle",
+        "Règle récursive explicite : un agent peut lancer des sous-agents de son niveau ou moins cher, jamais plus cher, et remonte la question à son parent sinon",
+        "Chaque brief se termine par la consigne de transmission de la règle de routage aux sous-agents (l'Opus la donne au Sonnet, le Sonnet au Haiku)",
+        "Les recherches larges dont seule la conclusion compte vont à un sous-agent du niveau le moins cher, avec les cas où déléguer perd",
+        "Les étapes mécaniques avec une vérification (compter, comparer, formater, fusionner, relancer) vont au niveau généraliste",
+        "Mesure prévue : jetons par modèle lus dans les transcriptions (cache relu compris) et temps, par agent",
+        "Les deux chantiers reçoivent chacun une équipe adaptée (fiches produit et audit de doc), avec des validateurs qui n'ont pas produit le contenu qu'ils vérifient"
+      ]
+    }
+  ]
+}
