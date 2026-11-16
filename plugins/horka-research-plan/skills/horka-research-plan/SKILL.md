@@ -26,11 +26,12 @@ Three rules that never bend:
 
 ## What this skill is for, and how much of it to run
 
-Three things matter most. The three rules above never bend in either lane; what the lane changes is how many waves and passes run around them:
+Four things matter most. The three rules above never bend in either lane; what the lane changes is how many waves and passes run around them:
 
 1. **A third party validates before anything ships.** No code and no figure goes out on its author's word.
 2. **Short returns.** Six words state a problem; twenty lines hide it. Every brief imposes the report format: one verdict line, then one line per point (`file:line` · problem · fix), 15 lines at most, no account of what was done. The same holds for messages to the user.
 3. **The right model for each task, inherited down the chain** (Phase 2): the top tier hands task 1 to an expert agent, which gets its lookups done by the cheapest tier.
+4. **The run is a task graph, shown on a board** (next section): a task starts as soon as what it reads is done, a blocked task blocks only its descendants, and the user follows tasks, models and tokens on one page instead of progress messages.
 
 **Size the run before Phase 0.** Pick the lane and say which in one line:
 
@@ -40,6 +41,17 @@ Three things matter most. The three rules above never bend in either lane; what 
 | Full | Market or marketing research; a migration or rewrite across several targets | Everything below. |
 
 If a plan for the same question already exists in the thread or the board, do not write a second one: supply facts to it. A session launched as a probe or a helper never runs this skill on its own.
+
+## The task graph and the board (every run, both lanes)
+
+Read `references/task-graph.md` before Phase 0 ends. The base of every run:
+
+1. **Write the graph before launching anything.** `graph.json` in a board folder outside the repo: one node per task (framing, probes, researchers or implementers, validators, critic, user decisions, retrospective) with its `deps`, role, model and effort. A dependency is a file or a decision the task reads, never "it came before".
+2. **Launch by the graph, not by the wave.** `scripts/board/set.py <board> <id> <status> [agent-id]` after every launch and every result; it prints what can start now, and you launch those in the same turn, within the concurrency cap. Tasks that do not depend on a blocked or slow task keep going. A decision waiting on the user is a node with status `user`: only its descendants wait.
+3. **Publish the board at the start and at every change that matters.** `set.py` rebuilds `board.html` (`scripts/board/build.py`): essentials, waiting on the user, decisions, probes, the graph coloured by status, then the consumption debrief read from the transcripts: tokens per task and per model (all-in, cache reads, output), agents, turns, direct calls to cheaper models, wall time vs cumulated agent time and the parallelism factor. One message in the thread with its link; then the board replaces progress messages.
+4. **Survive a cut.** Committed work is bundled outside the session while there is no remote branch; after a restart, `running` tasks become `interrupted` and are relaunched from their last commit.
+
+The short lane keeps the graph (five to ten nodes); it skips nothing here.
 
 ## Code mode (migration, rewrite, new foundation)
 
@@ -89,6 +101,8 @@ A wave is 3 to 5 agents, 10 to 15 minutes, results written to files (`res/<role>
 
 Keep 8 to 12 actions. Everything dropped goes in a "what we do not do, and why" tab with the reason: several will come back once the funnel has numbers.
 
+Waves are how you think about the run; the graph is what you execute (`references/task-graph.md`): a researcher's validator starts when that researcher is done, not when the whole wave is.
+
 Code mode replaces waves 1 to 6 with S (spike and decision records) → T (blind testers) → I (implementers) → R (reconciliation) → V (validation threads) → M (mechanical steps); 5 to 8 agents per wave, one worktree each: table and briefs in `references/code-variant.md` and `references/briefs.md`.
 
 If the `Workflow` tool is available, use `pipeline()` per researcher (researcher → validator) and a barrier only for dedup and the critic; see `references/workflow-skeleton.md`. Without it, use the `Agent` tool with one role per agent and the same schemas. Expect a concurrency cap: plan the waves, do not wait on a monolith.
@@ -124,7 +138,7 @@ Tabs: Essentials (actions table: first datable step, effort, sourced expectation
 
 Expectations borrowed from bigger players are presented as orders of magnitude with a dated stop threshold, never as forecasts. Mobile: no horizontal scroll at 400 px (check with Playwright: `document.documentElement.scrollWidth` ≤ viewport on every tab).
 
-Code variant: no page. The deliverable is the `integration` branch green on the reference gate, the `Spec/` folders, and the local progress board (doc-style HTML regenerated from the worktrees and the transcripts: tokens per model all-in and output, wall time vs cumulated agent time, parallelism factor, tests green, verdicts of the validation threads). The board replaces progress messages in the thread.
+Code variant: no page. The deliverable is the `integration` branch green on the reference gate, the `Spec/` folders, and the run board (`references/task-graph.md`; put tests green and the verdicts of the validation threads in its essentials). The board replaces progress messages in the thread.
 
 ## Phase 4 — Before delivering
 
@@ -132,13 +146,14 @@ Code variant: no page. The deliverable is the `integration` branch green on the 
 - [ ] Nothing created or scheduled (code variant: nothing pushed, merged or scheduled without the user's go in the thread; commits carry no attribution trailer).
 - [ ] Rendering checked on desktop and phone; links point to the right domain.
 - [ ] Summary in the thread under 80 words: link, verdict, what waits on the user.
+- [ ] Board up to date and published: every node in its true end state, last debrief rebuilt.
 - [ ] Phase 5 done: lessons file rewritten, three lines "what I learned" in the summary.
 
 ## Phase 5 — Step back, then write the lessons file (mandatory, ~15 min)
 
 The run is not finished when the page is delivered. It is finished when the next run can start smarter. Full method and templates in `references/retrospective.md`; the short version:
 
-1. **Facts (you).** Write the scorecard: per wave, agents, models and effort, minutes, failures, what you changed in the brief mid-run; candidates → kept actions; figures opened / verified / partial / false / not found; what was discovered late; tokens per model (all-in and output, read from the transcripts: the harness count ignores cache reads), wall time vs cumulated agent time; code variant: tests green on the gate, blocking points found by reviewers and validation threads, agents relaunched and why.
+1. **Facts (you).** Write the scorecard from the board (per-model rows, parallelism factor, agents relaunched): per wave, agents, models and effort, minutes, failures, what you changed in the brief mid-run; candidates → kept actions; figures opened / verified / partial / false / not found; what was discovered late; tokens per model (all-in and output, read from the transcripts: the harness count ignores cache reads), wall time vs cumulated agent time; code variant: tests green on the gate, blocking points found by reviewers and validation threads, agents relaunched and why.
 2. **Judgement (a fresh agent, not you).** Rule 2 applies to the orchestrator too: a critic agent that did not write the page reads the brief, the scorecard, the page and the previous lessons file, and returns at most five lessons (`situation → what we did → next time`), a verdict on the previous run's experiment (kept or dropped, why), and **one** experiment for the next run with the measure that will tell if it worked.
 3. **Merge (you).** Rewrite the lessons file in full: next experiment, rules that held, rules that changed, mistakes to watch, last 10 scorecard lines. Under 4 KB, no secret, nothing the user could not read. Then put three lines "what I learned" in the delivery summary, with the file's path.
 
