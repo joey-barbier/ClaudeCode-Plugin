@@ -26,7 +26,7 @@ Three rules that never bend:
 
 ## What this skill is for, and how much of it to run
 
-Three things matter; everything else is optional ceremony:
+Three things matter most. The three rules above never bend in either lane; what the lane changes is how many waves and passes run around them:
 
 1. **A third party validates before anything ships.** No code and no figure goes out on its author's word.
 2. **Short returns.** Six words state a problem; twenty lines hide it. Every brief imposes the report format: one verdict line, then one line per point (`file:line` · problem · fix), 15 lines at most, no account of what was done. The same holds for messages to the user.
@@ -36,7 +36,7 @@ Three things matter; everything else is optional ceremony:
 
 | Lane | When | What runs |
 |---|---|---|
-| Short | The question is about the user's own systems (one repo, one API, a config), or a change to one module or one connector | 2 or 3 agents (code, external API probe), one antagonist pass, the report in the thread. No personas, no page. In code: the four default gates below, nothing more. |
+| Short | The question is about the user's own systems (one repo, one API, a config), or a change to one module or one connector | 2 or 3 agents (code, external API probe), one antagonist pass, the report in the thread. No personas, no page. Every figure still gets a validator that is not its researcher and opens the URL. In code: the four default gates below, nothing more. |
 | Full | Market or marketing research; a migration or rewrite across several targets | Everything below. |
 
 If a plan for the same question already exists in the thread or the board, do not write a second one: supply facts to it. A session launched as a probe or a helper never runs this skill on its own.
@@ -106,11 +106,11 @@ The routing rule is general and recursive, not tied to a mode: `references/model
 | Code mode: merging a branch, rerunning the gate, "is it green?", the progress board | the generalist tier (e.g. Sonnet) | medium | Mechanical, no decision. |
 | Wide lookups inside any agent ("where is X used", inventory of a folder) | a sub-agent of the cheapest tier (e.g. Haiku, the `Explore` agent type), launched by the agent that needs the answer | low | The cost is the context the parent re-reads on every later turn (500 M of 566 M tokens on the Guild run were cache reads), not the output. |
 
-**How an agent actually delegates** (details in `references/model-routing.md`). Check it with a 30-second dry run before counting on it: in many sessions a sub-agent has no tool to launch another agent, and the pass-down line in its brief then does nothing (measured: 379 agents, none launched by another agent).
+**How an agent actually delegates** (details in `references/model-routing.md`). Check it with a 30-second dry run before counting on it: in many sessions a sub-agent has no tool to launch another agent, and the pass-down line in its brief then does nothing (one project, cloud sessions, 14/11/2026: 379 agents, none launched by another agent).
 
-- **Direct call, preferred when the agent has a shell:** `claude -p "<question and answer format>" --model <cheaper model id> --allowedTools Read Glob Grep --output-format json < /dev/null`. Give agents a small wrapper script and its path in the common brief.
+- **Direct call, preferred when the agent has a shell:** `claude -p "<question and answer format>" --model <cheaper model id> --tools Read,Glob,Grep --permission-mode default --output-format json < /dev/null` (`--tools` restricts the call to read-only tools; `--allowedTools` alone would only pre-approve). The wrapper is `scripts/ask.sh` in this skill: give agents its absolute path in the common brief.
 - **Relay through the parent, when the agent has no shell:** the agent sends one line `ASK PARENT: <tier> · <precise question> · <answer format>` and hands back; the parent launches the cheaper agent and resumes the first one with the answer.
-- **Threshold:** a single command, the agent runs itself. As soon as a lookup or a check would take it two turns or more, it delegates.
+- **Threshold:** a single command, the agent runs itself. As soon as a lookup whose conclusion is all it keeps, or a mechanical check, would take it two turns or more, it delegates. What needs exactness is still verified by the agent.
 
 Nothing picks the model automatically: a sub-agent inherits its parent's model unless the brief says otherwise. Put the delegation rule, with its losing cases, in every brief (text in `references/model-routing.md`): delegate a wide search whose conclusion is all you keep; never delegate content you need in full, a single `grep`, or anything that needs exactness. Measure it with tokens per model and cache-read tokens per agent in the scorecard.
 

@@ -89,8 +89,8 @@ not done or not found, questions. Do not declare yourself validated: others do t
 
 **Add to every common brief (research and code):**
 
-> Report format: one verdict line, then one line per point (`file:line` or URL · problem · fix), 15 lines at most. No account of what you did, no recap of the brief.
-> Delegation: a single command, run it yourself. A lookup or a mechanical check that would take you two turns or more: run `<path of the wrapper> <cheapest|generalist> <folder> "<question and answer format>"` (a `claude -p` call on a cheaper model, read-only). No shell: send your parent one line `ASK PARENT: <tier> · <question> · <answer format>` and hand back; you will be resumed with the answer. Verify any answer whose exactness matters.
+> Report format, for every reviewer, validator, critic and tester (anyone who reports problems): one verdict line, then one line per point (`file:line` or URL · problem · fix), 15 lines at most. No account of what you did, no recap of the brief. Roles with a schema of their own keep it (the researcher's JSON, the implementer's and reconciliation's proof of the gate), with the prose around it cut to the same standard.
+> Delegation: a single command, run it yourself. A lookup or a mechanical check that would take you two turns or more: run `<absolute path of scripts/ask.sh in this skill> <cheapest|generalist> <folder> "<question and answer format>"` (a `claude -p` call on a cheaper model, read-only tools, no shell). No shell: send your parent one line `ASK PARENT: <tier> · <question> · <answer format>` and hand back; you will be resumed with the answer. Verify any answer whose exactness matters.
 
 ## Code variant — blind tester (wave T)
 
