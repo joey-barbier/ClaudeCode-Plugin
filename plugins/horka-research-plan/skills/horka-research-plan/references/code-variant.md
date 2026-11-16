@@ -16,14 +16,25 @@ Read this when the request is "migrate X to Y with many agents", "rewrite the en
 
 | Wave | Agents | Purpose |
 |---|---|---|
-| S · Spike and decisions | 1 agent per proof (the build compiles on the reference platform, the walls hold, the risky mechanism works) + 1 author per architecture decision record | Prove before writing. A decision record is reviewed by an antagonist who did not write it, twice: the second pass states, per blocking point, "lifted / partially / not lifted" with the line that proves it. **Probe before spec:** one real probe per external dependency (API, CI runner, hosting platform, tool): run the real thing once with a disposable instance and record what it actually sends or requires; the blind spec of that piece starts from the record, never from the decision record alone. **Gate = CI from wave 1:** the gate runs with the CI's user (non root), core count and runner from wave 1; green means N consecutive passes (root hid a permission bug, 4 cores starved the cooperative pool, `Foundation.Process` crashed 4 runs out of 13). |
+| S · Spike and decisions | 1 agent per proof (the build compiles on the reference platform, the walls hold, the risky mechanism works) + 1 author per architecture decision record | Prove before writing. A decision record is reviewed by an antagonist who did not write it (twice in the full lane only: the second pass reads the corrections and states, per blocking point, "lifted / partially / not lifted" with the line that proves it). **Probe before spec:** one real probe per external dependency (API, CI runner, hosting platform, tool): run the real thing once with a disposable instance and record what it actually sends or requires; the blind spec of that piece starts from the record, never from the decision record alone. **Gate = CI from wave 1:** the gate runs with the CI's user (non root), core count and runner from wave 1; green means N consecutive passes (root hid a permission bug, 4 cores starved the cooperative pool, `Foundation.Process` crashed 4 runs out of 13). |
 | T · Blind testers | 1 per target, **before** any implementer | Write `Tests/<Target>/Spec/API.md` (the contract they assume) then the tests, from the reference and the base only. They never open `Sources/`, anywhere. A throwaway stub package outside the repo checks that the tests compile. |
 | I · Implementers | 1 per target, own worktree and branch | Make `Spec/` pass without changing an assertion. Only mechanical API renames, each listed in the report. A test they believe wrong stays red and is explained with `file:line`. Proof pasted (full test run, reference gate green). |
 | R · Reconciliation | 1 agent after each wave I | Blind specs drift on shared names. The lowest layer's `API.md` is the authority; provisional `TEMP` types are removed; branches are merged into `integration`; the gate runs again. |
-| V · Validation threads | separate threads: code, AI behaviour, security | Receive only the branch, the base and the validation type, never the orchestrator's context. Expect BLOCKED first; fix on a `fix/` branch; ask for a second pass. |
+| V · Validation threads | separate threads: code, AI behaviour, security | Receive only the branch, the base and the validation type, never the orchestrator's context. Expect BLOCKED first; fix on a `fix/` branch; ask for a second pass on the fixes only. |
 | M · Mechanical steps | generalist-tier agents | Merge a fix branch, rerun the gate, update the board. No decision. |
 
 Briefs for each role: `references/briefs.md`, section "Code variant".
+
+## Gates: four by default, in parallel, never "just to see"
+
+What a mid-size run showed (one craft and one connector, 16/11/2026): the real probe and the first antagonist review found what mattered (an API with no history, a forged-message hole across two agents, a state marked before the work was done); the second full review found two small points in ten minutes; a reference gate rerun locally and a 280-line decision record for three deliveries bought nothing; the base branch was red before the run started and nobody had looked.
+
+- **Default gates:** real probe; one antagonist review of the decision record; blind tests for pure engines and security boundaries; a third party validates before the push. The second review pass, blind tests for every target and the three validation threads are for migrations and rewrites.
+- **Phase 0:** read the CI status of the base branch (do not rerun the gate) and check the gate can run where you are (container runtime, outbound proxy and its CA, architecture). A red base goes to the user at once.
+- **While agents work:** filtered tests of their own target only. No full gate per agent.
+- **One full gate,** once, after reconciliation, where the user said long runs go. The validations start at the same time.
+- **Decision record:** only what ships in this delivery; later deliveries get three lines each.
+- **Reports:** one verdict line, then one line per point (`file:line` · problem · fix), 15 lines at most.
 
 ## Delegating lookups: when it wins, when it loses
 

@@ -30,6 +30,19 @@ A task that mixes the three is split: the expert agent does the judgement part i
 - A sub-agent can only delegate if it has the `Agent` tool and its brief says so. Check both before relying on nested delegation; if sub-agents cannot delegate, the orchestrator launches the cheap steps itself.
 - Keep the depth at three levels at most (orchestrator → agent → sub-agent): deeper chains lose the question on the way back up.
 
+## When a sub-agent cannot launch an agent (measured 16/11/2026)
+
+In cloud sessions a `general-purpose` sub-agent had no `Agent` tool: the pass-down line did nothing, and every run stayed at depth 1 (379 agents, none launched by another, no cheapest-tier call). Two ways round it, both tested on the same lookup (count the Swift files of two folders, right answer 69 and 39):
+
+| Way | How | Measured |
+|---|---|---|
+| Direct call | The agent runs `claude -p "<question and answer format>" --model <cheaper model id> --tools Read,Glob,Grep --permission-mode default --output-format json < /dev/null` (prompt right after `-p`, stdin closed; `--tools` restricts the call to read-only tools, no shell; the JSON gives `result` and `total_cost_usd`). Wrapper: `scripts/ask.sh`. | One test, cloud session, 16/11/2026: right answer in 16 s for 0.013 $ on the cheapest tier, no turn of the parent. Each call loads its own fixed context (about 160 k tokens of system prompt, tools and skills): batch questions rather than firing hundreds. |
+| Relay through the parent | The agent sends one line `ASK PARENT: <tier> · <precise question> · <answer format>` to its parent and hands back; the parent launches the cheaper agent and resumes the first one with the answer | One test, same day: works. The agent cannot wait for the reply: one round trip of about a minute and one full re-read of the agent's context (60 k tokens in the test) per ask. The parent handles an ask as soon as it arrives. |
+
+Prefer the direct call; keep the relay for agents without a shell. Run a 30-second dry run of whichever you rely on before the first wave.
+
+**Threshold.** One turn of an expert agent costs the re-read of its whole context (about 0.06 $ at 150 k tokens of context on a 4 $/MTok input tier with cache reads at a tenth; twice that on the top tier). One complete call on the cheapest tier costs about a cent. The agent spends one turn to launch the call either way, so: a single command, it runs itself; a lookup whose conclusion is all it keeps, or a mechanical check, that would take it two turns or more, it delegates, and the material read stays out of its context. Exactness is never delegated without a check afterwards (table below).
+
 ## The recursion rule
 
 - An agent may launch agents of **its own tier or cheaper**, never a more expensive one. If it needs more judgement than it has, it reports back to its parent with the question instead of escalating by itself.

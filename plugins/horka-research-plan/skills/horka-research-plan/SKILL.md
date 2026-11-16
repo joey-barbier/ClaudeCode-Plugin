@@ -24,6 +24,23 @@ Three rules that never bend:
 2. **No agent grades its own work.** Validators are never the researcher they check. The critic never wrote an action. Personas never saw the researchers' output before judging it.
 3. **Nothing is created or scheduled.** No cron, no board change, no CI change, no PR to a product repo. Product needs and tasks go in a "to hand over" tab.
 
+## What this skill is for, and how much of it to run
+
+Three things matter most. The three rules above never bend in either lane; what the lane changes is how many waves and passes run around them:
+
+1. **A third party validates before anything ships.** No code and no figure goes out on its author's word.
+2. **Short returns.** Six words state a problem; twenty lines hide it. Every brief imposes the report format: one verdict line, then one line per point (`file:line` · problem · fix), 15 lines at most, no account of what was done. The same holds for messages to the user.
+3. **The right model for each task, inherited down the chain** (Phase 2): the top tier hands task 1 to an expert agent, which gets its lookups done by the cheapest tier.
+
+**Size the run before Phase 0.** Pick the lane and say which in one line:
+
+| Lane | When | What runs |
+|---|---|---|
+| Short | The question is about the user's own systems (one repo, one API, a config), or a change to one module or one connector | 2 or 3 agents (code, external API probe), one antagonist pass, the report in the thread. No personas, no page. Every figure still gets a validator that is not its researcher and opens the URL. In code: the four default gates below, nothing more. |
+| Full | Market or marketing research; a migration or rewrite across several targets | Everything below. |
+
+If a plan for the same question already exists in the thread or the board, do not write a second one: supply facts to it. A session launched as a probe or a helper never runs this skill on its own.
+
 ## Code mode (migration, rewrite, new foundation)
 
 Same orchestrator, same "no agent grades its own work". Read `references/code-variant.md` before Phase 0 when the request is a migration or rewrite run by many agents. The five changes, in one line each:
@@ -36,10 +53,19 @@ Same orchestrator, same "no agent grades its own work". Read `references/code-va
 
 Probe every external dependency for real before any spec that depends on it (wave S), and run the gate as the CI will (same user, cores, runner) from wave 1.
 
+**Four gates by default; the rest is for the full lane.** (1) A real probe of each external dependency. (2) One antagonist review of the decision record, by an agent that did not write it. (3) Blind tests for pure engines and security boundaries. (4) A third party validates before the push (code; security when a boundary moves). A decision record covers what ships now, not the two deliveries after it.
+
+Gates run in parallel and never "just to see":
+
+- Phase 0 checks that the base branch is green on the reference gate (read the CI status, do not rerun it) and that the gate can run where you are. A red base is reported to the user at once, with the fix that is pending.
+- Agents run only the filtered tests of their own target while they work. One full gate runs once, after reconciliation, where the user said long runs go (often the CI of a pushed branch).
+- The validation threads start at the same time as that full gate, not after it.
+- Validator and critic run side by side. A second review pass is for the full lane; it reads only the corrections and the lines they touch, and answers per blocking point: lifted, partially, not lifted.
+
 ## Phase 0 — Framing and reality check (you, no agent, ~15 min)
 
 0. **Read the lessons file** if it exists (`research-plan-lessons.md`, locations in `references/retrospective.md`). Apply its "Rules that held" to the common brief and run its "Next experiment". This is how the skill improves: the previous run wrote it for you.
-1. Restate the question in one sentence. List constraints from CLAUDE.md, project memory and neighbouring work (do not duplicate another thread's actions: name them and link to them instead).
+1. Restate the question in one sentence, and name the lane (short or full). List constraints from CLAUDE.md, project memory and neighbouring work (do not duplicate another thread's actions: name them and link to them instead).
 2. **Reality check in three states.** People confuse "what is shipped" with "what is merged". Build a table with, per topic: what a visitor sees in prod today / what is merged in `develop` (or the integration branch) but not deployed / what is still in an open PR.
    - Open the live site, sitemap, robots, `llms.txt`, pricing, changelog.
    - `git fetch origin main develop --depth 200` (or the repo's branch names), then `git log --oneline origin/main..origin/develop` and a diff of the public-facing files.
@@ -79,6 +105,12 @@ The routing rule is general and recursive, not tied to a mode: `references/model
 | Code mode: authors, blind testers, implementers, antagonist reviewers, reconciliation | the expert tier (e.g. Opus) | high | Judgement on every line; a lazy spec is an effort problem. |
 | Code mode: merging a branch, rerunning the gate, "is it green?", the progress board | the generalist tier (e.g. Sonnet) | medium | Mechanical, no decision. |
 | Wide lookups inside any agent ("where is X used", inventory of a folder) | a sub-agent of the cheapest tier (e.g. Haiku, the `Explore` agent type), launched by the agent that needs the answer | low | The cost is the context the parent re-reads on every later turn (500 M of 566 M tokens on the Guild run were cache reads), not the output. |
+
+**How an agent actually delegates** (details in `references/model-routing.md`). Check it with a 30-second dry run before counting on it: in many sessions a sub-agent has no tool to launch another agent, and the pass-down line in its brief then does nothing (one project, cloud sessions, 14/11/2026: 379 agents, none launched by another agent).
+
+- **Direct call, preferred when the agent has a shell:** `claude -p "<question and answer format>" --model <cheaper model id> --tools Read,Glob,Grep --permission-mode default --output-format json < /dev/null` (`--tools` restricts the call to read-only tools; `--allowedTools` alone would only pre-approve). The wrapper is `scripts/ask.sh` in this skill: give agents its absolute path in the common brief.
+- **Relay through the parent, when the agent has no shell:** the agent sends one line `ASK PARENT: <tier> · <precise question> · <answer format>` and hands back; the parent launches the cheaper agent and resumes the first one with the answer.
+- **Threshold:** a single command, the agent runs itself. As soon as a lookup whose conclusion is all it keeps, or a mechanical check, would take it two turns or more, it delegates. What needs exactness is still verified by the agent.
 
 Nothing picks the model automatically: a sub-agent inherits its parent's model unless the brief says otherwise. Put the delegation rule, with its losing cases, in every brief (text in `references/model-routing.md`): delegate a wide search whose conclusion is all you keep; never delegate content you need in full, a single `grep`, or anything that needs exactness. Measure it with tokens per model and cache-read tokens per agent in the scorecard.
 
