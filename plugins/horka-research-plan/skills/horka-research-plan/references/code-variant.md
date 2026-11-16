@@ -25,6 +25,17 @@ Read this when the request is "migrate X to Y with many agents", "rewrite the en
 
 Briefs for each role: `references/briefs.md`, section "Code variant".
 
+## Gates: four by default, in parallel, never "just to see"
+
+What a mid-size run showed (one craft and one connector, 16/11/2026): the real probe and the first antagonist review found what mattered (an API with no history, a forged-message hole across two agents, a state marked before the work was done); the second full review found two small points in ten minutes; a reference gate rerun locally and a 280-line decision record for three deliveries bought nothing; the base branch was red before the run started and nobody had looked.
+
+- **Default gates:** real probe; one antagonist review of the decision record; blind tests for pure engines and security boundaries; a third party validates before the push. The second review pass, blind tests for every target and the three validation threads are for migrations and rewrites.
+- **Phase 0:** read the CI status of the base branch (do not rerun the gate) and check the gate can run where you are (container runtime, outbound proxy and its CA, architecture). A red base goes to the user at once.
+- **While agents work:** filtered tests of their own target only. No full gate per agent.
+- **One full gate,** once, after reconciliation, where the user said long runs go. The validations start at the same time.
+- **Decision record:** only what ships in this delivery; later deliveries get three lines each.
+- **Reports:** one verdict line, then one line per point (`file:line` · problem · fix), 15 lines at most.
+
 ## Delegating lookups: when it wins, when it loses
 
 The model is chosen by whoever launches an agent; nothing picks it automatically, and a sub-agent inherits its parent's model unless told otherwise. Put this rule in every brief:

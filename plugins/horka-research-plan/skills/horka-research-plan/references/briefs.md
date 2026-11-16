@@ -87,6 +87,11 @@ no assertion loosened. Report ≤ 300 words: branch, commits, done, old → new 
 not done or not found, questions. Do not declare yourself validated: others do that.
 ```
 
+**Add to every common brief (research and code):**
+
+> Report format: one verdict line, then one line per point (`file:line` or URL · problem · fix), 15 lines at most. No account of what you did, no recap of the brief.
+> Delegation: a single command, run it yourself. A lookup or a mechanical check that would take you two turns or more: run `<path of the wrapper> <cheapest|generalist> <folder> "<question and answer format>"` (a `claude -p` call on a cheaper model, read-only). No shell: send your parent one line `ASK PARENT: <tier> · <question> · <answer format>` and hand back; you will be resumed with the answer. Verify any answer whose exactness matters.
+
 ## Code variant — blind tester (wave T)
 
 ```
