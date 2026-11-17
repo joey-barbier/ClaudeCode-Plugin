@@ -140,16 +140,21 @@ claude plugin install horka-skill-eval
 
 ## horka-research-plan
 
-**Das richtige Modell, der richtige Aufwand, zum richtigen Zeitpunkt.** Standardmäßig erbt jeder Subagent das Modell der Sitzung; dieser Skill vergibt eines pro Rolle: das leistungsstärkste Modell für Orchestrierung, Kritik und Personas, die Expertenstufe für Rechercheure, die Generalistenstufe für Validatoren und Zählungen, jeweils mit eigenem Aufwand. Das Urteil bleibt beim besten Modell, mechanische Arbeit wandert zu günstigeren Modellen, und die tatsächlichen Kosten jeder Welle stehen in der Bilanz des Laufs.
+**Das richtige Modell, der richtige Aufwand, im richtigen Moment, auf jeder Ebene.** Jede Teilaufgabe geht an die günstigste Stufe, die sie schafft (die stärkste urteilt, die Expertenstufe recherchiert oder programmiert, die Generalistenstufe validiert und führt zusammen, die günstigste sucht nach), und jeder Agent gibt die Regel an seine eigenen Sub-Agenten weiter. Zwei Modi: **Recherche**, die in einem belegten Aktionsplan endet (eine Doc-Style-Seite, jede Zahl mit URL und Datum), und **Code**, eine Migration oder Neuschreibung mit vielen Agenten (blinde Tester vor Implementierern, grüner Integrations-Branch an einem Gate, getrennte Validierungs-Threads).
 
-Was er liefert: **Multi-Agenten-Recherche, die in einem belegten Aktionsplan endet**, geliefert als eine Doc-Style-HTML-Seite. Für Anfragen wie „ein kompletter Check und ein Plan“: Go-to-Market, welcher Kanal, wie wir entdeckt werden, wie wir auf eine Regulierung reagieren.
+Jeder Lauf ist ein **Aufgabengraph auf einem Live-Board** mit Token-Auswertung pro Aufgabe und Modell. **[Animiertes Beispiel-Board ansehen](https://raw.githack.com/joey-barbier/ClaudeCode-Plugin/main/plugins/horka-research-plan/examples/task-graph-demo.html)**. Die Verifikation folgt der Praxis des Claude-Code-Teams: das Produkt läuft vor jedem Push end-to-end, Migrationen werden alt gegen neu verglichen, Urteile sind an einen Commit gebunden, und nach drei roten Runden entscheidet der Nutzer.
 
 ```bash
 claude plugin install horka-research-plan
 ```
 
-| Komponente | Auslöser | Macht |
+| Komponente | Auslöser | Funktion |
 |---|---|---|
+| `/horka-research-plan:horka-research-plan` | "full check and a plan", "belegter Plan", "migriere X nach Y mit vielen Agenten", "welches Modell für welche Aufgabe" | Bemisst den Lauf (kurze oder volle Spur), schreibt den Aufgabengraphen, startet nach dem Graphen mit Modell-Routing, lässt durch Dritte validieren, liefert die Seite oder den grünen Branch, danach schreibt eine Retrospektive eine Lessons-Datei neu, die der nächste Lauf zuerst liest |
+
+**Drei Regeln:** keine Zahl und kein Verhalten aus dem Gedächtnis · kein Agent bewertet seine eigene Arbeit · nichts wird ohne Go des Nutzers erstellt oder geplant. Details: [Plugin-README](plugins/horka-research-plan/README.md).
+
+---|---|---|
 | `/horka-research-plan:horka-research-plan` | "full check and a plan", "belegter Plan", "wie werden wir entdeckt", "go-to-market" | Realitätscheck in drei Zuständen (prod / develop / offene PRs), dann kurze Wellen: Personas + Nachfrage-Sonde zuerst, Rechercheure pro Aktionstyp, Deduplizierung im Code, Validatoren, die jede URL öffnen, antagonistischer Kritiker, Machbarkeit + Vollständigkeit, eine HTML-Seite, danach eine Retrospektive durch einen separaten Agenten, der eine Lessons-Datei neu schreibt, die der nächste Lauf zuerst liest |
 
 **Drei Regeln:** keine Zahl aus dem Gedächtnis (URL, Datum, Status-Chip an jeder Zahl) · kein Agent bewertet seine eigene Arbeit · nichts wird erstellt oder geplant (Produktbedarf und Aufgaben kommen in einen Übergabe-Tab). Enthält Briefs pro Rolle, JSON-Schemas, `Workflow`-Gerüste, die Seitenstruktur und die Retrospektiven-Methode (Scorecard, Lessons-Datei, ein Experiment pro Lauf) in `references/`.

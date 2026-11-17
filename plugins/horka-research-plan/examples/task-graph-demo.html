@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chantier en graphe</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: header + controls, KPI strip, then graph (wide) beside a side column (decision, task detail, log); then comparison and models; then the explanation. Same doc-style as the run board the skill generates. */
+:root{
+  --bg:#FAF4F0; --card:#FFFFFF; --ink:#111111; --mute:#5C5550; --line:#111111; --soft:#E9DFD8;
+  --ok:#8FE388; --run:#FFDB58; --todo:#FFFFFF; --you:#FF8ACD; --ko:#FF6B6B; --info:#87CEEB;
+  --shadow:#111111; --on:#111111;
+  --m-fable:#AE7AFF; --m-opus:#6FA8FF; --m-sonnet:#3CC8B4; --m-haiku:#F4A259;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#17141A; --card:#221E26; --ink:#F3EEEA; --mute:#B3A9A6; --line:#F3EEEA; --soft:#3A3340;
+  --ok:#5FB85A; --run:#D9B53A; --todo:#221E26; --you:#D96BAA; --ko:#D95757; --info:#5FA6C4;
+  --shadow:#000000; --on:#111111;
+  --m-fable:#9A6BEB; --m-opus:#5A8FE0; --m-sonnet:#2FA898; --m-haiku:#D98A45; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#17141A; --card:#221E26; --ink:#F3EEEA; --mute:#B3A9A6; --line:#F3EEEA; --soft:#3A3340;
+  --ok:#5FB85A; --run:#D9B53A; --todo:#221E26; --you:#D96BAA; --ko:#D95757; --info:#5FA6C4;
+  --shadow:#000000; --on:#111111;
+  --m-fable:#9A6BEB; --m-opus:#5A8FE0; --m-sonnet:#2FA898; --m-haiku:#D98A45; color-scheme:dark }
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 56px}
+main{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+h1{font-size:30px;font-weight:900;line-height:1.1;margin:0;text-wrap:balance}
+h2{font-size:17px;font-weight:900;margin:0 0 10px}
+h3{font-size:15px;font-weight:900;margin:0 0 6px}
+p{margin:0}
+.lede{max-width:72ch;color:var(--mute);margin-top:6px}
+.card{background:var(--card);border:2px solid var(--line);border-radius:4px;box-shadow:4px 4px 0 var(--shadow);padding:14px 16px;min-width:0}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:700 14px var(--sans);color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:4px;padding:6px 12px;cursor:pointer;box-shadow:2px 2px 0 var(--shadow)}
+button:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--shadow)}
+button:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--shadow)}
+button:focus-visible{outline:3px solid var(--m-opus);outline-offset:2px}
+button.primary{background:var(--run);color:var(--on)}
+button.on{background:var(--ink);color:var(--bg)}
+.clock{font:700 20px var(--mono);font-variant-numeric:tabular-nums;margin-left:auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--card);border:2px solid var(--line);border-radius:4px;padding:8px 12px;min-width:0}
+.kpi b{display:block;font-size:22px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi span{font-size:12px;color:var(--mute)}
+.layout{display:flex;flex-direction:column;gap:20px}
+.side{display:grid!important;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-items:start}
+
+.side{display:flex;flex-direction:column;gap:20px;min-width:0}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.chip{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border:2px solid var(--line);border-radius:3px;color:var(--on);white-space:nowrap}
+.chip.ok{background:var(--ok)} .chip.run{background:var(--run)} .chip.todo{background:var(--todo);color:var(--ink);border-style:dashed}
+.chip.ready{background:var(--todo);color:var(--ink)} .chip.you{background:var(--you)} .chip.ko{background:var(--ko)}
+.note{color:var(--mute);font-size:13px}
+.scroll{overflow-x:auto}
+#graph{display:block;width:100%;min-width:860px;height:auto}
+.edge{fill:none;stroke:var(--mute);stroke-width:1.3;stroke-dasharray:4 4;opacity:.55;transition:opacity .2s}
+.edge.done{stroke:var(--ink);stroke-dasharray:none;opacity:.9}
+.arh{fill:var(--mute)}
+.node{cursor:pointer;transition:opacity .2s}
+.node .sh{fill:var(--shadow)}
+.node .bx{stroke:var(--line);stroke-width:2;fill:var(--todo);stroke-dasharray:5 4;transition:fill .3s}
+.node.wait .sh{fill:none}
+.node.ready .bx{stroke-dasharray:none}
+.node.run .bx{fill:var(--run);stroke-dasharray:none}
+.node.done .bx{fill:var(--ok);stroke-dasharray:none}
+.node.user .bx{fill:var(--you);stroke-dasharray:none}
+.node.ko .bx{fill:var(--ko);stroke-dasharray:none}
+.node text{font-family:var(--sans);fill:var(--ink);pointer-events:none}
+.node.run text,.node.done text,.node.user text,.node.ko text{fill:#111111}
+.nid{font:700 10.5px var(--mono)} .nwho{font:10px var(--mono)} .ntt{font-size:11px;font-weight:600}
+.prog{fill:#111111;opacity:.75}
+.lane{fill:var(--soft);opacity:.45}
+.lane-t{font:800 12px var(--sans);fill:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+.node.user .bx{animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{50%{stroke-width:4}}
+.node text.badge,.node.done text.badge{font:800 9px var(--mono);fill:#FFFFFF}
+.badge-bg{fill:#111111}
+svg.focusing .node{opacity:.22} svg.focusing .edge{opacity:.08}
+svg.focusing .node.hl,svg.focusing .node.sel{opacity:1} svg.focusing .edge.hl{opacity:1;stroke:var(--ink);stroke-width:2.2}
+.node.sel .bx{stroke-width:4}
+.decision{background:var(--you);color:var(--on);border-color:#111111}
+.decision .note{color:#111111}
+.decision .bar{margin-top:10px}
+.decision button{background:#FFFFFF;color:#111111;border-color:#111111}
+#detail dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:8px 0 0;font-size:13.5px}
+#detail dt{color:var(--mute)} #detail dd{margin:0;min-width:0}
+.mono{font-family:var(--mono);font-size:12.5px}
+#log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;max-height:420px;overflow:auto;font-size:13.5px}
+#log li{border-left:4px solid var(--soft);padding-left:8px}
+#log li.k-ok{border-color:var(--ok)} #log li.k-run{border-color:var(--run)} #log li.k-you{border-color:var(--you)} #log li.k-ko{border-color:var(--ko)}
+#log time{font:700 11.5px var(--mono);color:var(--mute);display:block}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px}
+.cmp{display:flex;flex-direction:column;gap:12px}
+.row{display:grid;grid-template-columns:150px minmax(0,1fr) 70px;gap:10px;align-items:center;font-size:13.5px}
+@media (max-width:520px){.row{grid-template-columns:110px minmax(0,1fr) 62px}}
+.track{height:18px;border:2px solid var(--line);border-radius:3px;background:var(--soft);overflow:hidden}
+.fill{height:100%;background:var(--ink);width:0;transition:width .25s linear}
+.fill.g{background:var(--ok)} .fill.w{background:var(--info)}
+.val{font:700 13px var(--mono);text-align:right;font-variant-numeric:tabular-nums}
+.models{display:flex;flex-direction:column;gap:10px}
+.stack{display:flex;height:22px;border:2px solid var(--line);border-radius:3px;overflow:hidden;background:var(--soft)}
+.stack div{height:100%;transition:width .25s linear}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--soft)}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);border-bottom:2px solid var(--line)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.sw{display:inline-block;width:10px;height:10px;border:1.5px solid var(--line);margin-right:6px;vertical-align:-1px}
+.explain{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.explain p{font-size:14px;max-width:62ch}
+.explain p+p{margin-top:6px}
+details summary{cursor:pointer;font-weight:900}
+.banner{border:2px solid var(--line);border-radius:4px;padding:10px 14px;font-weight:700;background:var(--info);color:var(--on)}
+.banner.ko{background:var(--ko)} .banner.ok{background:var(--ok)}
+@media (prefers-reduced-motion: reduce){ .node.user .bx{animation:none} .fill,.stack div{transition:none} }
+</style>
+
+<main>
+<header>
+  <h1>Un chantier de 50 tâches, mené en graphe</h1>
+  <p class="lede">Un projet fictif, la réécriture d'une appli de réservation de salles, joué en accéléré. Chaque tâche part dès que ce qu'elle lit est prêt. Quand une tâche bloque ou attend ta décision, seules les tâches qui en dépendent l'attendent ; tout le reste avance.</p>
+</header>
+
+<section class="card bar" aria-label="Commandes">
+  <button id="play" class="primary" type="button">Lancer</button>
+  <button id="reset" type="button">Recommencer</button>
+  <span class="note">Vitesse</span>
+  <button class="spd on" data-s="1" type="button">1×</button>
+  <button class="spd" data-s="2" type="button">2×</button>
+  <button class="spd" data-s="4" type="button">4×</button>
+  <span class="clock" id="clock" aria-live="off">T+0 h 00</span>
+</section>
+
+<div id="banner" class="banner" hidden></div>
+
+<section class="kpis" aria-label="Chiffres du chantier">
+  <div class="kpi"><b id="k-done">0 / 50</b><span>tâches faites</span></div>
+  <div class="kpi"><b id="k-run">0</b><span>agents au travail (6 au plus)</span></div>
+  <div class="kpi"><b id="k-agents">0</b><span>agents lancés</span></div>
+  <div class="kpi"><b id="k-tok">0</b><span id="k-tok-l">jetons au total</span></div>
+  <div class="kpi"><b id="k-out">0</b><span>jetons de sortie</span></div>
+  <div class="kpi"><b id="k-par">—</b><span id="k-par-l">travail d'agents / temps écoulé</span></div>
+</section>
+
+<div class="layout">
+  <section class="card" aria-label="Graphe des tâches">
+    <h2>Graphe des tâches</h2>
+    <div class="legend">
+      <span class="chip todo">Attend ses dépendances</span><span class="chip ready">Peut partir</span><span class="chip run">En cours</span>
+      <span class="chip ok">Faite</span><span class="chip you">Attend ta décision</span><span class="chip ko">Coupée, à reprendre</span>
+    </div>
+    <p class="note" style="margin-bottom:10px">Touche une tâche pour voir ce qu'elle attend et ce qu'elle débloque. Une flèche pleine part d'une tâche finie. Le modèle de chaque tâche est dans son coin.</p>
+    <div class="scroll"><svg id="graph" role="img" aria-label="Graphe des 50 tâches du chantier"></svg></div>
+  </section>
+
+  <div class="side">
+    <section class="card decision" id="decision" hidden aria-live="polite">
+      <h3>Une décision t'attend</h3>
+      <p id="dec-q">Quel prestataire de paiement garde-t-on ?</p>
+      <p class="note" style="margin-top:6px">Seule la colonne Paiement attend ta réponse. Les autres colonnes continuent.</p>
+      <div class="bar">
+        <button type="button" data-opt="A">Garder l'actuel</button>
+        <button type="button" data-opt="B">Passer au nouveau</button>
+      </div>
+    </section>
+
+    <section class="card" id="detail" aria-live="polite">
+      <h3 id="d-title">Choisis une tâche</h3>
+      <p class="note" id="d-hint">Touche une case du graphe : ses dépendances et ce qu'elle débloque s'allument, le reste s'efface.</p>
+      <dl id="d-dl" hidden></dl>
+    </section>
+
+    <section class="card" aria-label="Journal">
+      <h2>Journal du chantier</h2>
+      <ol id="log"></ol>
+    </section>
+  </div>
+</div>
+
+<div class="two">
+  <section class="card cmp" aria-label="Combien de temps">
+    <h2>Combien de temps, selon la façon de mener le chantier</h2>
+    <div class="row"><span>Une tâche après l'autre</span><div class="track"><div class="fill" id="b-lin"></div></div><span class="val" id="v-lin"></span></div>
+    <div class="row"><span>Par vagues</span><div class="track"><div class="fill w" id="b-wav"></div></div><span class="val" id="v-wav"></span></div>
+    <div class="row"><span>En graphe (en direct)</span><div class="track"><div class="fill g" id="b-gra"></div></div><span class="val" id="v-gra">0 h 00</span></div>
+    <p class="note">Par vagues, chaque étage du graphe attend sa tâche la plus lente avant que le suivant parte. En graphe, une tâche n'attend que ce qu'elle lit, avec 6 agents au plus en même temps. La barre du graphe compte aussi l'attente de ta décision et la coupure de la machine ; les deux autres n'en comptent aucune.</p>
+  </section>
+
+  <section class="card" aria-label="Jetons par modèle">
+    <h2>Débrief de consommation, par modèle</h2>
+    <div class="models">
+      <div class="stack" id="stack" aria-hidden="true"></div>
+      <div class="scroll"><table>
+        <thead><tr><th>Modèle</th><th>Rôle</th><th class="num">Agents</th><th class="num">Jetons</th><th class="num">Part</th></tr></thead>
+        <tbody id="mrows"></tbody>
+      </table></div>
+      <p class="note">Les jetons sont lus dans les transcripts, lectures de cache comprises : elles font environ 92 % du total, parce qu'un agent relit tout son contexte à chaque tour. C'est pourquoi les recherches larges partent sur un modèle moins cher. Les chiffres de cette démo sont inventés ; leurs ordres de grandeur viennent d'un vrai chantier.</p>
+    </div>
+  </section>
+</div>
+
+<section aria-label="Comment ça marche" class="explain">
+  <div class="card">
+    <h3>Une tâche part dès que ce qu'elle lit est prêt</h3>
+    <p>Une dépendance, c'est un fichier ou une décision que la tâche lit, pas « elle venait avant ». Les tests à l'aveugle partent dès que le contrat d'API existe, sans attendre le design system.</p>
+  </div>
+  <div class="card">
+    <h3>Un blocage ne bloque que ses descendants</h3>
+    <p>La relecture de l'architecture revient BLOQUÉE : une tâche de correction s'ajoute. Les décisions sur les données et le paiement continuent leur chemin pendant ce temps.</p>
+  </div>
+  <div class="card">
+    <h3>Ta décision est une tâche comme une autre</h3>
+    <p>Le choix du prestataire de paiement est une case rose du graphe. Seule la colonne Paiement l'attend ; les autres colonnes ne le savent même pas.</p>
+  </div>
+  <div class="card">
+    <h3>Une coupure se reprend sans rien oublier</h3>
+    <p>Quand la machine redémarre, les tâches en cours passent en rouge. Leur travail commité est intact, et le graphe dit exactement quoi relancer.</p>
+  </div>
+  <div class="card">
+    <h3>Le débrief se lit sur la page</h3>
+    <p>Jetons par tâche et par modèle, agents lancés, temps d'agents contre temps écoulé. Si le modèle du haut porte plus que l'orchestration et le jugement, le routage n'a pas marché.</p>
+  </div>
+  <div class="card">
+    <h3>Dans le skill research-plan</h3>
+    <p>Depuis la v1.6.0, chaque run tient un <code class="mono">graph.json</code> et publie cette page de suivi. <code class="mono">set.py</code> met une tâche à jour et dit ce qui peut partir ; <code class="mono">build.py</code> relit les transcripts et refait la page.</p>
+  </div>
+</section>
+
+<section class="card">
+  <details>
+    <summary>Les 50 tâches du chantier fictif</summary>
+    <div class="scroll" style="margin-top:10px"><table>
+      <thead><tr><th>Id</th><th>Tâche</th><th>Rôle</th><th>Modèle</th><th>Effort</th><th>Dépend de</th><th class="num">Durée</th></tr></thead>
+      <tbody id="trows"></tbody>
+    </table></div>
+  </details>
+</section>
+</main>
+
+<script>
+(() => {
+  // ── The fictional project: id, title, role, model, minutes of work, deps ──
+  const LANES = [['inf','Infra'],['pay','Paiement'],['cal','Calendrier'],['res','Réservations'],['dat','Données et droits'],['ui','Design et écrans'],['doc','Guide'],['fin','Livraison']];
+  const T = [
+    ['P0','Cadrage et brief commun','orchestrateur','Fable',8,[],'top'],
+    ['I1','Sonde : la CI telle quelle','sonde réelle','Sonnet',5,['P0'],'inf'],
+    ['I2','Porte locale identique à la CI','mécanique','Sonnet',8,['I1'],'inf'],
+    ['I3','Image de build','mécanique','Sonnet',10,['I2'],'inf'],
+    ['I4','Environnement de recette','implémenteur','Opus',15,['I3'],'inf'],
+    ['I5','Déploiement auto en recette','mécanique','Sonnet',9,['I4'],'inf'],
+    ['S1','Sonde : API de paiement','sonde réelle','Sonnet',6,['P0'],'pay'],
+    ['D3','Décision : paiement','auteur de décision','Opus',12,['S1'],'pay'],
+    ['A3','Relecture antagoniste de D3','antagoniste','Opus',8,['D3'],'pay'],
+    ['U1','Choix du prestataire de paiement','ta décision','Toi',0,['A3'],'pay'],
+    ['T3',"Tests à l'aveugle : paiement",'testeur aveugle','Opus',18,['U1'],'pay'],
+    ['L3','Paiement','implémenteur','Opus',30,['T3','I2'],'pay'],
+    ['S2','Sonde : calendrier externe','sonde réelle','Sonnet',8,['P0'],'cal'],
+    ['CA1','Connecteur calendrier','implémenteur','Opus',26,['S2'],'cal'],
+    ['CA2','Tests du connecteur','validateur','Sonnet',12,['CA1'],'cal'],
+    ['S3',"Inventaire de l'ancien code",'recherche large','Haiku',24,['P0'],'res'],
+    ['D1','Décision : architecture','auteur de décision','Opus',30,['S3'],'res'],
+    ['A1','Relecture antagoniste de D1','antagoniste','Opus',18,['D1'],'res'],
+    ['C1','Corrections de D1 après A1','auteur de décision','Opus',15,['A1'],'res'],
+    ['F2',"Types et contrat d'API",'implémenteur','Opus',30,['C1'],'res'],
+    ['T1',"Tests à l'aveugle : réservations",'testeur aveugle','Opus',22,['F2'],'res'],
+    ['SV','Serveur : routes et données factices','implémenteur','Opus',36,['F2'],'res'],
+    ['CL',"Client d'API",'implémenteur','Opus',26,['F2'],'res'],
+    ['L1','Moteur de réservation','implémenteur','Opus',38,['T1'],'res'],
+    ['RS','Réconciliation serveur et client','réconciliation','Opus',18,['SV','CL','L1'],'res'],
+    ['S5','Inventaire des données','inventaire','Opus',55,['P0'],'dat'],
+    ['D2','Décision : données et droits','auteur de décision','Opus',28,['S5'],'dat'],
+    ['A2','Relecture antagoniste de D2','antagoniste','Opus',16,['D2'],'dat'],
+    ['T2',"Tests à l'aveugle : droits",'testeur aveugle','Opus',20,['A2'],'dat'],
+    ['L2','Droits et rôles','implémenteur','Opus',30,['T2'],'dat'],
+    ['MG','Migration des données','implémenteur','Opus',28,['L2'],'dat'],
+    ['S4','Inventaire des écrans','recherche large','Haiku',7,['P0'],'ui'],
+    ['DS0','Jetons visuels et maquettes','designer','Opus',18,['S4'],'ui'],
+    ['DS1','Design system : coque, boutons','implémenteur','Opus',30,['DS0'],'ui'],
+    ['DS2','Design system : formulaires','implémenteur','Opus',30,['DS0'],'ui'],
+    ['VIS','Captures de référence','mécanique','Sonnet',12,['DS1'],'ui'],
+    ['E1','Écrans : accueil, recherche','implémenteur','Opus',34,['DS1','RS'],'ui'],
+    ['E2','Écrans : réservation','implémenteur','Opus',40,['DS2','RS','L2'],'ui'],
+    ['E3','Écrans : paiement','implémenteur','Opus',30,['DS2','L3'],'ui'],
+    ['K0','Plan du guide utilisateur','rédacteur','Sonnet',10,['S4'],'doc'],
+    ['K1','Guide utilisateur','rédacteur','Sonnet',22,['K0','E2'],'doc'],
+    ['V1','Relecture antagoniste du code','antagoniste','Opus',22,['RS','L2','L3'],'res'],
+    ['CX','Corrections après V1','implémenteur','Opus',18,['V1'],'res'],
+    ['NR','Non-régression visuelle','validateur','Sonnet',18,['E1','E2','E3','VIS'],'ui'],
+    ['G','Porte complète, une seule fois','mécanique','Sonnet',22,['NR','CX','I5','MG','CA2'],'fin'],
+    ['VS','Validation sécurité par un tiers','validateur','Opus',22,['CX'],'dat'],
+    ['VC','Validation du code par un tiers','validateur','Opus',20,['G'],'fin'],
+    ['PR','Branche poussée, PR ouverte','orchestrateur','Fable',6,['VC','VS','K1'],'fin'],
+    ['RX','Rétrospective et leçons','critique','Opus',14,['PR'],'fin'],
+    ['SC','Débrief de consommation publié','mécanique','Sonnet',5,['RX'],'fin'],
+  ];
+  const EFFORT = {Fable:'moyen', Opus:'élevé', Sonnet:'moyen', Haiku:'bas', Toi:'—'};
+  const RATE = {Opus:46000, Sonnet:26000, Haiku:15000, Fable:30000}; // tokens per agent-minute, cache reads included
+  const VERDICT = {A1:'BLOQUÉ', V1:'BLOQUÉ', A2:'OK', A3:'OK', VF:'OK', VS:'OK', VC:'OK', NR:'OK'};
+  const CAP = 6, CUT_AT = 150, CUT_LEN = 8, AUTO_DECIDE = 45, MIN_PER_SEC = 5;
+  const MODELS = ['Fable','Opus','Sonnet','Haiku'];
+  const MROLE = {Fable:'orchestre, juge', Opus:'écrit, relit, décide', Sonnet:'mécanique vérifiable', Haiku:'recherches larges'};
+
+  const N = {}; T.forEach(([id,title,role,model,dur,deps,lane]) => N[id] = {id,title,role,model,dur,deps,lane,kids:[]});
+  T.forEach(([id,,,,,deps]) => deps.forEach(d => N[d].kids.push(id)));
+  const ids = T.map(t => t[0]);
+
+  // depth (row) and longest remaining chain (launch priority)
+  const depth = {}, chain = {};
+  const dep = i => depth[i] ??= 1 + Math.max(-1, ...N[i].deps.map(dep));
+  const ch = i => chain[i] ??= N[i].dur + Math.max(0, ...N[i].kids.map(ch));
+  ids.forEach(i => { dep(i); ch(i); });
+
+  // reference durations
+  const linear = ids.reduce((s,i) => s + N[i].dur, 0);
+  const rowsMax = {}; ids.forEach(i => rowsMax[depth[i]] = Math.max(rowsMax[depth[i]] || 0, N[i].dur));
+  const waves = Object.values(rowsMax).reduce((a,b) => a + b, 0);
+
+  // ── layout: one column per lane (sub-columns when a lane has several tasks at one depth), one row per depth ──
+  const BW = 128, BH = 50, GX = 10, GY = 28, PAD = 12, HEAD = 26, LG = 22;
+  const subs = {}; // lane -> depth -> [ids]
+  ids.forEach(i => { if (N[i].lane === 'top') return; ((subs[N[i].lane] ||= {})[depth[i]] ||= []).push(i); });
+  const laneW = {}; LANES.forEach(([k]) => laneW[k] = Math.max(1, ...Object.values(subs[k] || {}).map(l => l.length)));
+  const laneX = {}; let xx = PAD;
+  LANES.forEach(([k]) => { laneX[k] = xx; xx += laneW[k]*BW + (laneW[k]-1)*GX + LG; });
+  const W = xx - LG + PAD, nRows = Math.max(...ids.map(i => depth[i])) + 1;
+  const H = PAD + HEAD + nRows*BH + (nRows-1)*GY + PAD;
+  const pos = {};
+  pos.P0 = [W/2 - BW/2, PAD + HEAD];
+  LANES.forEach(([k]) => Object.entries(subs[k] || {}).forEach(([d, list]) => {
+    const off = (laneW[k] - list.length) * (BW+GX) / 2;
+    list.forEach((i, n) => pos[i] = [laneX[k] + off + n*(BW+GX), PAD + HEAD + d*(BH+GY)]);
+  }));
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.getElementById('graph');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.style.minWidth = Math.round(W*0.72) + 'px';
+
+  const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+  const lanesG = el('g', {}, svg);
+  LANES.forEach(([k, label]) => {
+    const w = laneW[k]*BW + (laneW[k]-1)*GX;
+    el('rect', {class:'lane', x:laneX[k]-6, y:PAD, width:w+12, height:H-PAD*2, rx:4}, lanesG);
+    el('text', {class:'lane-t', x:laneX[k] + w/2, y:PAD+16, 'text-anchor':'middle'}, lanesG).textContent = label;
+  });  const defs = el('defs', {}, svg);
+  const mk = el('marker', {id:'ar', viewBox:'0 0 10 10', refX:9, refY:5, markerWidth:6, markerHeight:6, orient:'auto'}, defs);
+  el('path', {d:'M0 0L10 5L0 10z', class:'arh'}, mk);
+  const edges = [];
+  ids.forEach(i => N[i].deps.forEach(d => {
+    const [x1,y1] = pos[d], [x2,y2] = pos[i];
+    const a = x1 + BW/2, b = y1 + BH, c = x2 + BW/2, e = y2 - 3, my = (b+e)/2;
+    edges.push({from:d, to:i, p: el('path', {class:'edge', d:`M${a} ${b}C${a} ${my} ${c} ${my} ${c} ${e}`, 'marker-end':'url(#ar)'}, svg)});
+  }));
+  const wrap = (t, n=21) => { const out=[]; let cur=''; t.split(' ').forEach(w => { if (cur && (cur+' '+w).length > n) { out.push(cur); cur = w; } else cur = (cur+' '+w).trim(); }); out.push(cur); return out.length > 2 ? [out[0], out[1].slice(0,n-1) + '…'] : out; };
+  ids.forEach(i => {
+    const [x,y] = pos[i], n = N[i];
+    const g = el('g', {class:'node wait', tabindex:0, role:'button', 'aria-label':`${i} ${n.title}`}, svg);
+    el('rect', {class:'sh', x:x+3, y:y+3, width:BW, height:BH, rx:4}, g);
+    el('rect', {class:'bx', x, y, width:BW, height:BH, rx:4}, g);
+    el('text', {class:'nid', x:x+7, y:y+14}, g).textContent = i;
+    el('text', {class:'nwho', x:x+BW-7, y:y+14, 'text-anchor':'end'}, g).textContent = n.model;
+    wrap(n.title).forEach((l,j) => el('text', {class:'ntt', x:x+7, y:y+29+j*13}, g).textContent = l);
+    n.prog = el('rect', {class:'prog', x, y:y+BH-4, width:0, height:4}, g);
+    n.g = g; n.x = x; n.y = y;
+    g.addEventListener('click', ev => { ev.stopPropagation(); select(i); });
+    g.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); select(i); } });
+  });
+  svg.addEventListener('click', () => select(null));
+
+  // ── tables ──
+  document.getElementById('trows').innerHTML = ids.map(i => { const n = N[i];
+    return `<tr><td class="mono">${i}</td><td>${n.title}</td><td>${n.role}</td><td>${n.model}</td><td>${EFFORT[n.model]}</td><td class="mono">${n.deps.join(' ') || '—'}</td><td class="num">${n.dur ? n.dur + ' min' : '—'}</td></tr>`; }).join('');
+  const fmtH = m => `${Math.floor(m/60)} h ${String(Math.floor(m%60)).padStart(2,'0')}`;
+  const fmtT = n => n >= 1e6 ? (n/1e6).toFixed(1).replace('.', ',') + ' M' : n >= 1e3 ? Math.round(n/1e3) + ' k' : String(Math.round(n));
+  document.getElementById('v-lin').textContent = fmtH(linear);
+  document.getElementById('v-wav').textContent = fmtH(waves);
+  document.getElementById('b-lin').style.width = '100%';
+  document.getElementById('b-wav').style.width = (100*waves/linear) + '%';
+
+  // ── simulation state ──
+  let S;
+  function init(){
+    S = {t:0, playing:false, cutDone:false, cutUntil:null, decidedAt:null, userSince:null, agents:0, agentMin:0, tok:{}, agentsBy:{}, logs:[], done:false};
+    MODELS.forEach(m => { S.tok[m] = 0; S.agentsBy[m] = 0; });
+    ids.forEach(i => Object.assign(N[i], {st:'wait', left:N[i].dur, used:0}));
+    S.agentsBy.Fable = 1;
+    document.getElementById('log').innerHTML = '';
+    document.getElementById('decision').hidden = true;
+    banner(null);
+    log(`Le cadrage commence : le brief commun et le graphe des ${ids.length} tâches sont écrits avant de lancer le moindre agent.`, 'run');
+    N.P0.st = 'run'; S.agents = 0;
+    render();
+  }
+  const isDone = i => N[i].st === 'done';
+  function log(text, kind=''){
+    S.logs.unshift({t:S.t, text, kind});
+    const li = document.createElement('li'); li.className = 'k-' + kind;
+    li.innerHTML = `<time>T+${fmtH(S.t)}</time>${text}`;
+    const ol = document.getElementById('log'); ol.prepend(li);
+    while (ol.children.length > 90) ol.lastChild.remove();
+  }
+  function banner(text, kind=''){ const b = document.getElementById('banner'); b.hidden = !text; if (text) { b.textContent = text; b.className = 'banner ' + kind; } }
+
+  function step(dt){
+    if (S.done) return;
+    S.t += dt;
+    const running = ids.filter(i => N[i].st === 'run');
+    // machine cut
+    if (!S.cutDone && S.t >= CUT_AT && running.length >= 3) {
+      S.cutDone = true; S.cutUntil = S.t + CUT_LEN;
+      running.forEach(i => { N[i].st = 'ko'; N[i].left += 2; });
+      log(`La machine redémarre : ${running.join(', ')} sont coupées. Leurs commits sont intacts ; le graphe dit exactement quoi relancer.`, 'ko');
+      banner('Coupure : la machine redémarre. Les tâches en rouge reprendront depuis leur dernier commit.', 'ko');
+      return;
+    }
+    if (S.cutUntil !== null) {
+      if (S.t < S.cutUntil) return;
+      S.cutUntil = null; banner(null);
+      const ko = ids.filter(i => N[i].st === 'ko');
+      ko.forEach(i => { N[i].st = 'run'; S.agents++; S.agentsBy[N[i].model]++; });
+      log(`Reprise : ${ko.join(', ')} relancées depuis leur dernier commit (2 minutes de relecture chacune).`, 'run');
+    }
+    // progress running tasks
+    let busy = 0;
+    ids.forEach(i => { const n = N[i]; if (n.st !== 'run') return;
+      busy++;
+      const w = Math.min(dt, n.left); n.left -= w; S.agentMin += w;
+      const tk = RATE[n.model] * w; n.used += tk; S.tok[n.model] += tk;
+      if (n.left <= 0) finish(i);
+    });
+    if (busy) S.tok.Fable += 3500 * dt; // orchestration while agents work
+    // user decision
+    if (N.U1.st === 'user' && S.t - S.userSince >= AUTO_DECIDE) decide('A', true);
+    // launch what can start, longest chain first, within the cap
+    let slots = CAP - ids.filter(i => N[i].st === 'run' && i !== 'P0' && i !== 'PR').length;
+    const can = ids.filter(i => ['wait','ready'].includes(N[i].st) && N[i].deps.every(isDone)).sort((a,b) => chain[b] - chain[a]);
+    can.forEach(i => {
+      const n = N[i];
+      if (i === 'U1') { n.st = 'user'; S.userSince = S.t; document.getElementById('decision').hidden = false;
+        log('U1 attend ta décision : quel prestataire de paiement ? Seule la colonne Paiement attend ; les autres colonnes continuent.', 'you'); return; }
+      if (n.model === 'Fable') { n.st = 'run'; return; }
+      if (slots > 0) { slots--; n.st = 'run'; S.agents++; S.agentsBy[n.model]++; }
+      else n.st = 'ready';
+    });
+    if (ids.every(isDone)) {
+      S.done = true; S.playing = false; updatePlay();
+      log(`Chantier terminé en ${fmtH(S.t)} : ${fmtH(S.agentMin)} de travail d'agents, soit ×${(S.agentMin/S.t).toFixed(1).replace('.', ',')} en parallèle.`, 'ok');
+      banner(`Terminé en ${fmtH(S.t)}, contre ${fmtH(linear)} une tâche après l'autre et ${fmtH(waves)} par vagues.`, 'ok');
+    }
+  }
+  function finish(i){
+    const n = N[i]; n.st = 'done'; n.left = 0;
+    const freed = n.kids.filter(k => N[k].deps.every(isDone));
+    const v = VERDICT[i];
+    if (i === 'P0') log('Cadrage fini : sept colonnes partent en même temps, chacune à son rythme.', 'ok');
+    else if (v === 'BLOQUÉ' && i === 'A1') log('A1 revient BLOQUÉE (2 points sur l\'architecture). C1 corrige ; seules les tâches qui lisent l\'architecture attendent, le reste continue.', 'ko');
+    else if (v === 'BLOQUÉ') log('V1 revient BLOQUÉE (1 bloquant, 4 à corriger). CX corrige ; les écrans qui ne lisent pas ce code continuent.', 'ko');
+    else if (freed.length) log(`${i} finie${v ? ' (' + v + ')' : ''} : ${freed.join(', ')} ${freed.length > 1 ? 'peuvent' : 'peut'} partir.`, 'ok');
+    else if (n.kids.length) log(`${i} finie${v ? ' (' + v + ')' : ''}. ${n.kids.join(', ')} ${n.kids.length > 1 ? 'attendent' : 'attend'} encore d'autres tâches.`, '');
+  }
+  function decide(opt, auto){
+    if (N.U1.st !== 'user') return;
+    N.U1.st = 'done'; document.getElementById('decision').hidden = true;
+    const rest = N.T3.deps.filter(d => !isDone(d));
+    log(`${auto ? 'Décision prise (automatique dans la démo)' : 'Tu as décidé'} : ${opt === 'A' ? "on garde l'actuel" : 'on passe au nouveau'}. ${rest.length ? 'T3 n\'attend plus que ' + rest.join(', ') + '.' : 'T3 peut partir.'}`, 'you');
+    render();
+  }
+  document.querySelectorAll('#decision button').forEach(b => b.addEventListener('click', () => decide(b.dataset.opt, false)));
+
+  // ── rendering ──
+  let selected = null;
+  function render(){
+    const cls = {wait:'wait', ready:'ready', run:'run', done:'done', user:'user', ko:'ko'};
+    ids.forEach(i => { const n = N[i];
+      const base = 'node ' + cls[n.st] + (selected === i ? ' sel' : '') + (hl.has(i) ? ' hl' : '');
+      if (n.g.getAttribute('class') !== base) n.g.setAttribute('class', base);
+      const p = n.dur ? (1 - n.left / n.dur) : (n.st === 'done' ? 1 : 0);
+      n.prog.setAttribute('width', n.st === 'run' || n.st === 'ko' ? Math.max(0, p) * BW : 0);
+      if (VERDICT[i] === 'BLOQUÉ' && n.st === 'done' && !n.badge) {
+        n.badge = el('g', {}, n.g);
+        el('rect', {class:'badge-bg', x:n.x+BW-56, y:n.y+BH-14, width:52, height:12, rx:2}, n.badge);
+        el('text', {class:'badge', x:n.x+BW-30, y:n.y+BH-5, 'text-anchor':'middle'}, n.badge).textContent = 'BLOQUÉ';
+      }
+      if (n.st !== 'done' && n.badge) { n.badge.remove(); n.badge = null; }
+    });
+    edges.forEach(e => e.p.setAttribute('class', 'edge' + (isDone(e.from) ? ' done' : '') + (hlE.has(e) ? ' hl' : '')));
+    const doneN = ids.filter(isDone).length, run = ids.filter(i => N[i].st === 'run' && N[i].model !== 'Fable').length;
+    const total = MODELS.reduce((s,m) => s + S.tok[m], 0);
+    txt('clock', 'T+' + fmtH(S.t));
+    txt('k-done', `${doneN} / ${ids.length}`);
+    txt('k-run', run);
+    txt('k-agents', S.agents);
+    txt('k-tok', fmtT(total));
+    txt('k-tok-l', `jetons au total, dont ${total ? 92 : 0} % de lectures de cache`);
+    txt('k-out', fmtT(total * 0.013));
+    txt('k-par', S.t > 1 ? '×' + (S.agentMin / S.t).toFixed(1).replace('.', ',') : '—');
+    txt('k-par-l', `${fmtH(S.agentMin)} de travail d'agents pour ${fmtH(S.t)} écoulées`);
+    txt('v-gra', fmtH(S.t));
+    document.getElementById('b-gra').style.width = Math.min(100, 100*S.t/linear) + '%';
+    // models
+    document.getElementById('stack').innerHTML = MODELS.map(m => `<div title="${m}" style="width:${total ? 100*S.tok[m]/total : 0}%;background:var(--m-${m.toLowerCase()})"></div>`).join('');
+    document.getElementById('mrows').innerHTML = MODELS.map(m => `<tr><td><span class="sw" style="background:var(--m-${m.toLowerCase()})"></span><b>${m}</b></td><td>${MROLE[m]}</td><td class="num">${S.agentsBy[m]}</td><td class="num">${fmtT(S.tok[m])}</td><td class="num">${total ? Math.round(100*S.tok[m]/total) : 0} %</td></tr>`).join('');
+    if (selected) detail(selected);
+  }
+  const txt = (id, v) => { const e = document.getElementById(id); if (e.textContent !== String(v)) e.textContent = v; };
+
+  // ── focus: ancestors and descendants of the selected task ──
+  let hl = new Set(), hlE = new Set();
+  function select(i){
+    selected = selected === i ? null : i;
+    hl = new Set(); hlE = new Set();
+    if (selected) {
+      const up = x => N[x].deps.forEach(d => { if (!hl.has(d)) { hl.add(d); up(d); } });
+      const down = x => N[x].kids.forEach(k => { if (!hl.has(k)) { hl.add(k); down(k); } });
+      up(selected); down(selected);
+      edges.forEach(e => { if ((hl.has(e.from) || e.from === selected) && (hl.has(e.to) || e.to === selected)) hlE.add(e); });
+    }
+    svg.classList.toggle('focusing', !!selected);
+    if (!selected) { txt('d-title', 'Choisis une tâche'); document.getElementById('d-hint').hidden = false; document.getElementById('d-dl').hidden = true; }
+    render();
+  }
+  const STL = {wait:'Attend ses dépendances', ready:'Peut partir, attend un agent libre', run:'En cours', done:'Faite', user:'Attend ta décision', ko:'Coupée, à reprendre'};
+  function detail(i){
+    const n = N[i];
+    txt('d-title', `${i} · ${n.title}`);
+    document.getElementById('d-hint').hidden = true;
+    const dl = document.getElementById('d-dl'); dl.hidden = false;
+    const missing = n.deps.filter(d => !isDone(d));
+    dl.innerHTML = `<dt>État</dt><dd>${STL[n.st]}${VERDICT[i] && n.st === 'done' ? ' · ' + VERDICT[i] : ''}</dd>
+      <dt>Rôle</dt><dd>${n.role}</dd><dt>Modèle</dt><dd>${n.model} · effort ${EFFORT[n.model]}</dd>
+      <dt>Dépend de</dt><dd class="mono">${n.deps.join(' ') || '—'}</dd>
+      <dt>Attend encore</dt><dd class="mono">${missing.join(' ') || '—'}</dd>
+      <dt>Débloque</dt><dd class="mono">${n.kids.join(' ') || '—'}</dd>
+      <dt>Durée prévue</dt><dd>${n.dur ? n.dur + ' min' : '—'}</dd>
+      <dt>Jetons</dt><dd>${fmtT(n.used)}</dd>`;
+  }
+
+  // ── loop ──
+  let speed = 1, last = null;
+  function frame(ts){
+    if (!S.playing) { last = null; return; }
+    if (last !== null) {
+      let dt = Math.min(0.25, (ts - last) / 1000) * MIN_PER_SEC * speed;
+      while (dt > 0 && !S.done) { const d = Math.min(0.5, dt); step(d); dt -= d; }
+      render();
+    }
+    last = ts;
+    requestAnimationFrame(frame);
+  }
+  const playBtn = document.getElementById('play');
+  function updatePlay(){ playBtn.textContent = S.done ? 'Rejouer' : S.playing ? 'Pause' : (S.t > 0 ? 'Reprendre' : 'Lancer'); }
+  playBtn.addEventListener('click', () => {
+    if (S.done) { init(); }
+    S.playing = !S.playing; updatePlay();
+    if (S.playing) requestAnimationFrame(frame);
+  });
+  document.getElementById('reset').addEventListener('click', () => { const was = S.playing; init(); S.playing = was; updatePlay(); if (was) requestAnimationFrame(frame); });
+  document.querySelectorAll('.spd').forEach(b => b.addEventListener('click', () => {
+    speed = +b.dataset.s; document.querySelectorAll('.spd').forEach(x => x.classList.toggle('on', x === b));
+  }));
+
+  init();
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) { S.playing = true; updatePlay(); requestAnimationFrame(frame); }
+})();
+</script>
+
+</html>
