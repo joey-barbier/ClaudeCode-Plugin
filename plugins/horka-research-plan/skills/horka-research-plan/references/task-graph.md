@@ -31,15 +31,18 @@ Kept by the orchestrator in a board folder outside the repository (scratchpad or
   "waiting_on_user": ["…"],
   "decisions": ["…"],
   "probes": ["<b>Payment API.</b> what the real call returned …"],
+  "lanes": [["infra", "Infra"], ["pay", "Payment"], ["data", "Data and rights"], ["ship", "Delivery"]],  // optional: columns
   "nodes": [
     {"id": "P0", "title": "Framing and common brief", "role": "orchestrator", "model": "Fable", "effort": "—", "status": "done", "deps": []},
-    {"id": "S1", "title": "Probe the payment API", "role": "probe", "model": "Sonnet", "effort": "medium", "status": "done", "deps": ["P0"], "agents": ["a3f2…"]},
+    {"id": "S1", "title": "Probe the payment API", "role": "probe", "model": "Sonnet", "effort": "medium", "status": "done", "deps": ["P0"], "agents": ["a3f2…"], "lane": "pay"},
     {"id": "A1", "title": "Antagonist review of the decision record", "role": "antagonist", "model": "Opus", "effort": "high", "status": "waiting", "deps": ["D1"]}
   ]
 }
 ```
 
 Statuses: `ready` (can start), `waiting` (a dependency is not done), `running`, `done`, `user` (waits for the user), `failed` (to redo: add the correction task), `interrupted` (the agent was cut by a restart or a limit: its committed work stays, relaunch it with "resume from your last commit").
+
+**Lanes (recommended as soon as the run has 15 tasks or more).** Give `graph.json` a `lanes` list and each node a `lane`: the board then draws one column per lane (infra, payment, data, screens, delivery…), rows still by depth. Lanes make the point of the graph visible at a glance: a fast lane is finished while a slow one is still on its second task, and a lane stopped on a user decision does not hold the others. A lane-less root (the framing task) is centred on top; any other lane-less task goes to a last column. Group by what a task reads, so that most arrows stay inside their column and only the delivery lane gathers them. Without `lanes`, the board draws one row per depth.
 
 Ids are short and stable (`S1`, `D2`, `T1`, `I3`, `V1`): they are what you write in the thread and in commit messages.
 
@@ -63,7 +66,7 @@ Read from the transcripts (`message.usage` per assistant message, deduplicated b
 - Tasks done / running, agents launched, direct calls to a cheaper model.
 - Tokens in all and the share of cache reads (usually above 90 %: the cost of an agent is the context it re-reads every turn), output tokens.
 - Wall time vs cumulated agent time, and their ratio: the parallelism factor. Below ×1.5 on a run of more than 10 tasks, the graph has too many false dependencies.
-- The graph itself: one row per depth, coloured by status, model of each task in its corner, solid arrows from finished tasks.
+- The graph itself: one column per lane when lanes are set (else one row per depth), coloured by status, model of each task in its corner, solid arrows from finished tasks.
 - Per task: role, model, effort, state, agents, duration, turns, tokens, output.
 - Per model: agents, turns, tokens in all, cache reads, input and cache writes, output. This is the check that routing worked: if the top model carries more than the orchestration and the judgement, the briefs did not route.
 

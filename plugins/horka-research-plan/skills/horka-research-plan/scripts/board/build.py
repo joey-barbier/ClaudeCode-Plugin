@@ -153,7 +153,7 @@ def main():
     tot_out = sum(c['output_tokens'] for c in models.values())
     tot_cr = sum(c['cache_read_input_tokens'] for c in models.values())
 
-    # ── graph layout: one row per depth, top to bottom ──────────────────────
+    # ── graph layout: lanes as columns when graph.json has "lanes", else one row per depth ──
     N = {n['id']: n for n in G['nodes']}
     for n in G['nodes']:
         n['status'] = ALIASES.get(n['status'], n['status'])
@@ -166,18 +166,51 @@ def main():
 
     for i in N:
         dep(i)
-    rows = collections.defaultdict(list)
-    for n in G['nodes']:
-        rows[depth[n['id']]].append(n['id'])
     BW, BH, GX, GY, PAD = 152, 66, 14, 30, 14
-    width = max(len(v) for v in rows.values())
-    W = PAD * 2 + width * BW + (width - 1) * GX
-    H = PAD * 2 + len(rows) * BH + (len(rows) - 1) * GY
-    pos = {}
-    for r, ids in rows.items():
-        off = (width - len(ids)) * (BW + GX) / 2
-        for k, i in enumerate(ids):
-            pos[i] = (PAD + off + k * (BW + GX), PAD + r * (BH + GY))
+    nrows = max(depth.values()) + 1
+    pos, lane_boxes = {}, []
+    lanes = [l if isinstance(l, list) else [l, l] for l in G.get('lanes', [])]
+    if lanes:
+        # One column per lane, sub-columns when a lane has several tasks at one depth; a lane-less
+        # root (the framing task) is centred on top. Lanes advance at their own pace, which is the point.
+        HEAD, LG = 28, 24
+        keys = [k for k, _ in lanes]
+        if any(n.get('lane') not in keys and depth[n['id']] > 0 for n in G['nodes']):
+            lanes.append(['_', '—'])
+            keys.append('_')
+        cells = collections.defaultdict(lambda: collections.defaultdict(list))
+        top = []
+        for n in G['nodes']:
+            k = n.get('lane') if n.get('lane') in keys else ('_' if depth[n['id']] > 0 else None)
+            (cells[k][depth[n['id']]] if k else top).append(n['id'])
+        lw = {k: max([len(v) for v in cells[k].values()] or [1]) for k in keys}
+        lx, x = {}, PAD
+        for k in keys:
+            lx[k] = x
+            x += lw[k] * BW + (lw[k] - 1) * GX + LG
+        W = x - LG + PAD
+        H = PAD * 2 + HEAD + nrows * BH + (nrows - 1) * GY
+        for j, i in enumerate(top):
+            pos[i] = (W / 2 - BW / 2 + (j - (len(top) - 1) / 2) * (BW + GX), PAD + HEAD)
+        for k, label in lanes:
+            w = lw[k] * BW + (lw[k] - 1) * GX
+            lane_boxes.append((lx[k] - 7, PAD, w + 14, H - PAD * 2, lx[k] + w / 2, label))
+            for d, ids in cells[k].items():
+                off = (lw[k] - len(ids)) * (BW + GX) / 2
+                for j, i in enumerate(ids):
+                    pos[i] = (lx[k] + off + j * (BW + GX), PAD + HEAD + d * (BH + GY))
+    else:
+        # One row per depth, top to bottom.
+        rows = collections.defaultdict(list)
+        for n in G['nodes']:
+            rows[depth[n['id']]].append(n['id'])
+        width = max(len(v) for v in rows.values())
+        W = PAD * 2 + width * BW + (width - 1) * GX
+        H = PAD * 2 + nrows * BH + (nrows - 1) * GY
+        for r, ids in rows.items():
+            off = (width - len(ids)) * (BW + GX) / 2
+            for k, i in enumerate(ids):
+                pos[i] = (PAD + off + k * (BW + GX), PAD + r * (BH + GY))
 
     def wrap(t, n=22):
         out, cur = [], ''
@@ -195,6 +228,9 @@ def main():
     svg = ['<svg viewBox="0 0 %d %d" width="%d" height="%d" role="img" aria-label="%s">' % (W, H, W, H, E(lab['graph'])),
            '<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">'
            '<path d="M0 0L10 5L0 10z" class="arh"/></marker></defs>']
+    for x, y, w, h, cx, label in lane_boxes:
+        svg.append('<rect class="lane" x="%.0f" y="%.0f" width="%.0f" height="%.0f" rx="4"/>'
+                   '<text class="lane-t" x="%.0f" y="%.0f" text-anchor="middle">%s</text>' % (x, y, w, h, cx, y + 18, E(label)))
     for n in G['nodes']:
         x2, y2 = pos[n['id']]
         for d in n.get('deps', []):
