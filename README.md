@@ -29,7 +29,7 @@ Then `/plugin` → **Discover** tab to browse, or install plugins individually b
 | **[horka-skill-eval](#horka-skill-eval)** | Skill quality auditor | skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Production-grade skill factory with enforced quality gates | skill |
 | **[horka-project-index](#horka-project-index)** | Global project index: resolves generic commands to the right project/workspace | skill + script |
-| **[horka-research-plan](#horka-research-plan)** | Right model and right effort for each agent role → multi-agent research that saves tokens and ends in a sourced action plan (doc-style page); code variant for a migration run by many agents (blind testers before implementers, integration branch green on a gate, separate validation threads); every run is a task graph on a live board with a token debrief per task and per model | skill |
+| **[horka-research-plan](#horka-research-plan)** | Right model and right effort for each agent role → multi-agent research that saves tokens and ends in a sourced action plan (doc-style page); code variant for a migration run by many agents (blind testers before implementers, integration branch green on a gate, separate validation threads); every run is a task graph on a live board with a token debrief per task and per model; checks that hold: the product run end to end before any push, old-vs-new differential tests, verdicts pinned to a commit | skill |
 | **[horka-played](#horka-played)** | `/played` as in WoW: your Claude Code token usage per day, machine and model, with a shareable card and a story PNG | skill + scripts |
 
 ---
@@ -176,9 +176,9 @@ claude plugin install horka-project-index
 
 ## horka-research-plan
 
-**Right model, right effort, right moment.** By default every subagent inherits the session's model; this skill assigns one per role: the most capable model for orchestration, critic and personas, the expert tier for researchers, the generalist tier for validators and counting, each with its own effort level. Judgement stays on the best model, mechanical work moves to cheaper tiers, and the real cost of each wave goes in the run's scorecard.
+**Right model, right effort, right moment, at every level.** Each sub-task goes to the cheapest tier that can do it (top tier judges, expert researches or codes, generalist validates and merges, cheapest does lookups), and every agent passes the rule to its own sub-agents. Two modes: **research**, which ends in a sourced action plan (one doc-style page, every figure with URL and date), and **code**, a migration or rewrite run by many agents (blind testers before implementers, integration branch green on a gate, separate validation threads).
 
-What it delivers: **multi-agent research that ends in a sourced action plan**, delivered as one doc-style HTML page. For "give me a full check and a plan" questions: go-to-market, which channel, how to get discovered, how to answer a regulation.
+Every run is a **task graph on a live board** with a token debrief per task and per model. **[See the animated example board](https://raw.githack.com/joey-barbier/ClaudeCode-Plugin/main/plugins/horka-research-plan/examples/task-graph-demo.html)**. Verification follows the Claude Code team's practice: the product is run end to end before a push, migrations are diffed old vs new, verdicts are pinned to a commit, and after three red rounds the user decides.
 
 ```bash
 claude plugin install horka-research-plan
@@ -186,6 +186,11 @@ claude plugin install horka-research-plan
 
 | Component | Trigger | Does |
 |---|---|---|
+| `/horka-research-plan:horka-research-plan` | "full check and a plan", "sourced plan", "plan sourcé", "migre X vers Y avec plein d'agents", "lance plein d'agents", "quel modèle pour quelle tâche" | Sizes the run (short or full lane), writes the task graph, launches by the graph with model routing, validates through third parties, delivers the page or the green branch, then a retrospective rewrites a lessons file read by the next run |
+
+**Three rules:** no number or behaviour from memory · no agent grades its own work · nothing created or scheduled without the user's go. Details: [plugin README](plugins/horka-research-plan/README.md).
+
+---|---|---|
 | `/horka-research-plan:horka-research-plan` | "full check and a plan", "how do we get discovered", "go-to-market", "sourced plan", "check complet et un plan", "plan sourcé" | Reality check in three states (prod / develop / open PRs), then short waves: personas + real-demand probe first, researchers per action type, code-level dedup, validators that open every URL, antagonist critic, feasibility + completeness, one HTML page, then a retrospective by a separate agent that rewrites a lessons file read by the next run |
 
 **Three rules:** no number from memory (URL, date, status chip on every figure) · no agent grades its own work · nothing is created or scheduled (product needs and tasks go in a hand-over tab). Ships brief templates, JSON schemas, `Workflow` skeletons, the page structure and the retrospective method (scorecard, lessons file, one experiment per run) in `references/`.

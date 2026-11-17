@@ -1,63 +1,84 @@
 # horka-research-plan
 
-**Right model, right effort, right moment.** By default Claude Code gives every subagent the session's model, so a ten-agent run on the top model pays top price for work that is mostly opening pages and counting. This skill assigns a model and an effort level to each role:
+**Right model, right effort, right moment, at every level.** By default every subagent inherits the session's model, so a ten-agent run on the top model pays top price for work that is mostly opening pages and counting. This skill routes each sub-task to the cheapest tier that can do it, and every agent passes the same rule to its own sub-agents:
 
-| Role | Model | Effort |
+| Tier | Does | Example |
 |---|---|---|
-| Orchestrator, critic, personas, synthesis | most capable (Fable) | high |
-| Researchers | expert tier (Opus) | high |
-| Validators, demand probe, counting | generalist tier (Sonnet) | medium |
+| Top | Orchestrates and judges: critic, personas, synthesis | Fable / Opus, high effort |
+| Expert | Researches, writes specs, tests and code | Opus, high |
+| Generalist | Validates, merges, reruns a gate, counts | Sonnet, medium |
+| Cheapest | Wide lookups whose conclusion is all you keep | Haiku (`Explore`), low |
 
-Judgement stays on the best model; mechanical work moves to cheaper tiers. The real cost of each wave goes in the run's scorecard, so the split is adjusted with numbers, not guesses.
+An agent never launches a tier above its own. Delegation is a direct `claude -p` call (`scripts/ask.sh`) when the agent has a shell, or one `ASK PARENT` line otherwise.
 
-What it produces: multi-agent research that ends in a **sourced action plan**, delivered as one doc-style HTML page.
+**Two modes:**
 
-Built after a real run: 18 agents in two waves, 44 candidate actions, 329 figures opened at the source by validators (0 false, 9 corrections), 10 actions kept by an antagonist critic. The skill encodes what that run taught: readers (personas, real demand) *before* researchers, one brief per action type, validators separate from researchers, short waves with reading in between, and a retrospective that rewrites a **lessons file** so the next run starts smarter (one experiment per run, judged by an agent that did not write the page).
+- **Research**: multi-agent research that ends in a **sourced action plan**, one doc-style HTML page where every figure has a URL, a date and a status.
+- **Code**: a migration or rewrite run by many agents. Blind testers write the specs before the implementers, each agent has its own worktree, the integration branch must be green on a gate, and separate threads validate it.
+
+**Two lanes:** short (2 or 3 agents, one antagonist pass, the report in the thread) for a question about your own systems, full for market research or a multi-target migration.
+
+## See it run
+
+**[Example board, animated](https://raw.githack.com/joey-barbier/ClaudeCode-Plugin/main/plugins/horka-research-plan/examples/task-graph-demo.html)** (`examples/task-graph-demo.html`, open it locally if the link is blocked). A fictional project: 45 tasks, 5 agents at most, reviews that come back BLOCKED, a decision you click for the user, a machine cut, the debrief per model, and a comparison of one-by-one vs waves vs graph.
 
 ## What's included
 
-| Component | Trigger | Role |
-|-------|---------|------|
-| `/horka-research-plan:horka-research-plan` | "full check and a plan", "how do we get discovered", "go-to-market", "sourced plan", "check complet et un plan", "plan sourcé" | Orchestrates the waves, writes the page, hands over product needs and tasks |
-| `references/briefs.md` | — | Brief templates per role (persona, demand probe, researcher, validator, critic, feasibility, completeness) |
-| `references/schemas.md` | — | JSON schemas to impose on every agent |
-| `references/workflow-skeleton.md` | — | `Workflow` scripts per wave (falls back to the `Agent` tool) |
-| `references/page-structure.md` | — | The doc-style page: look, tabs, build |
-| `references/retrospective.md` | — | Scorecard, lessons-file template, where it lives, who writes what |
-| `references/task-graph.md` + `scripts/board/` | — | The task graph every run is driven by (`graph.json`, `set.py`) and the run board (`build.py` → `board.html`): graph by status, tokens per task and per model read from the transcripts, parallelism factor |
+| Component | Role |
+|---|---|
+| `/horka-research-plan:horka-research-plan` | Triggers on "full check and a plan", "plan sourcé", "migre X vers Y avec plein d'agents", "lance plein d'agents", "quel modèle pour quelle tâche". Orchestrates the run. |
+| `references/model-routing.md` | The four tiers, the three questions that pick one, the pass-down line for every brief, when delegating loses |
+| `references/task-graph.md` + `scripts/board/` | The task graph every run follows (`graph.json`, `set.py`) and the board (`build.py` → `board.html`) |
+| `references/code-variant.md` | Code mode: waves S/T/I/R/V/M, gates, differential harness, deliverable |
+| `references/briefs.md` | Brief templates per role, with the short report format |
+| `references/schemas.md` · `workflow-skeleton.md` · `page-structure.md` | JSON schemas, `Workflow` scripts, the doc-style page |
+| `references/retrospective.md` | Scorecard, lessons file, one experiment per run |
+| `scripts/ask.sh` | Direct call to a cheaper model, read-only tools, logged on the board |
+| `examples/task-graph-demo.html` | The animated example board above |
 
 ## The task graph and the board
 
-Every run, short or full, is a task graph: a task starts as soon as what it reads is done, a blocked task blocks only its descendants, a decision that waits on the user is a node of its own. The orchestrator updates `graph.json` with `scripts/board/set.py`, which prints what can start now and rebuilds the board: the graph coloured by status, then the consumption debrief read from the transcripts (tokens per task and per model, cache reads, output, agents, direct calls to cheaper models, wall time vs cumulated agent time). The board replaces progress messages; at the end it feeds the scorecard.
+Every run, short or full, is a task graph. A task starts as soon as what it reads is done. A blocked task blocks only its descendants. A decision waiting on the user is a node of its own. `scripts/board/set.py` updates a task, prints what can start now and rebuilds `board.html`: the graph coloured by status, then the consumption debrief read from the transcripts (tokens per task and per model, cache reads, direct calls, wall time vs cumulated agent time, parallelism factor). The board replaces progress messages and feeds the scorecard.
 
-## The waves
+## Verification
+
+Based on [how the Claude Code team verifies agent work](https://claude.dev/blog/how-the-claude-code-team-thinks-about-verification/):
+
+- **Run the real thing.** Before any push, the product runs end to end (a real job, a browser, a simulator, an API harness) and the trace is pasted. Research mode's equivalent: a validator opens every URL.
+- **Migrations compare old and new** on the same inputs; any difference is a bug unless it is on the approved-differences list the user signed. Pure engines get property tests.
+- **Checks stay out of reach of the change.** Verdicts name the commit SHA, rules are read from the base branch, and a script checks that no spec assertion moved.
+- **Three red rounds, then the user decides.** A flaky test is never retried to green.
+- **One reviewer made better, not more reviewers stacked.** Every point has a severity: blocking, minor or pre-existing. A new gate starts in observe mode.
+
+## Research waves
 
 ```
-0  Read the lessons file from the previous run · reality check in three states (prod / develop / open PRs) + dated point zero
+0  Lessons file · reality check in three states (prod / develop / open PRs) · dated point zero
 1  Personas (buyer, impacted third party) + real-demand probe        ← before any research
 2  Researchers, one brief per action type
 3  Dedup in code
 4  Validators (a different agent per researcher) open every URL
 5  Antagonist critic: 8–12 actions, 90-day sequence, two decision gates
-6  Feasibility of every assumed flow + completeness ("what is missing?")
-7  Retrospective: scorecard (facts), a fresh critic agent (lessons + ONE next experiment), lessons file rewritten
-→  One HTML page · nothing created or scheduled · the next run reads the lessons file first
+6  Feasibility of every assumed flow + completeness
+7  Retrospective
 ```
+
+Code mode replaces them with S (probes, decision records) → T (blind testers, differential harness) → I (implementers) → R (reconciliation) → V (validation threads) → M (mechanical steps).
 
 ## Three rules
 
-1. No number from memory: URL opened, date, status chip (verified / partial / hypothesis / not found).
+1. No number (or behaviour) from memory: URL opened, date, status; in code, `file:line` of the reference.
 2. No agent grades its own work.
-3. Nothing is created or scheduled: product needs and tasks go in a hand-over tab.
+3. Nothing is created or scheduled; in code, branches yes, a push only on the user's go.
 
 ## Self-improvement loop
 
-Each run ends with `references/retrospective.md`: the orchestrator writes the facts (agents, models, minutes, figures verified, what was found late), a separate agent writes the judgement (at most five lessons, a verdict on the previous experiment, one experiment for the next run), and the orchestrator rewrites `research-plan-lessons.md` in full (project memory, `.claude/memory/` in the repo, or `~/.claude/`). Phase 0 of the next run reads it first.
+The orchestrator writes the facts (scorecard from the board), a separate agent writes the judgement (at most five lessons, a verdict on the previous experiment, one experiment for the next run), and the orchestrator rewrites `research-plan-lessons.md`. Lessons are rules with a trigger, a check and an origin: a rule enters after two occurrences, applies only when its trigger matches, and is dropped when it stops firing. Reviewers are measured on what they found, missed and flagged wrongly.
 
 ## Requirements
 
-- `WebFetch` / `WebSearch` for validators and researchers.
-- `Workflow` tool optional (Agent tool fallback).
+- `Agent` tool (or `Workflow`), `WebFetch` / `WebSearch` for research mode.
+- A shell with `claude` for direct delegation; otherwise the `ASK PARENT` relay.
 - Optional: `horka-review:antagonist-reviewer` for the critic's voice, a project `doc-style` skill for the page.
 
 ## Install

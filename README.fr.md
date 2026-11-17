@@ -29,7 +29,7 @@ Puis `/plugin` → onglet **Discover** pour parcourir, ou installe les plugins i
 | **[horka-skill-eval](#horka-skill-eval)** | Auditeur qualité de skills | skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Usine à skills avec gates de qualité obligatoires | skill |
 | **[horka-project-index](#horka-project-index)** | Index global des projets : résout les commandes génériques vers le bon projet/workspace | skill + script |
-| **[horka-research-plan](#horka-research-plan)** | Le bon modèle et le bon effort pour chaque rôle d'agent → recherche multi-agents économe en tokens, qui aboutit à un plan d'actions sourcé (page doc-style) ; variante code pour une migration menée par de nombreux agents (testeurs à l'aveugle avant les implémenteurs, branche d'intégration verte sur une porte, fils de validation séparés) ; chaque run est un graphe de tâches sur une page de suivi vivante, avec le débrief des jetons par tâche et par modèle | skill |
+| **[horka-research-plan](#horka-research-plan)** | Le bon modèle et le bon effort pour chaque rôle d'agent → recherche multi-agents économe en tokens, qui aboutit à un plan d'actions sourcé (page doc-style) ; variante code pour une migration menée par de nombreux agents (testeurs à l'aveugle avant les implémenteurs, branche d'intégration verte sur une porte, fils de validation séparés) ; chaque run est un graphe de tâches sur une page de suivi vivante, avec le débrief des jetons par tâche et par modèle ; des vérifications solides : le produit lancé de bout en bout avant tout push, tests différentiels ancien/nouveau, verdicts liés à un commit | skill |
 | **[horka-played](#horka-played)** | `/played` comme dans WoW : ta conso de tokens Claude Code par jour, machine et modèle, avec carte à partager et PNG story | skill + scripts |
 
 ---
@@ -140,9 +140,9 @@ claude plugin install horka-skill-eval
 
 ## horka-research-plan
 
-**Le bon modèle, le bon effort, au bon moment.** Par défaut, chaque sous-agent hérite du modèle de la session ; ce skill en attribue un par rôle : le modèle le plus capable pour l'orchestration, la critique et les personas, le niveau expert pour les chercheurs, le niveau généraliste pour les validateurs et les comptages, chacun avec son propre niveau d'effort. Le jugement reste sur le meilleur modèle, le travail mécanique passe sur des modèles moins chers, et le coût réel de chaque vague est noté dans le bilan du run.
+**Le bon modèle, le bon effort, au bon moment, à chaque niveau.** Chaque sous-tâche va au palier le moins cher qui suffit (le plus capable juge, l'expert cherche ou code, le généraliste valide et fusionne, le moins cher fait les recherches), et chaque agent transmet la règle à ses propres sous-agents. Deux modes : **recherche**, qui finit en plan d'actions sourcé (une page doc-style, chaque chiffre avec URL et date), et **code**, une migration ou réécriture menée par de nombreux agents (testeurs à l'aveugle avant les implémenteurs, branche d'intégration verte sur une porte, fils de validation séparés).
 
-Ce que ça livre : **recherche multi-agents qui finit en plan d'actions sourcé**, livré en une page HTML doc-style. Pour les demandes « un check complet et un plan » : go-to-market, quel canal, comment se faire découvrir, comment répondre à une réglementation.
+Chaque run est un **graphe de tâches sur une page de suivi vivante**, avec le débrief des jetons par tâche et par modèle. **[Voir l'exemple animé](https://raw.githack.com/joey-barbier/ClaudeCode-Plugin/main/plugins/horka-research-plan/examples/task-graph-demo.html)**. La vérification suit la pratique de l'équipe Claude Code : le produit est lancé de bout en bout avant tout push, les migrations sont comparées ancien contre nouveau, les verdicts sont liés à un commit, et après trois tours en échec l'utilisateur tranche.
 
 ```bash
 claude plugin install horka-research-plan
@@ -150,6 +150,11 @@ claude plugin install horka-research-plan
 
 | Composant | Déclencheur | Rôle |
 |---|---|---|
+| `/horka-research-plan:horka-research-plan` | « check complet et un plan », « plan sourcé », « migre X vers Y avec plein d'agents », « lance plein d'agents », « quel modèle pour quelle tâche » | Dimensionne le run (voie courte ou complète), écrit le graphe, lance selon le graphe avec le routage de modèle, fait valider par des tiers, livre la page ou la branche verte, puis une rétrospective réécrit un fichier de leçons relu au run suivant |
+
+**Trois règles :** aucun chiffre ni comportement de mémoire · aucun agent ne note son propre travail · rien n'est créé ni planifié sans le go de l'utilisateur. Détails : [README du plugin](plugins/horka-research-plan/README.md).
+
+---|---|---|
 | `/horka-research-plan:horka-research-plan` | « check complet et un plan », « plan sourcé », « comment se faire découvrir », « go-to-market » | État réel en trois états (prod / develop / PR ouvertes), puis vagues courtes : personas + demande réelle d'abord, chercheurs par type d'action, dédoublonnage par code, validateurs qui ouvrent chaque URL, critique antagoniste, faisabilité + complétude, une page HTML, puis une rétrospective par un agent séparé qui réécrit un fichier de leçons relu au run suivant |
 
 **Trois règles :** aucun chiffre de mémoire (URL, date, chip de statut sur chaque nombre) · aucun agent ne note son propre travail · rien n'est créé ni planifié (besoins produit et tâches dans un onglet « à transmettre »). Fournit les briefs par rôle, les schémas JSON, les squelettes `Workflow`, la structure de page et la méthode de rétrospective (scorecard, fichier de leçons, une expérience par run) dans `references/`. Modèle et effort par rôle : modèle le plus capable pour orchestration / critique / personas, expert pour les chercheurs, généraliste pour les validateurs.

@@ -16,25 +16,27 @@ Read this when the request is "migrate X to Y with many agents", "rewrite the en
 
 | Wave | Agents | Purpose |
 |---|---|---|
-| S · Spike and decisions | 1 agent per proof (the build compiles on the reference platform, the walls hold, the risky mechanism works) + 1 author per architecture decision record | Prove before writing. A decision record is reviewed by an antagonist who did not write it (twice in the full lane only: the second pass reads the corrections and states, per blocking point, "lifted / partially / not lifted" with the line that proves it). **Probe before spec:** one real probe per external dependency (API, CI runner, hosting platform, tool): run the real thing once with a disposable instance and record what it actually sends or requires; the blind spec of that piece starts from the record, never from the decision record alone. **Gate = CI from wave 1:** the gate runs with the CI's user (non root), core count and runner from wave 1; green means N consecutive passes (root hid a permission bug, 4 cores starved the cooperative pool, `Foundation.Process` crashed 4 runs out of 13). |
-| T · Blind testers | 1 per target, **before** any implementer | Write `Tests/<Target>/Spec/API.md` (the contract they assume) then the tests, from the reference and the base only. They never open `Sources/`, anywhere. A throwaway stub package outside the repo checks that the tests compile. |
+| S · Spike and decisions | 1 agent per proof (the build compiles on the reference platform, the walls hold, the risky mechanism works) + 1 author per architecture decision record | Prove before writing. A decision record is reviewed by an antagonist who did not write it (twice in the full lane only: the second pass reads the corrections and states, per blocking point, "lifted / partially / not lifted" with the line that proves it). **Probe before spec:** one real probe per external dependency (API, CI runner, hosting platform, tool): run the real thing once with a disposable instance and record what it actually sends or requires; the blind spec of that piece starts from the record, never from the decision record alone. **Gate = CI from wave 1:** the gate runs with the CI's user (non root), core count and runner from wave 1; green means N consecutive passes (to expose a flaky test, which is then fixed or deleted, never to fish for one green run) (root hid a permission bug, 4 cores starved the cooperative pool, `Foundation.Process` crashed 4 runs out of 13). |
+| T · Blind testers | 1 per target, **before** any implementer | Write `Tests/<Target>/Spec/API.md` (the contract they assume) then the tests, from the reference and the base only. They never open `Sources/`, anywhere. A throwaway stub package outside the repo checks that the tests compile. For a migration, one of them also builds the **differential harness**: old and new on the same recorded or generated inputs, outputs normalised then diffed, against an approved-differences list the user signs. Pure engines get property tests (round trip, invariant, idempotency). |
 | I · Implementers | 1 per target, own worktree and branch | Make `Spec/` pass without changing an assertion. Only mechanical API renames, each listed in the report. A test they believe wrong stays red and is explained with `file:line`. Proof pasted (full test run, reference gate green). |
 | R · Reconciliation | 1 agent after each wave I | Blind specs drift on shared names. The lowest layer's `API.md` is the authority; provisional `TEMP` types are removed; branches are merged into `integration`; the gate runs again. |
-| V · Validation threads | separate threads: code, AI behaviour, security | Receive only the branch, the base and the validation type, never the orchestrator's context. Expect BLOCKED first; fix on a `fix/` branch; ask for a second pass on the fixes only. |
+| V · Validation threads | separate threads: code, AI behaviour, security | Receive only the branch, its SHA, the base and the validation type, never the orchestrator's context; rules are read from the base. Expect BLOCKED first; fix on a `fix/` branch; the second pass reads only the fixes. Still blocked after three rounds: the user decides. |
 | M · Mechanical steps | generalist-tier agents | Merge a fix branch, rerun the gate, update the board. No decision. |
 
 Briefs for each role: `references/briefs.md`, section "Code variant".
 
-## Gates: four by default, in parallel, never "just to see"
+## Gates: few, real, in parallel, never "just to see"
 
 What a mid-size run showed (one craft and one connector, 16/11/2026): the real probe and the first antagonist review found what mattered (an API with no history, a forged-message hole across two agents, a state marked before the work was done); the second full review found two small points in ten minutes; a reference gate rerun locally and a 280-line decision record for three deliveries bought nothing; the base branch was red before the run started and nobody had looked.
 
-- **Default gates:** real probe; one antagonist review of the decision record; blind tests for pure engines and security boundaries; a third party validates before the push. The second review pass, blind tests for every target and the three validation threads are for migrations and rewrites.
-- **Phase 0:** read the CI status of the base branch (do not rerun the gate) and check the gate can run where you are (container runtime, outbound proxy and its CA, architecture). A red base goes to the user at once.
-- **While agents work:** filtered tests of their own target only. No full gate per agent.
-- **One full gate,** once, after reconciliation, where the user said long runs go. The validations start at the same time.
+The rules are in SKILL.md, section Verification. What they mean here:
+
+- **Phase 0:** read the base branch's CI status (do not rerun the gate) and check the gate can run where you are (container runtime, proxy and its CA, architecture). A red base goes to the user at once.
+- **While agents work:** filtered tests of their own target only. One full gate after reconciliation, where the user said long runs go; validations start with it.
+- **Before the push:** the `verify` run (the product driven end to end, trace pasted) and, for a migration, the differential report: zero difference outside the approved list.
+- **Out of reach:** a script checks that each implementer's diff of `Spec/` holds only the listed renames; verdicts name the SHA they checked.
 - **Decision record:** only what ships in this delivery; later deliveries get three lines each.
-- **Reports:** one verdict line, then one line per point (`file:line` · problem · fix), 15 lines at most.
+- **Reports:** one verdict line, then one line per point (`file:line` · severity · problem · fix), 15 lines at most.
 
 ## Delegating lookups: when it wins, when it loses
 
@@ -54,7 +56,7 @@ Measure it: the scorecard records cache-read tokens per agent, read from the tra
 ## The deliverable
 
 - The `integration` branch, green on the reference gate (for example `docker run … swift:6.2-noble swift test`), pushed only on the user's go.
-- The `Spec/` folders, one per target, each test citing its source.
+- The `Spec/` folders, one per target, each test citing its source; the verify trace and, for a migration, the differential report.
 - The run board of `references/task-graph.md` (task graph, tokens per task and per model, wall time vs cumulated agent time, parallelism factor), with tests green and the verdicts of the validation threads in its essentials. It replaces progress messages in the thread; the thread summary stays under 80 words.
 - The lessons file (Phase 5), with the scorecard fields of `references/retrospective.md`.
 

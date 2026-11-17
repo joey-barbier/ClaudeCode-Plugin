@@ -29,7 +29,7 @@ Luego `/plugin` → pestaña **Discover** para explorar, o instala plugins indiv
 | **[horka-skill-eval](#horka-skill-eval)** | Auditor de calidad de skills | skill |
 | **[horka-agent-forge](#horka-agent-forge)** | Factory de skills con quality gates obligatorios | skill |
 | **[horka-project-index](#horka-project-index)** | Índice global de proyectos: resuelve comandos genéricos al proyecto/workspace correcto | skill + script |
-| **[horka-research-plan](#horka-research-plan)** | El modelo y el esfuerzo adecuados para cada rol de agente → investigación multi-agente que ahorra tokens y termina en un plan de acción con fuentes (página doc-style); variante código para una migración llevada por muchos agentes (testers ciegos antes de los implementadores, rama de integración verde en una puerta, hilos de validación separados); cada ejecución es un grafo de tareas en un tablero en vivo, con el balance de tokens por tarea y por modelo | skill |
+| **[horka-research-plan](#horka-research-plan)** | El modelo y el esfuerzo adecuados para cada rol de agente → investigación multi-agente que ahorra tokens y termina en un plan de acción con fuentes (página doc-style); variante código para una migración llevada por muchos agentes (testers ciegos antes de los implementadores, rama de integración verde en una puerta, hilos de validación separados); cada ejecución es un grafo de tareas en un tablero en vivo, con el balance de tokens por tarea y por modelo; verificaciones sólidas: el producto ejecutado de punta a punta antes de cada push, pruebas diferenciales viejo/nuevo, veredictos ligados a un commit | skill |
 | **[horka-played](#horka-played)** | `/played` como en WoW: tu consumo de tokens de Claude Code por día, máquina y modelo, con tarjeta para compartir y PNG para stories | skill + scripts |
 
 ---
@@ -140,9 +140,9 @@ claude plugin install horka-skill-eval
 
 ## horka-research-plan
 
-**El modelo adecuado, el esfuerzo adecuado, en el momento adecuado.** Por defecto cada subagente hereda el modelo de la sesión; este skill asigna uno por rol: el modelo más capaz para la orquestación, el crítico y las personas, el nivel experto para los investigadores, el nivel generalista para los validadores y los recuentos, cada uno con su propio nivel de esfuerzo. El juicio se queda en el mejor modelo, el trabajo mecánico pasa a modelos más baratos, y el coste real de cada oleada se anota en el balance de la ejecución.
+**El modelo adecuado, el esfuerzo adecuado, en el momento adecuado, en cada nivel.** Cada subtarea va al nivel más barato que la resuelve (el más capaz juzga, el experto investiga o programa, el generalista valida y fusiona, el más barato hace las búsquedas), y cada agente pasa la regla a sus propios subagentes. Dos modos: **investigación**, que termina en un plan de acción con fuentes (una página doc-style, cada cifra con URL y fecha), y **código**, una migración o reescritura llevada por muchos agentes (testers ciegos antes de los implementadores, rama de integración verde en una puerta, hilos de validación separados).
 
-Lo que entrega: **investigación multi-agente que termina en un plan de acción con fuentes**, entregado como una página HTML doc-style. Para peticiones tipo « un check completo y un plan »: go-to-market, qué canal, cómo darse a conocer, cómo responder a una regulación.
+Cada ejecución es un **grafo de tareas en un tablero en vivo**, con el balance de tokens por tarea y por modelo. **[Ver el tablero de ejemplo animado](https://raw.githack.com/joey-barbier/ClaudeCode-Plugin/main/plugins/horka-research-plan/examples/task-graph-demo.html)**. La verificación sigue la práctica del equipo de Claude Code: el producto se ejecuta de punta a punta antes de cada push, las migraciones se comparan viejo contra nuevo, los veredictos quedan ligados a un commit, y tras tres rondas en rojo decide el usuario.
 
 ```bash
 claude plugin install horka-research-plan
@@ -150,6 +150,11 @@ claude plugin install horka-research-plan
 
 | Componente | Disparador | Hace |
 |---|---|---|
+| `/horka-research-plan:horka-research-plan` | "full check and a plan", "plan con fuentes", "migra X a Y con muchos agentes", "qué modelo para qué tarea" | Dimensiona la ejecución (carril corto o completo), escribe el grafo de tareas, lanza según el grafo con enrutamiento de modelo, valida con terceros, entrega la página o la rama verde, y una retrospectiva reescribe un archivo de lecciones que lee la siguiente ejecución |
+
+**Tres reglas:** ninguna cifra ni comportamiento de memoria · ningún agente califica su propio trabajo · nada se crea ni se programa sin el visto bueno del usuario. Detalles: [README del plugin](plugins/horka-research-plan/README.md).
+
+---|---|---|
 | `/horka-research-plan:horka-research-plan` | "full check and a plan", "plan con fuentes", "cómo nos descubren", "go-to-market" | Estado real en tres niveles (prod / develop / PR abiertas), luego oleadas cortas: personas + sondeo de demanda real primero, investigadores por tipo de acción, deduplicación en código, validadores que abren cada URL, crítico antagonista, factibilidad + completitud, una página HTML, y después una retrospectiva por un agente separado que reescribe un archivo de lecciones leído en la siguiente ejecución |
 
 **Tres reglas:** ningún número de memoria (URL, fecha y chip de estado en cada cifra) · ningún agente califica su propio trabajo · nada se crea ni se programa (necesidades de producto y tareas van a una pestaña « para transmitir »). Incluye briefs por rol, esquemas JSON, esqueletos `Workflow`, la estructura de la página y el método de retrospectiva (scorecard, archivo de lecciones, un experimento por ejecución) en `references/`.
