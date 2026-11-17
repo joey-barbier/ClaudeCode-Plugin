@@ -1,10 +1,10 @@
 {
   "name": "horka-memory",
-  "version": "2.0.0",
-  "description": "Project memory management: restore context (/horka-memory) and save progression (/horka-save)",
+  "version": "3.0.0",
+  "description": "Project memory across sessions and people: durable project files plus a per-task file on each branch, with freshness checks (restore, save, close)",
   "author": {
     "name": "Orka"
   },
-  "keywords": ["memory", "context", "session", "restore", "project-state"],
+  "keywords": ["memory", "context", "session", "restore", "project-state", "handoff", "task"],
   "skills": "./skills/"
 }

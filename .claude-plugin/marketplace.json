@@ -19,8 +19,8 @@
     {
       "name": "horka-memory",
       "source": "./plugins/horka-memory",
-      "description": "Project memory management: restore context (/horka-memory) and save progression (/horka-save)",
-      "version": "2.0.0"
+      "description": "Project memory across sessions and people: durable project files plus a per-task file on each branch, with freshness checks (restore, save, close)",
+      "version": "3.0.0"
     },
     {
       "name": "horka-setup",

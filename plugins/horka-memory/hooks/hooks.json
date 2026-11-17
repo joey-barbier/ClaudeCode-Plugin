@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/auto-save-reminder.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/stop-check.sh"
           }
         ]
       }

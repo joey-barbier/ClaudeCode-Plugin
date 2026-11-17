@@ -1,27 +1,23 @@
 #!/bin/bash
-# Pre-compact hook: remind Claude to save memory before context is compressed.
-# Context compaction means conversation history will be summarized, so saving now is critical.
+# PreCompact hook: the conversation is about to be summarized, so what is not in the memory files may be lost.
+# Says which file is behind, measured against the code, instead of a generic reminder.
 
-MEMORY_DIR=".claude/memory"
+. "$(dirname "$0")/lib.sh"
+cat >/dev/null 2>&1
+hm_status
 
-# No memory dir = nothing to save
-if [ ! -d "$MEMORY_DIR" ]; then
-  exit 0
+[ "$HM_KIND" = "repo" ] || exit 0
+[ "$HM_MEM" = "present" ] || exit 0
+
+DIRTY="$(git -C "$HM_ROOT" status --porcelain 2>/dev/null | grep -v ' \.claude/memory/' | head -1)"
+
+if [ "$HM_TASK_BRANCH" = "yes" ]; then
+  if [ "$HM_TASK_FILE" = "absent" ]; then
+    echo "IMPORTANT: context is about to be compacted and branch $HM_BRANCH has no task file. Run /horka-memory:horka-memory-save NOW so the stopping point of this task is written down."
+  elif [ "$HM_TASK_BEHIND" != "0" ] || [ -n "$DIRTY" ]; then
+    echo "IMPORTANT: context is about to be compacted. The task file of $HM_BRANCH is $HM_TASK_BEHIND commits behind${DIRTY:+ and there are uncommitted changes}. Run /horka-memory:horka-memory-save NOW."
+  fi
+elif [ "$HM_BEHIND" != "0" ] || [ -n "$DIRTY" ]; then
+  echo "IMPORTANT: context is about to be compacted. Project memory is $HM_BEHIND commits behind${DIRTY:+ and there are uncommitted changes}. Run /horka-memory:horka-memory-save NOW."
 fi
-
-# Check if memory files exist
-if [ ! -f "$MEMORY_DIR/PROJECT_STATE.md" ]; then
-  exit 0
-fi
-
-# Check if there's meaningful session work to save
-GIT_CHANGES=$(git diff --stat HEAD 2>/dev/null | tail -1)
-GIT_NEW_COMMITS=$(git log --oneline --since="2 hours ago" 2>/dev/null | wc -l | tr -d ' ')
-
-if [ -n "$GIT_CHANGES" ] || [ "$GIT_NEW_COMMITS" -gt 0 ]; then
-  echo "IMPORTANT: Context is about to be compacted. Run /horka-memory:horka-memory-save NOW to persist session progress before context is lost. ($GIT_NEW_COMMITS recent commits, changes: $GIT_CHANGES)"
-else
-  echo "Context compaction starting. Memory files exist at $MEMORY_DIR/ but no significant git changes detected since last save."
-fi
-
 exit 0
