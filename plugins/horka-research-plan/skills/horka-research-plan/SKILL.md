@@ -55,7 +55,7 @@ The short lane keeps the graph (five to ten nodes); it skips nothing here.
 
 ## Code mode (migration, rewrite, new foundation)
 
-Read `references/code-variant.md` before Phase 0. In one line each: no behaviour from memory (the reference is the remote `main`, every test cites `file:line`); one worktree and branch per agent, a push only on the user's go, never a PR or merge without it; blind testers write `Spec/API.md` then the tests before any implementer, who changes no assertion; a reconciliation agent merges into `integration`, which must be green on the reference gate; validation by separate threads that receive only the branch and the base. Probe every external dependency for real before any spec that depends on it, and run the gate as the CI will (same user, cores, runner) from wave 1.
+Read `references/code-variant.md` before Phase 0. In one line each: no behaviour from memory (the reference is the remote `main`, every test cites `file:line`); one worktree and branch per agent, a push only on the user's go, never a PR or merge without it; blind testers write `Spec/API.md` then the tests before any implementer, who changes no assertion; a reconciliation agent merges into `integration`, which must be green on the reference gate; validation by separate threads that receive only the branch and the base, where a BLOCKED first pass is the expected result. Probe every external dependency for real before any spec that depends on it, and run the gate as the CI will (same user, cores, runner) from wave 1.
 
 ## Verification: what counts as proof (every run, both lanes)
 
