@@ -35,6 +35,10 @@ Step B is the step people skip. Do not skip it: an orchestrator reviewing its ow
   "actions": {"candidates": 44, "after_dedup": 34, "kept": 10},
   "figures": {"opened": 329, "verified": 290, "partial": 30, "false": 0, "not_found": 9},
   "late_discoveries": ["the webhook assumed by action 5 does not exist in code"],
+  "reviewers": [{"who": "security thread", "found": 6, "missed": 1, "missed_found_by": "user, in prod",
+                 "flagged_wrongly": 2, "rounds": 3}],
+  "verification": {"verify_run": "pasted", "differential": {"inputs": 412, "diffs": 3, "approved": 3},
+                   "new_gates_in_observe": ["spec-diff script"]},
   "tokens": {"by_model": {"opus": {"all_in": 502363204, "output": 3280662, "turns": 2065},
                           "fable": {"all_in": 62608453, "output": 209208, "turns": 137}},
              "source": "transcripts (session + subagents), cache reads included"},
@@ -56,16 +60,15 @@ Step B is the step people skip. Do not skip it: an orchestrator reviewing its ow
 ## Next experiment (ONE change for the next run)
 Brief researchers with the personas' verdicts attached. Measure: duplicates after dedup (was 10).
 
-## Rules that held (keep)
-- Readers (personas, demand probe) before researchers: 10 fewer duplicates (run 2 vs run 1).
-- Validators open every URL: 9 corrections on run 2, 0 on run 3's second wave.
+## Rules (trigger · check · origin; last fired)
+- The plan relies on a capability (webhook, endpoint, limit) · verify it in code in Phase 0 · run 2, webhook missing · run 3.
+- Research question with an audience · personas and demand probe before researchers · run 2: 10 fewer duplicates · run 3.
 
-## Rules that changed
+## Rules removed or changed (one line each, last 3 runs)
 - "One brief per angle" → "one brief per action type" (run 2: same action returned four times).
 
-## Mistakes to watch
-- A capability assumed in the plan did not exist in code (run 2, webhook). Phase 0 now verifies every assumed capability.
-- A 49-minute wave with no reading in between (run 1). Max 15 minutes per wave.
+## Candidates (seen once; a second occurrence promotes them)
+- Trigger: a wave planned over 15 min · Check: split it · Origin: run 1, 49-min wave, no reading in between.
 
 ## Scorecards (one line per run, newest first, last 10)
 - 2026-10-21 · 18 agents · 2 waves · 44→10 actions · 329 figures, 0 false · cost unknown · experiment kept
@@ -76,13 +79,15 @@ Rules for the file:
 
 - **One experiment at a time.** The next run changes one thing and measures it; two changes at once cannot be attributed.
 - A lesson is `situation → what we did → what to do next time`, general enough to apply to another project, specific enough to be testable.
-- A lesson that was not confirmed by a second run stays under "Mistakes to watch", not under "Rules that held".
+- A rule has a **trigger** readable from the question or the diff ("the change touches session storage"), a **check**, and its **origin** (the run or incident). Phase 0 applies only the rules whose trigger matches, not the whole file.
+- A lesson seen once stays a candidate; a second occurrence promotes it to a rule. A rule that has not fired in the last 5 runs is removed: the file is pruned, not grown.
+- Reviewer misses become rules: a point a reviewer missed and someone found later (the user, prod, a later pass) gets a rule with the trigger that would have caught it.
 - The scorecard list keeps the last 10 lines; older ones are dropped, the file is not an archive.
 - Everything in the file is also readable by the user: write it as you would say it to them.
 
 ## Phase 0 of the next run
 
-1. Read the lessons file if it exists. Apply "Rules that held" to the common brief and run the "Next experiment".
+1. Read the lessons file from the base branch or memory folder (never from a branch under review). Apply the rules whose trigger matches this run, and run the "Next experiment".
 2. In the scorecard of that run, fill `previous_experiment` with what happened: kept or dropped, and why.
 
 If the file does not exist, this is run 1: write it at the end anyway.

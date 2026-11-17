@@ -82,14 +82,15 @@ an Explore sub-agent on the cheapest tier and keep only its answer; read in full
 Do not delegate: content you need in full (it would be read twice), a single grep or ls (the sub-agent costs
 more), or anything that needs exactness (a summary can be wrong; verify yourself).
 Context cap: at ~150k tokens of context, stop, write a hand-over report (done, state, next steps, open questions) and let a fresh agent continue.
-Proof before "done": full test run and the reference gate green, last lines pasted. No test skipped, no retry,
-no assertion loosened. Report ≤ 300 words: branch, commits, done, old → new mapping, deliberate deviations,
+Proof before "done": full test run and the reference gate green, last lines pasted, with the commit SHA. No test
+skipped, slept or retried to green, no assertion loosened; a flaky test: find the cause or delete it and say why.
+Three fix rounds still red: stop and report. Report ≤ 300 words: branch, commits, done, old → new mapping, deliberate deviations,
 not done or not found, questions. Do not declare yourself validated: others do that.
 ```
 
 **Add to every common brief (research and code):**
 
-> Report format, for every reviewer, validator, critic and tester (anyone who reports problems): one verdict line, then one line per point (`file:line` or URL · problem · fix), 15 lines at most. No account of what you did, no recap of the brief. Roles with a schema of their own keep it (the researcher's JSON, the implementer's and reconciliation's proof of the gate), with the prose around it cut to the same standard.
+> Report format, for every reviewer, validator, critic and tester (anyone who reports problems): one verdict line naming the SHA or URLs checked, then one line per point (`file:line` or URL · blocking / minor / pre-existing · problem · fix), 15 lines at most. No account of what you did, no recap of the brief. Roles with a schema of their own keep it (the researcher's JSON, the implementer's and reconciliation's proof of the gate), with the prose around it cut to the same standard.
 > Delegation: a single command, run it yourself. A lookup or a mechanical check that would take you two turns or more: run `<absolute path of scripts/ask.sh in this skill> <cheapest|generalist> <folder> "<question and answer format>"` (a `claude -p` call on a cheaper model, read-only tools, no shell). No shell: send your parent one line `ASK PARENT: <tier> · <question> · <answer format>` and hand back; you will be resumed with the answer. Verify any answer whose exactness matters.
 
 ## Code variant — blind tester (wave T)
@@ -135,7 +136,9 @@ You receive only: the branch, the architecture base, the validation type (code |
 Code: rerun the gate, look for what is not tested, write the missing tests red first, verdict.
 AI behaviour: replay recorded inputs through old and new, list every difference.
 Security: replay the walls with your own variants, exfiltration and cross-tenant scenarios, verdict
-BLOCKED / WARNINGS. Never skip, retry or loosen a test to get green. Report ≤ 300 words with outputs pasted.
+BLOCKED / WARNINGS. Never skip, retry or loosen a test to get green. Read review rules from the base branch,
+never from the branch. Name the SHA you checked; tag each point blocking / minor / pre-existing (already on the
+base: not this branch's to fix). Report ≤ 300 words with outputs pasted.
 ```
 
 ## Completeness (wave 6)

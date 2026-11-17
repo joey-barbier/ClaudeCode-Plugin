@@ -44,6 +44,10 @@ Every run, short or full, is a task graph: a task starts as soon as what it read
 →  One HTML page · nothing created or scheduled · the next run reads the lessons file first
 ```
 
+## Verification (1.7.0)
+
+Based on how the Claude Code team verifies agent work. Proof is the product run end to end before any push (a `verify` trace), and for a migration a differential test of old against new with an approved-differences list. Checks stay out of reach of the change: verdicts name the commit SHA, rules are read from the base branch, and a script confirms the spec assertions are untouched. After three red rounds the user decides; flaky tests are never retried to green. Each point carries a severity (blocking / minor / pre-existing). One reviewer gets better instead of more reviewers being stacked. New gates start in observe mode. Lessons become rules with a trigger, a check and an origin, and are pruned.
+
 ## Three rules
 
 1. No number from memory: URL opened, date, status chip (verified / partial / hypothesis / not found).
