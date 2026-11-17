@@ -1,6 +1,6 @@
 # Initialize the project memory
 
-Only for a repository whose `.claude/memory/` has no file. Never in a workspace folder (several repositories, `kind: workspace`). Create the files without asking.
+Only for a repository whose `.claude/memory/` lacks files (`memory: absent` or `partial`), and only from a base branch (`task_branch: no`): the five project files are shared, a task branch must not create them. Never in a workspace folder (several repositories, `kind: workspace`). Create the files without asking.
 
 ## Gather
 
@@ -27,6 +27,12 @@ Mark every unknown `TBD` rather than filling it. End `PROJECT_STATE.md` with:
 
 If some of the five files already exist, create only the missing ones and leave the others untouched.
 
+So that two branches adding lines to the same memory file merge without a conflict, add this line to `.gitattributes` (create the file if needed) and say so in the confirmation:
+
+```
+.claude/memory/*.md merge=union
+```
+
 ## Confirm
 
 ```
@@ -35,4 +41,4 @@ Created: [files]
 Next: /horka-memory:horka-memory-save after significant work, /horka-memory:horka-memory-close before merging a task branch.
 ```
 
-Commit the new files with the project's commit convention if `.claude/memory` is not git-ignored; never push without the user's go.
+Commit the new files with the project's commit convention if `.claude/memory` is not git-ignored (`git commit -m "add(memory) - project memory" -- .claude/memory .gitattributes`, no attribution trailer); never push without the user's go.

@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Task memory must be closed before merge
         run: |
-          left="$(find .claude/memory/in-progress -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort)"
+          left="$(find .claude/memory/in-progress -mindepth 1 -maxdepth 1 2>/dev/null | sort)"
           if [ -n "$left" ]; then
             echo "Task memory still in progress. Run horka-memory-close on the branch, then push:"
             echo "$left"
@@ -33,10 +33,10 @@ A draft pull request fails this check until the task is closed: that is the inte
 ## Any other CI, or a local gate
 
 ```bash
-test -z "$(find .claude/memory/in-progress -mindepth 1 -maxdepth 1 -type d 2>/dev/null)"
+test -z "$(find .claude/memory/in-progress -mindepth 1 -maxdepth 1 2>/dev/null)"
 ```
 
-The plugin ships the same test with a readable message: `scripts/check-in-progress.sh [repository root]`.
+Run it from the repository root. The plugin ships the same test with a readable message, which finds the root by itself and fails outside a repository: `scripts/check-in-progress.sh [path inside the repository]`.
 
 ## Before installing it
 

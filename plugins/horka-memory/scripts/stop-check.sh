@@ -1,7 +1,8 @@
 #!/bin/bash
 # Stop hook: states what would be lost if nobody came back to this session.
 # It does not count interactions and does not rely on anyone remembering to save:
-# it measures the gap between the code and the memory, and between the branch and its remote.
+# it measures the gap between the code and the memory, between the branch and its remote,
+# and what sits uncommitted in the working tree.
 # Shown to the person as one line, at most once per kind of gap every 30 minutes per session.
 
 . "$(dirname "$0")/lib.sh"
@@ -9,34 +10,40 @@ SESSION="$(hm_session_id)"
 hm_status
 
 [ "$HM_KIND" = "repo" ] || exit 0
-[ "$HM_MEM" = "present" ] || exit 0      # the project does not use this memory: stay silent
+[ "$HM_MEM" = "present" ] || exit 0          # the project does not use this memory: stay silent
+[ "$HM_TASK_BRANCH" = "detached" ] && exit 0 # a rebase or a bisect is in progress: nothing to say
 
 FLAGS=""; PARTS=""
 flag() { FLAGS="${FLAGS}${FLAGS:+,}$1"; PARTS="${PARTS}${PARTS:+, }$2"; }
+BR="$(hm_clean "$HM_BRANCH")"
 
 if [ "$HM_TASK_BRANCH" = "yes" ]; then
   HAS_WORK="no"
-  case "$HM_AHEAD" in ''|*[!0-9]*) HAS_WORK="unknown" ;; 0) ;; *) HAS_WORK="yes" ;; esac
-  if [ "$HM_TASK_FILE" = "absent" ]; then
-    [ "$HAS_WORK" = "yes" ] && flag "task-missing" "no task file for $HM_AHEAD commits of work"
-  elif [ "$HM_TASK_STALE" = "yes" ]; then
-    flag "task-stale" "task file $HM_TASK_BEHIND commits behind"
-  fi
-  case "$HM_UNPUSHED" in
-    no-upstream) [ "$HAS_WORK" = "yes" ] && flag "no-upstream" "branch never pushed" ;;
-    ''|*[!0-9]*|0) ;;
-    *) flag "unpushed" "$HM_UNPUSHED commits not pushed" ;;
+  if hm_is_number "$HM_AHEAD"; then [ "$HM_AHEAD" -gt 0 ] && HAS_WORK="yes"; else HAS_WORK="yes"; fi
+  case "$HM_TASK_FILE" in
+    absent) [ "$HAS_WORK" = "yes" ] && flag "task-missing" "no task file for $HM_AHEAD commits of work" ;;
+    present) [ "$HM_TASK_STALE" = "yes" ] && flag "task-stale" "task file $HM_TASK_BEHIND commits behind" ;;
+    closed) ;;                               # closed and waiting for its merge: do not ask for a new task file
   esac
-  WHERE="branch $HM_BRANCH"
+  case "$HM_UNPUSHED" in
+    not-on-remote) [ "$HAS_WORK" = "yes" ] && flag "not-on-remote" "branch is not on the remote" ;;
+    0|n/a) ;;
+    *) hm_is_number "$HM_UNPUSHED" && flag "unpushed" "$HM_UNPUSHED commits not pushed" ;;
+  esac
+  WHERE="branch $BR"
   HINT="Run /horka-memory:horka-memory-save, then push, so someone else can take over."
 else
   [ "$HM_STALE" = "yes" ] && flag "memory-stale" "project memory $HM_BEHIND commits behind"
   [ -n "$HM_LEFTOVER" ] && flag "leftover" "task folders left after merge: $HM_LEFTOVER"
-  WHERE="${HM_BRANCH:-detached HEAD}"
+  WHERE="$BR"
   HINT="Run /horka-memory:horka-memory-save."
 fi
+[ "$HM_DIRTY" -gt 0 ] 2>/dev/null && [ -n "$FLAGS" ] && flag "dirty" "$HM_DIRTY files uncommitted"
+[ "$HM_DIRTY" -gt 0 ] 2>/dev/null && [ -z "$FLAGS" ] && [ "$HM_TASK_BRANCH" = "yes" ] && [ "$HM_TASK_FILE" != "closed" ] \
+  && flag "dirty" "$HM_DIRTY files uncommitted on a task branch"
 
-STATE="$(hm_state_dir)/stop-$SESSION"
+STATE_DIR="$(hm_state_dir)" || exit 0        # no safe place to remember what was said: stay silent rather than nag
+STATE="$STATE_DIR/stop-$SESSION"
 if [ -z "$FLAGS" ]; then
   rm -f "$STATE" 2>/dev/null
   exit 0
@@ -44,15 +51,16 @@ fi
 
 NOW="$(date +%s)"
 LAST_TIME=0; LAST_FLAGS=""
-if [ -f "$STATE" ]; then
+if [ -f "$STATE" ] && [ ! -L "$STATE" ]; then
   LAST_TIME="$(cut -d' ' -f1 "$STATE" 2>/dev/null)"
   LAST_FLAGS="$(cut -d' ' -f2- "$STATE" 2>/dev/null)"
-  case "$LAST_TIME" in ''|*[!0-9]*) LAST_TIME=0 ;; esac
+  hm_is_number "$LAST_TIME" || LAST_TIME=0
 fi
 if [ "$FLAGS" = "$LAST_FLAGS" ] && [ $((NOW - LAST_TIME)) -lt "${HORKA_MEMORY_REMIND_SECONDS:-1800}" ]; then
   exit 0
 fi
-printf '%s %s\n' "$NOW" "$FLAGS" > "$STATE" 2>/dev/null
+rm -f "$STATE" 2>/dev/null
+{ printf '%s %s\n' "$NOW" "$FLAGS" > "$STATE"; } 2>/dev/null
 
 printf '{"systemMessage":"%s"}\n' "$(printf 'horka-memory, %s: %s. %s' "$WHERE" "$PARTS" "$HINT" | hm_json_escape)"
 exit 0

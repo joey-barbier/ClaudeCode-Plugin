@@ -8,16 +8,29 @@ hm_status
 
 [ "$HM_KIND" = "repo" ] || exit 0
 [ "$HM_MEM" = "present" ] || exit 0
+[ "$HM_TASK_BRANCH" = "detached" ] && exit 0
 
-DIRTY="$(git -C "$HM_ROOT" status --porcelain 2>/dev/null | grep -v ' \.claude/memory/' | head -1)"
+BR="$(hm_clean "$HM_BRANCH")"
+DIRTY=""; [ "$HM_DIRTY" -gt 0 ] 2>/dev/null && DIRTY=" and there are uncommitted changes"
+gap() {   # <count> -> "is 3 commits behind" | "may be behind (freshness unknown)" | "" when current
+  if hm_is_number "$1"; then [ "$1" -gt 0 ] && echo "is $1 commits behind"; else echo "may be behind (freshness unknown)"; fi
+}
 
 if [ "$HM_TASK_BRANCH" = "yes" ]; then
-  if [ "$HM_TASK_FILE" = "absent" ]; then
-    echo "IMPORTANT: context is about to be compacted and branch $HM_BRANCH has no task file. Run /horka-memory:horka-memory-save NOW so the stopping point of this task is written down."
-  elif [ "$HM_TASK_BEHIND" != "0" ] || [ -n "$DIRTY" ]; then
-    echo "IMPORTANT: context is about to be compacted. The task file of $HM_BRANCH is $HM_TASK_BEHIND commits behind${DIRTY:+ and there are uncommitted changes}. Run /horka-memory:horka-memory-save NOW."
+  case "$HM_TASK_FILE" in
+    absent)
+      echo "IMPORTANT: context is about to be compacted and branch $BR has no task file. Run /horka-memory:horka-memory-save NOW so the stopping point of this task is written down." ;;
+    present)
+      G="$(gap "$HM_TASK_BEHIND")"
+      if [ -n "$G" ] || [ -n "$DIRTY" ]; then
+        echo "IMPORTANT: context is about to be compacted. The task file of $BR ${G:-is current}$DIRTY. Run /horka-memory:horka-memory-save NOW."
+      fi ;;
+    closed) ;;
+  esac
+else
+  G="$(gap "$HM_BEHIND")"
+  if [ -n "$G" ] || [ -n "$DIRTY" ]; then
+    echo "IMPORTANT: context is about to be compacted. Project memory ${G:-is current}$DIRTY. Run /horka-memory:horka-memory-save NOW."
   fi
-elif [ "$HM_BEHIND" != "0" ] || [ -n "$DIRTY" ]; then
-  echo "IMPORTANT: context is about to be compacted. Project memory is $HM_BEHIND commits behind${DIRTY:+ and there are uncommitted changes}. Run /horka-memory:horka-memory-save NOW."
 fi
 exit 0
