@@ -55,7 +55,7 @@ Measure it: the scorecard records cache-read tokens per agent, read from the tra
 
 - The `integration` branch, green on the reference gate (for example `docker run … swift:6.2-noble swift test`), pushed only on the user's go.
 - The `Spec/` folders, one per target, each test citing its source.
-- A local progress board (doc-style HTML regenerated from the worktrees and the transcripts): tokens per model all-in and output, wall time vs cumulated agent time, parallelism factor, tests green, verdicts of the validation threads. It replaces progress messages in the thread; the thread summary stays under 80 words.
+- The run board of `references/task-graph.md` (task graph, tokens per task and per model, wall time vs cumulated agent time, parallelism factor), with tests green and the verdicts of the validation threads in its essentials. It replaces progress messages in the thread; the thread summary stays under 80 words.
 - The lessons file (Phase 5), with the scorecard fields of `references/retrospective.md`.
 
 ## What the Guild run showed (07/11/2026)

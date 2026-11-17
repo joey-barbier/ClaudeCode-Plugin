@@ -24,6 +24,11 @@ Built after a real run: 18 agents in two waves, 44 candidate actions, 329 figure
 | `references/workflow-skeleton.md` | — | `Workflow` scripts per wave (falls back to the `Agent` tool) |
 | `references/page-structure.md` | — | The doc-style page: look, tabs, build |
 | `references/retrospective.md` | — | Scorecard, lessons-file template, where it lives, who writes what |
+| `references/task-graph.md` + `scripts/board/` | — | The task graph every run is driven by (`graph.json`, `set.py`) and the run board (`build.py` → `board.html`): graph by status, tokens per task and per model read from the transcripts, parallelism factor |
+
+## The task graph and the board
+
+Every run, short or full, is a task graph: a task starts as soon as what it reads is done, a blocked task blocks only its descendants, a decision that waits on the user is a node of its own. The orchestrator updates `graph.json` with `scripts/board/set.py`, which prints what can start now and rebuilds the board: the graph coloured by status, then the consumption debrief read from the transcripts (tokens per task and per model, cache reads, output, agents, direct calls to cheaper models, wall time vs cumulated agent time). The board replaces progress messages; at the end it feeds the scorecard.
 
 ## The waves
 
