@@ -190,11 +190,6 @@ claude plugin install horka-research-plan
 
 **Three rules:** no number or behaviour from memory · no agent grades its own work · nothing created or scheduled without the user's go. Details: [plugin README](plugins/horka-research-plan/README.md).
 
----|---|---|
-| `/horka-research-plan:horka-research-plan` | "full check and a plan", "how do we get discovered", "go-to-market", "sourced plan", "check complet et un plan", "plan sourcé" | Reality check in three states (prod / develop / open PRs), then short waves: personas + real-demand probe first, researchers per action type, code-level dedup, validators that open every URL, antagonist critic, feasibility + completeness, one HTML page, then a retrospective by a separate agent that rewrites a lessons file read by the next run |
-
-**Three rules:** no number from memory (URL, date, status chip on every figure) · no agent grades its own work · nothing is created or scheduled (product needs and tasks go in a hand-over tab). Ships brief templates, JSON schemas, `Workflow` skeletons, the page structure and the retrospective method (scorecard, lessons file, one experiment per run) in `references/`.
-
 ---
 
 ## horka-played
