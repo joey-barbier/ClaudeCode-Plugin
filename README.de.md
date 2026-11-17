@@ -154,11 +154,6 @@ claude plugin install horka-research-plan
 
 **Drei Regeln:** keine Zahl und kein Verhalten aus dem Gedächtnis · kein Agent bewertet seine eigene Arbeit · nichts wird ohne Go des Nutzers erstellt oder geplant. Details: [Plugin-README](plugins/horka-research-plan/README.md).
 
----|---|---|
-| `/horka-research-plan:horka-research-plan` | "full check and a plan", "belegter Plan", "wie werden wir entdeckt", "go-to-market" | Realitätscheck in drei Zuständen (prod / develop / offene PRs), dann kurze Wellen: Personas + Nachfrage-Sonde zuerst, Rechercheure pro Aktionstyp, Deduplizierung im Code, Validatoren, die jede URL öffnen, antagonistischer Kritiker, Machbarkeit + Vollständigkeit, eine HTML-Seite, danach eine Retrospektive durch einen separaten Agenten, der eine Lessons-Datei neu schreibt, die der nächste Lauf zuerst liest |
-
-**Drei Regeln:** keine Zahl aus dem Gedächtnis (URL, Datum, Status-Chip an jeder Zahl) · kein Agent bewertet seine eigene Arbeit · nichts wird erstellt oder geplant (Produktbedarf und Aufgaben kommen in einen Übergabe-Tab). Enthält Briefs pro Rolle, JSON-Schemas, `Workflow`-Gerüste, die Seitenstruktur und die Retrospektiven-Methode (Scorecard, Lessons-Datei, ein Experiment pro Lauf) in `references/`.
-
 ---
 
 ## horka-played
