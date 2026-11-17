@@ -18,7 +18,11 @@
         "Table modèle/effort par rôle : auteurs/testeurs/relecteurs sur le modèle expert, étapes mécaniques (fusion, porte, tableau de bord) sur un modèle moins cher",
         "Règle de délégation des recherches larges à un sous-agent du modèle le moins cher pour garder court le contexte des agents chers, avec les cas où ça perd",
         "Mesure : jetons par modèle (sortie et tout compris, cache relu inclus), temps réel vs temps d'agents cumulé, tests verts",
-        "Les briefs exigent une preuve collée (sortie des tests / porte) et un rapport court qui ne se déclare pas validé"
+        "Les briefs exigent une preuve collée (sortie des tests / porte) et un rapport court qui ne se déclare pas validé",
+        "Pour une migration : test différentiel ancien vs nouveau sur les mêmes entrées (enregistrées ou générées), sorties normalisées, avec une liste d'écarts approuvés signée par l'utilisateur",
+        "Avant le push, le produit est lancé de bout en bout (script ou skill verify : vrai run, navigateur, simulateur ou harnais d'API) avec une trace collée, pas seulement des tests unitaires",
+        "Les vérifications sont hors de portée du changement : chaque verdict cite le SHA vérifié, les règles de relecture sont lues sur la branche de base, et le « aucune assertion changée » est contrôlé par un script",
+        "Plafond : un contrôle encore rouge après trois tours de correction remonte à l'utilisateur ; un test instable n'est jamais relancé, endormi ou sauté pour verdir"
       ]
     },
     {
@@ -38,7 +42,11 @@
         "Table modèle/effort par rôle : auteurs/testeurs/relecteurs sur le modèle expert, étapes mécaniques (fusion, porte, tableau de bord) sur un modèle moins cher",
         "Règle de délégation des recherches larges à un sous-agent du modèle le moins cher pour garder court le contexte des agents chers, avec les cas où ça perd",
         "Mesure : jetons par modèle (sortie et tout compris, cache relu inclus), temps réel vs temps d'agents cumulé, tests verts",
-        "Les briefs exigent une preuve collée (sortie des tests / porte) et un rapport court qui ne se déclare pas validé"
+        "Les briefs exigent une preuve collée (sortie des tests / porte) et un rapport court qui ne se déclare pas validé",
+        "Pour une migration : test différentiel ancien vs nouveau sur les mêmes entrées (enregistrées ou générées), sorties normalisées, avec une liste d'écarts approuvés signée par l'utilisateur",
+        "Avant le push, le produit est lancé de bout en bout (script ou skill verify : vrai run, navigateur, simulateur ou harnais d'API) avec une trace collée, pas seulement des tests unitaires",
+        "Les vérifications sont hors de portée du changement : chaque verdict cite le SHA vérifié, les règles de relecture sont lues sur la branche de base, et le « aucune assertion changée » est contrôlé par un script",
+        "Plafond : un contrôle encore rouge après trois tours de correction remonte à l'utilisateur ; un test instable n'est jamais relancé, endormi ou sauté pour verdir"
       ]
     },
     {
@@ -58,7 +66,11 @@
         "Table modèle/effort par rôle : auteurs/testeurs/relecteurs sur le modèle expert, étapes mécaniques (fusion, porte, tableau de bord) sur un modèle moins cher",
         "Règle de délégation des recherches larges à un sous-agent du modèle le moins cher pour garder court le contexte des agents chers, avec les cas où ça perd",
         "Mesure : jetons par modèle (sortie et tout compris, cache relu inclus), temps réel vs temps d'agents cumulé, tests verts",
-        "Les briefs exigent une preuve collée (sortie des tests / porte) et un rapport court qui ne se déclare pas validé"
+        "Les briefs exigent une preuve collée (sortie des tests / porte) et un rapport court qui ne se déclare pas validé",
+        "Pour une migration : test différentiel ancien vs nouveau sur les mêmes entrées (enregistrées ou générées), sorties normalisées, avec une liste d'écarts approuvés signée par l'utilisateur",
+        "Avant le push, le produit est lancé de bout en bout (script ou skill verify : vrai run, navigateur, simulateur ou harnais d'API) avec une trace collée, pas seulement des tests unitaires",
+        "Les vérifications sont hors de portée du changement : chaque verdict cite le SHA vérifié, les règles de relecture sont lues sur la branche de base, et le « aucune assertion changée » est contrôlé par un script",
+        "Plafond : un contrôle encore rouge après trois tours de correction remonte à l'utilisateur ; un test instable n'est jamais relancé, endormi ou sauté pour verdir"
       ]
     },
     {
@@ -74,7 +86,11 @@
         "Les recherches larges dont seule la conclusion compte vont à un sous-agent du niveau le moins cher, avec les cas où déléguer perd",
         "Les étapes mécaniques avec une vérification (compter, comparer, formater, fusionner, relancer) vont au niveau généraliste",
         "Mesure prévue : jetons par modèle lus dans les transcriptions (cache relu compris) et temps, par agent",
-        "Les deux chantiers reçoivent chacun une équipe adaptée (fiches produit et audit de doc), avec des validateurs qui n'ont pas produit le contenu qu'ils vérifient"
+        "Les deux chantiers reçoivent chacun une équipe adaptée (fiches produit et audit de doc), avec des validateurs qui n'ont pas produit le contenu qu'ils vérifient",
+        "Pour une migration : test différentiel ancien vs nouveau sur les mêmes entrées (enregistrées ou générées), sorties normalisées, avec une liste d'écarts approuvés signée par l'utilisateur",
+        "Avant le push, le produit est lancé de bout en bout (script ou skill verify : vrai run, navigateur, simulateur ou harnais d'API) avec une trace collée, pas seulement des tests unitaires",
+        "Les vérifications sont hors de portée du changement : chaque verdict cite le SHA vérifié, les règles de relecture sont lues sur la branche de base, et le « aucune assertion changée » est contrôlé par un script",
+        "Plafond : un contrôle encore rouge après trois tours de correction remonte à l'utilisateur ; un test instable n'est jamais relancé, endormi ou sauté pour verdir"
       ]
     }
   ]
