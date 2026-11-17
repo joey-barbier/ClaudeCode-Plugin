@@ -173,7 +173,7 @@ claude plugin install horka-played
 |---|---|---|
 | `/horka-played:played` | "/played", "how many tokens did I use", "wie viele Tokens habe ich verbraucht" | Summen, pro Tag / Maschine / Modell, Anteil der Subagenten, Rekordtag, Zeitraumwahl (letzter Tag, 7 Tage, freier Bereich, −1/+1 Tag), teilbare Karte und Story-PNG 1080×1920 |
 
-Nur lesend, keine geschätzte Zahl. Mehrere Maschinen: auf jeder ausführen und `~/.claude/played/<label>.json` auf die Maschine kopieren, auf der du die Seite öffnest. Cloud-Sitzungen sind nicht messbar, und die Seite sagt das.
+Nur lesend, keine geschätzte Zahl. Mehrere Maschinen: auf jeder ausführen und `~/.claude/played/<label>.json` auf die Maschine kopieren, auf der du die Seite öffnest. Cloud-Sitzungen speichern ihren Verbrauch am Ende jedes Turns selbst (claude.ai-Projekt-Threads, Plugin-Hook) und werden ab der Installation gezählt.
 
 ---
 

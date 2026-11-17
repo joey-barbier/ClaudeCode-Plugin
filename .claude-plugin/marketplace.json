@@ -67,8 +67,8 @@
     {
       "name": "horka-played",
       "source": "./plugins/horka-played",
-      "description": "/played for Claude Code, as in WoW: how many tokens you burned. Measures your local transcripts (30 days by default), merges your other machines, and builds a doc-style page with per-day, per-machine and per-model charts, subagent share, record day, a shareable card and a 9:16 story PNG. Read-only, no estimated number.",
-      "version": "1.0.0"
+      "description": "/played for Claude Code, as in WoW: how many tokens you burned. Measures your local transcripts (30 days by default), merges your other machines, and builds a doc-style page with per-day, per-machine and per-model charts, subagent share, record day, a shareable card and a 9:16 story PNG. Counts cloud sessions too (a hook saves their usage). Read-only, no estimated number.",
+      "version": "1.1.0"
     }
   ]
 }

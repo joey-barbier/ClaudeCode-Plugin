@@ -209,7 +209,7 @@ claude plugin install horka-played
 |---|---|---|
 | `/horka-played:played` | "/played", "how many tokens did I use", "combien de tokens j'ai consommé" | Totals, per day / machine / model, subagent share, record day, period picker (last day, 7 days, free range, −1/+1 day), shareable card and a 1080×1920 story PNG |
 
-Read-only, no estimated number. Several machines: run it on each one and copy `~/.claude/played/<label>.json` to the machine you open the page on. Cloud sessions are not measurable, and the page says so.
+Read-only, no estimated number. Several machines: run it on each one and copy `~/.claude/played/<label>.json` to the machine you open the page on. Cloud sessions save their own usage at the end of each turn (claude.ai project threads, plugin hook) and are counted from the install on.
 
 ---
 

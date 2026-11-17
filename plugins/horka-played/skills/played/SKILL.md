@@ -26,11 +26,11 @@ The scripts live in this skill's base directory: `scripts/usage.py`, `scripts/bu
    ```
    If python3 is missing, say so and stop. Never edit the transcripts.
 
-2. **Merge the other machines.** Every other `*.json` in `~/.claude/played/` is a measurement from another machine (the user ran `/played` there and copied the file here). Keep those measured in the last 30 days; list the ones you skip. Never fetch them yourself from another machine.
+2. **Merge the other machines and the cloud.** Every other `*.json` in `~/.claude/played/` is a measurement from another machine (the user ran `/played` there and copied the file here). Keep those measured in the last 30 days; list the ones you skip. Never fetch them yourself from another machine. If `~/.claude/played/cloud/` exists, pass the folder itself: it holds one file per cloud session and `build.py` merges them into one "Cloud" line, response by response, without double counting.
 
 3. **Build and open the page:**
    ```bash
-   python3 "<skill dir>/scripts/build.py" ~/.claude/played/played.html ~/.claude/played/"<label>".json [other files…]
+   python3 "<skill dir>/scripts/build.py" ~/.claude/played/played.html ~/.claude/played/"<label>".json [other files…] [~/.claude/played/cloud]
    open ~/.claude/played/played.html   # macOS; xdg-open on Linux
    ```
    Put this machine's file first: its color leads the chart.
@@ -45,6 +45,8 @@ The scripts live in this skill's base directory: `scripts/usage.py`, `scripts/bu
 
 ## Rules
 
-- Cloud sessions (Claude Code on the web, claude.ai project threads) cannot be measured: their transcripts vanish with the container. Say so if asked; never estimate them.
+- Cloud sessions (Claude Code on the web, claude.ai project threads) lose their transcripts with the container. The plugin's `Stop` hook (`hooks/hooks.json`) saves each cloud session's usage at the end of every turn to `/mnt/project-files/played/cloud/<session>.json` (`usage.py --cloud`), merged with what earlier containers of the same session saved. It does nothing on a local machine, and `PLAYED_CLOUD=0` turns it off. Only sessions that ran with this plugin are counted: past cloud usage is lost, never estimate it.
+- **Run in a cloud session** (`CLAUDE_CODE_REMOTE=true`): run `usage.py --cloud /mnt/project-files/played/cloud` first, then build the page into `/mnt/project-files/played/played.html` from that folder plus any machine file found in `/mnt/project-files/played/` (the user uploads them there), and give the user that file.
+- **To count the cloud on a machine**, the user copies the project's `played/cloud/` folder into `~/.claude/played/cloud/`.
 - The JSON files contain folder names: do not paste them into a public place or send them anywhere. The share card and the story PNG only carry totals.
 - To count another machine, the user runs `/played` on it and copies `~/.claude/played/<label>.json` into this machine's `~/.claude/played/`.

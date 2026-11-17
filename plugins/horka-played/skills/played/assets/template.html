@@ -154,7 +154,7 @@ ul.facts li { margin-bottom: 6px; }
 <main>
   <div class="top"><span class="brand">Created by Orka</span><span class="eyebrow">Claude Code · {{EYEBROW}}</span></div>
   <h1>Consommation de tokens</h1>
-  <p class="tl">Usage mesuré en heure locale, à partir des transcripts Claude Code de {{MEASURED}}, {{FENETRE}}.{{MISSING}} Les sessions cloud ne sont pas mesurables et ne sont pas comptées.</p>
+  <p class="tl">Usage mesuré en heure locale, à partir des transcripts Claude Code de {{MEASURED}}, {{FENETRE}}.{{MISSING}} {{CLOUD_NOTE}}</p>
 
   <div class="card range">
     <div class="range-row">
@@ -256,7 +256,7 @@ ul.facts li { margin-bottom: 6px; }
   <p class="note">Ces tableaux couvrent toujours la fenêtre complète, quel que soit le choix de période. Le pourcentage « sous-agents » est la part des tokens produite par des sous-agents (Agent, workflows). Les dossiers temporaires sont regroupés parmi les 15 dossiers les plus consommateurs de chaque machine.</p>
 
   <h2>Méthode et limites</h2>
-  <div class="warnbox"><span class="chip c-ko">Cloud non mesuré</span> Les sessions cloud (Claude Code sur le web, fils de projet claude.ai) tournent dans des conteneurs éphémères : leurs transcripts disparaissent avec le conteneur. Leur consommation n'est donc pas dans ces chiffres, et elle n'est pas estimée. Les sessions Remote Control tournent sur la machine où elles sont lancées et sont comptées avec elle.</div>
+  <div class="warnbox">{{CLOUD_BOX}} Les sessions Remote Control tournent sur la machine où elles sont lancées et sont comptées avec elle.</div>
   <div class="card twrap"><table>
     <thead><tr><th>Machine</th><th>Dossier lu</th><th class="r">Fichiers</th><th>Plus ancien transcript</th><th>Mesuré le</th></tr></thead>
     <tbody>{{SRC_ROWS}}</tbody>
@@ -426,7 +426,7 @@ ul.facts li { margin-bottom: 6px; }
       return "<tr>" + sw + (m.measured ? cells(tot[m.key]) : '<td colspan="6"><span class="chip c-ko">non mesuré</span> aucune mesure récente reçue</td>') + "</tr>";
     }).join("");
     rows += '<tr class="sum"><td>Total mesuré</td>' + cells(grand) + "</tr>";
-    rows += '<tr><td><span class="sw" style="background:#E8E0DA"></span>Sessions cloud</td><td colspan="6"><span class="chip c-ko">non mesurable</span> transcripts effacés avec le conteneur</td></tr>';
+    if (!D.cloud) rows += '<tr><td><span class="sw" style="background:#E8E0DA"></span>Sessions cloud</td><td colspan="6"><span class="chip c-ko">non mesurable</span> transcripts effacés avec le conteneur</td></tr>';
     $("t-machine").innerHTML = rows;
 
     var mrows = Object.keys(models).map(function (x) { var t = z(); for (var k in models[x]) add(t, models[x][k]); return [x, t]; })

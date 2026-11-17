@@ -2,24 +2,62 @@
 # Builds the /played page (doc-style) from one or more JSON files produced by usage.py.
 # Daily numbers are embedded in the page: the period is picked in the browser.
 # Usage: python3 build.py out.html machine1.json [machine2.json ...]
-import base64, html, json, os, sys
+import base64, glob, html, json, os, sys
 from datetime import date, datetime, timedelta
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ASSETS = os.path.join(HERE, "..", "assets")
 COLORS = ["#AE7AFF", "#87CEEB", "#FF8ACD", "#FFD24D", "#7AE582", "#FF9F6B"]  # doc-style palette
 
-out_path, paths = sys.argv[1], sys.argv[2:]
-if not paths:
-    sys.exit("usage: build.py out.html machine1.json [machine2.json ...]")
-src = {}
+sys.path.insert(0, HERE)
+from usage import keep, summarize
+
+out_path, args = sys.argv[1], sys.argv[2:]
+if not args:
+    sys.exit("usage: build.py out.html machine1.json [machine2.json | cloud_dir ...]")
+# A folder stands for every *.json inside it (the cloud folder holds one file per session).
+paths = []
+for a in args:
+    paths += sorted(glob.glob(os.path.join(a, "*.json"))) if os.path.isdir(a) else [a]
+groups = {}
 for p in paths:
-    d = json.load(open(p))
-    src[d["machine"]] = d
+    if os.path.abspath(p) == os.path.abspath(out_path):
+        continue
+    try:
+        d = json.load(open(p))
+    except (OSError, ValueError):
+        print("ignoré (illisible) : " + p, file=sys.stderr); continue
+    if "machine" in d and "days" in d:
+        groups.setdefault(d["machine"], []).append(d)
+
+def merge(ds):
+    """Several files under one label: cloud sessions, deduplicated response by response."""
+    if len(ds) == 1:
+        return ds[0]
+    if not all("responses" in d for d in ds):  # two measurements of one machine: the newest wins
+        return max(ds, key=lambda d: d["generated_at"])
+    best = {}
+    for d in ds:
+        for key, rec in d["responses"].items():
+            keep(best, key, rec)
+    m = {"machine": ds[0]["machine"], "label": ds[0].get("label"),
+         "generated_at": max(d["generated_at"] for d in ds),
+         "window": [min(d["window"][0] for d in ds), max(d["window"][1] for d in ds)],
+         "roots": ["cloud : %d sessions" % len(ds)], "files": sum(d["files"] for d in ds),
+         "oldest_transcript_mtime": min(d["oldest_transcript_mtime"] for d in ds)}
+    m.update(summarize(best))
+    return m
+
+src = {k: merge(v) for k, v in groups.items()}
+if not src:
+    sys.exit("aucune mesure lisible")
+CLOUD = "cloud" in src
 MACHINES = [(k, d.get("label") or k, COLORS[i % len(COLORS)]) for i, (k, d) in enumerate(src.items())]
 
 # Window: the one of the most recent measurement (an older measurement does not widen it).
 ref = max(src.values(), key=lambda d: d["window"][1])
+if len(src) > 1 and CLOUD:  # the cloud keeps 60 days: the machines' window frames the page
+    ref = max((d for k, d in src.items() if k != "cloud"), key=lambda d: d["window"][1])
 start, end = date.fromisoformat(ref["window"][0]), date.fromisoformat(ref["window"][1])
 days = [(start + timedelta(i)).isoformat() for i in range((end - start).days + 1)]
 
@@ -38,6 +76,7 @@ inwin = lambda day: start.isoformat() <= day <= end.isoformat()
 data = {
     "days": days,
     "machines": [{"key": k, "label": lab, "color": col, "measured": True} for k, lab, col in MACHINES],
+    "cloud": CLOUD,
     "series": {k: {day: m for day, m in src[k]["days"].items() if inwin(day)} for k, _, _ in MACHINES},
     # Subagents per day: only for measurements that carry this detail.
     "sub": {k: {day: v for day, v in src[k]["days_sub"].items() if inwin(day)}
@@ -98,6 +137,15 @@ for key, val in {
     "POULPI": "data:image/png;base64," + base64.b64encode(open(os.path.join(ASSETS, "poulpi.png"), "rb").read()).decode(),
     "PROJ_COLS": cols.rstrip("\n"),
     "SRC_ROWS": src_rows,
+    "CLOUD_NOTE": ("Les sessions cloud sont comptées à partir des relevés qu'elles déposent elles-mêmes, une ligne par réponse, sans doublon."
+                   if CLOUD else "Les sessions cloud ne sont pas comptées : aucun relevé cloud fourni."),
+    "CLOUD_BOX": ('<span class="chip c-ok">Cloud compté</span> Chaque session cloud dépose son relevé à la fin de chaque tour '
+                  "(hook du plugin). Les réponses sont dédoublonnées entre les conteneurs d'une même session. "
+                  "Seules les sessions qui ont tourné avec ce plugin depuis son installation sont comptées : le passé n'est pas reconstitué."
+                  if CLOUD else
+                  '<span class="chip c-ko">Cloud non mesuré</span> Aucun relevé cloud fourni. Les sessions cloud (Claude Code sur le web, '
+                  "fils de projet claude.ai) tournent dans des conteneurs éphémères : avec ce plugin installé, elles déposent leur relevé "
+                  "dans <code>/mnt/project-files/played/cloud/</code>. Copie ce dossier dans <code>~/.claude/played/cloud/</code> pour les compter ici."),
 }.items():
     page = page.replace("{{" + key + "}}", val)
 open(out_path, "w").write(page)
