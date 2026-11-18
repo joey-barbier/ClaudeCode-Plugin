@@ -428,7 +428,9 @@ git checkout -q main; git pull -q; commits 4 late.txt; git switch -q -c feature/
 is    "work committed before the branch was created is the branch's own once main is put back" "$(field own_commits)" "4"
 has   "and is said to exist on this machine only" "$(stop o2)" "(4 commits on this machine only)"
 git checkout -q -b feature/u main; commits 5 u.txt; git push -q -u origin feature/u
-git clone -q "$WORK/r13.git" "$WORK/r13-take"; cd "$WORK/r13-take" || exit 1; git checkout -q feature/u
+# This clone failed once in eleven runs and its message was lost: keep it and stop loudly if it happens again.
+git clone -q "$WORK/r13.git" "$WORK/r13-take" 2>"$WORK/clone.err" || { echo "  FAIL  setup: git clone of r13 failed: $(cat "$WORK/clone.err")"; ls -la "$WORK" | head -30; exit 1; }
+cd "$WORK/r13-take" || exit 1; git checkout -q feature/u
 (cd "$WORK/r13-mate" && git push -q origin --delete feature/u)
 git fetch -q --prune
 is    "a branch taken over from the remote, then deleted there, still has its five commits" "$(field own_commits)" "5"
