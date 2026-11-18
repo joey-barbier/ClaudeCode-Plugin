@@ -183,6 +183,7 @@ commits 20
 has   "its stale memory is still reported at stop" "$(stop u1)" "project memory 20 commits behind"
 mkdir -p .claude/memory/in-progress/other; echo x > .claude/memory/in-progress/other/TASK.md
 hasnt "but no task folder is called a leftover there" "$(start)" "left in"
+hasnt "nor by the stop hook" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop u1)" "left after merge"
 rm -rf .claude/memory/in-progress
 cd "$WORK/r4" || exit 1; git checkout -q --detach HEAD
 is    "a detached HEAD is neither a task nor a base" "$(field task_branch)" "detached"
@@ -220,7 +221,13 @@ has   "session start says the branch has no task file" "$(start)" "has no task f
 has   "pre-compact hook asks for the task file" "$(compact)" "has no task file. Run /horka-memory:horka-memory-save NOW"
 
 echo "task branch with a task file"
-task feature-login-form; git push -q -u origin feature/login-form
+task feature-login-form
+git checkout -q -b feature/memory-only main; task feature-memory-only
+has   "a branch whose only commit is its task file is still reported as not on the remote" "$(stop mo1)" "branch is not on the remote"
+rm -rf .claude/memory/in-progress
+is    "a task file removed from the working tree only is missing, not closed" "$(field task_file)" "absent"
+git checkout -q .; git checkout -q feature/login-form
+git push -q -u origin feature/login-form
 empty "current task file and pushed branch: silent" "$(stop t2)"
 has   "session start points to the task file" "$(start)" "in-progress/feature-login-form/TASK.md"
 empty "pre-compact hook is silent when the task file is current" "$(compact)"
@@ -268,9 +275,10 @@ OUT="$(stop n3)"
 has   "an upstream set to the base does not count as pushed" "$OUT" "branch is not on the remote"
 git push -q origin feature/tracks-base
 hasnt "once pushed under its own name nothing is said about pushing" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop n3)" "remote"
-git checkout -q feature/x; git checkout -q -b staging develop; git merge -q --no-ff --no-edit feature/x; git checkout -q feature/x
-is    "a base the branch was merged into is not taken as its base" "$(field base)" "origin/develop"
-has   "so the open work is still stated" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop n1)" "no task file for 2 commits of work"
+git checkout -q -b feature/fresh develop; git checkout -q develop; commits 2 moved-on.txt; git checkout -q feature/fresh
+case "$(field base)" in develop|origin/develop) ok "a branch without commits whose base moved on is still measured against that base" ;; *) ko "a branch without commits whose base moved on is still measured against that base" "$(field base)" ;; esac
+is    "and shows no work of its own" "$(field ahead_of_base)" "0"
+empty "so the stop hook has nothing to say about it" "$(stop n4)"
 git clone -q --single-branch -b feature/tracks-base "file://$WORK/r8.git" "$WORK/single"; cd "$WORK/single" || exit 1
 is    "a task branch cloned alone, without its task file, is not classified" "$(field task_branch)" "unknown"
 task feature-tracks-base
@@ -290,11 +298,8 @@ empty "pre-compact hook does not ask for a task file either" "$(compact)"
 echo x > stray.txt
 empty "uncommitted files on a closed task are not reported" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop c1)"
 rm stray.txt
-git checkout -q -b feature/no-file main; commits 2 nf.txt; git push -q -u origin feature/no-file
-has   "a task branch that was never given a task file is asked for one" "$(stop c2)" "no task file"
-echo "delivered" >> .claude/memory/PROJECT_STATE.md; git add -A >/dev/null; git commit -qm "close without a task folder"; git push -q
-is    "a branch that updated the project state is closed, even with no folder to delete" "$(field task_file)" "closed"
-empty "and the stop hook stops asking" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop c2)"
+git checkout -q -b feature/touches-state main; commits 2 ts.txt; echo "note" >> .claude/memory/PROJECT_STATE.md; git add -A >/dev/null; git commit -qm "state edited"
+is    "a branch that merely changed the project state is not taken for a closed task" "$(field task_file)" "absent"
 git checkout -q feature/login-form
 
 echo "task folder merged by mistake"
@@ -332,6 +337,9 @@ OUT="$(start)"
 has   "session start says freshness is unknown" "$OUT" "freshness unknown (shallow clone)"
 hasnt "and never prints a number of commits" "$OUT" "0 commits behind"
 empty "stop hook does not call an unknown memory stale" "$(stop sh1)"
+git checkout -q -b feature/in-shallow; commit sh.txt work
+is    "on a shallow clone the work of a branch is unknown, not a number" "$(field ahead_of_base)" "?"
+git checkout -q -
 echo x >> code.txt
 OUT="$(compact)"
 has   "pre-compact hook says the freshness is unknown" "$OUT" "may be behind (freshness unknown)"
@@ -343,6 +351,12 @@ cd "$WORK/wt dir" || exit 1
 is    "in a worktree whose path has a space, the task is found" "$(field task_file)" "present"
 is    "and its id is the branch's" "$(field task_id)" "feature-x"
 valid_json "$(start)" .hookSpecificOutput.additionalContext && ok "session start output is valid JSON there" || ko "session start output is valid JSON there"
+
+echo "hook configuration"
+if command -v jq >/dev/null 2>&1; then
+  is  "each of the three hooks has a timeout" "$(jq '[.hooks[][].hooks[] | select(.timeout > 0)] | length' "$SCRIPTS/../hooks/hooks.json")" "3"
+  is  "and its script path is quoted" "$(jq -r '.hooks[][].hooks[].command' "$SCRIPTS/../hooks/hooks.json" | grep -c '^bash "\${CLAUDE_PLUGIN_ROOT}/scripts/[a-z-]*\.sh"$')" "3"
+else echo "  skip  hook configuration (needs jq)"; fi
 
 echo "JSON escaping"
 ESC="$(printf 'a"b\\c\nd\te\rf' | hm_json_escape)"

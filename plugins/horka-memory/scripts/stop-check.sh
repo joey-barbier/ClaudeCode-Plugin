@@ -26,8 +26,9 @@ if [ "$HM_TASK_BRANCH" = "yes" ]; then
     present) [ "$HM_TASK_STALE" = "yes" ] && flag "task-stale" "task file $(many "$HM_TASK_BEHIND") commits behind" ;;
     closed) ;;                               # closed and waiting for its merge: do not ask for a new task file
   esac
+  HAS_OWN="yes"; hm_is_number "$HM_OWN" && [ "$HM_OWN" -eq 0 ] && HAS_OWN="no"     # unknown counts as yes
   case "$HM_UNPUSHED" in
-    not-on-remote) [ "$HAS_WORK" = "yes" ] && flag "not-on-remote" "branch is not on the remote" ;;
+    not-on-remote) [ "$HAS_OWN" = "yes" ] && flag "not-on-remote" "branch is not on the remote" ;;
     0|n/a) ;;
     *) hm_is_number "$HM_UNPUSHED" && flag "unpushed" "$HM_UNPUSHED commits not pushed" ;;
   esac

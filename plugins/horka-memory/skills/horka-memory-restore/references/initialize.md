@@ -1,6 +1,6 @@
 # Initialize the project memory
 
-Only for a repository whose `.claude/memory/` lacks files (`memory: absent` or `partial`), and only from a base branch (`task_branch: no`): the five project files are shared, a task branch must not create them. Never in a workspace folder (several repositories, `kind: workspace`). Create the files without asking.
+Only for a repository whose `.claude/memory/` lacks files (`memory: absent` or `partial`), and only from a base branch (`task_branch: no`, or `unknown` once the user has confirmed this branch is the project's main line): the five project files are shared, a task branch must not create them. Never in a workspace folder (several repositories, `kind: workspace`). Create the files without asking.
 
 ## Gather
 

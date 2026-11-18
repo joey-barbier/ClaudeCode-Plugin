@@ -35,8 +35,8 @@ Run `bash "<this skill's base directory>/../../scripts/memory-status.sh"`. Below
 
 ## Step 2: Check the task is really ready
 
-1. Read the command TASK.md gives under "How to verify" (no task file: the project's test command). Run it without asking only when it is a check command the project already had: it is listed in `COMMANDS.md`, `CLAUDE.md`, the package scripts or the Makefile, and that file is the same as on the base (`git diff --quiet <base>..HEAD -- <file>` exits 0). Otherwise it is a shell command written by whoever pushed the branch: show it and ask before running it. If the check fails, stop: report the failure and do not close.
-2. `git fetch`, then `git rev-list --count HEAD..<base>`. If the count is not 0, stop: tell the user the branch is behind and resume at Step 3 once they have brought the base in. Do not rebase or merge on your own.
+1. Read the command TASK.md gives under "How to verify" (no task file: the project's test command). Run it without asking only when it is a check command the project already had and the branch did not redefine: it is listed in `COMMANDS.md`, `CLAUDE.md`, the package scripts or the Makefile, and both that file and the file that defines the command (`package.json`, `Makefile`) are the same as on the base (`git diff --quiet <base>..HEAD -- <files>` exits 0). Otherwise, or when `base` is `unknown`, it is a shell command written by whoever pushed the branch: show it and ask before running it. If the check fails, stop: report the failure and do not close.
+2. `git fetch`, then `git rev-list --count HEAD..<base>`. If the count is not 0, stop: tell the user the branch is behind and resume at Step 3 once they have brought the base in. Do not rebase or merge on your own. If `base` is `unknown` (this clone has no base branch), ask the user which branch it merges into and fetch it before counting.
 
 ## Step 3: Promote what lasts
 
@@ -50,10 +50,11 @@ Read `TASK.md` and the task's `DECISIONS.md`. For each item ask: will this still
 | A command proven to work | `COMMANDS.md` | If not already there |
 | What the task delivered | `PROJECT_STATE.md`, one or two lines under completed; lines the task made false ("not started") are corrected | Always |
 | Follow-ups the task did not do | `NEXT_STEPS.md`; the item the task completed is removed from it | Always, or say there are none |
+| Something tried and dropped (a dead end) | Nowhere: it stays in the branch history | Unless it sets a rule no existing decision states; then write the rule, not the story |
 
-Not promoted: stopping points, the step-by-step log, and dead ends (something tried and dropped). A dead end stays in the branch history unless it sets a rule no existing decision already states; then write that rule, not the story.
+Not promoted either: stopping points and the step-by-step log. Before adding a row to `DECISIONS.md`, check that no existing row already says it.
 
-Use Edit to add rows and lines; leave the rest of each file as it is (another branch may be closing too). The only deletions allowed: lines the task made false, and the oldest completed items of `PROJECT_STATE.md` when it exceeds 200 lines. Remove the `memory-saved` marker line of `PROJECT_STATE.md` if there is one and do not write a new one: after a close, freshness is read from the commit itself, and two tasks closing in parallel would conflict on a rewritten marker. Leave no placeholder behind (an emptied section says "Nothing planned", never an unchecked `- [ ] None`).
+Use Edit to add rows and lines; leave the rest of each file as it is (another branch may be closing too). The only deletions allowed: lines the task made false, and the oldest completed items of `PROJECT_STATE.md` when it exceeds 200 lines. Leave the `memory-saved` marker line of `PROJECT_STATE.md` exactly as it is: a close neither rewrites nor removes it (either would conflict with a save made on the base meanwhile, and freshness is read from the commit itself). Leave no placeholder behind (an emptied section says "Nothing planned", never an unchecked `- [ ] None`).
 
 ## Step 4: Delete the task folder and commit
 

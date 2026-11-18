@@ -38,12 +38,16 @@ EOF2
       absent)
         if [ "$HM_TASK_BRANCH" = "yes" ]; then
           add "No project memory in this repository. It is initialized from a base branch, not from task branch $BR: say so if the work needs it."
+        elif [ "$HM_TASK_BRANCH" = "unknown" ]; then
+          add "No project memory in this repository, and branch $BR cannot be classified (no base branch in this clone). Ask whether it is the project's main line before initializing the memory with horka-memory:horka-memory-restore."
         else
           add "No project memory in this repository (.claude/memory/ is empty). Use the horka-memory:horka-memory-restore skill to initialize it before working on the project."
         fi ;;
       partial)
         if [ "$HM_TASK_BRANCH" = "yes" ]; then
           add "Project memory in .claude/memory/ is incomplete (no PROJECT_STATE.md). The missing files are created from a base branch, not from task branch $BR: say so if the work needs them."
+        elif [ "$HM_TASK_BRANCH" = "unknown" ]; then
+          add "Project memory in .claude/memory/ is incomplete (no PROJECT_STATE.md), and branch $BR cannot be classified (no base branch in this clone). Ask whether it is the project's main line before creating the missing files."
         else
           add "Project memory in .claude/memory/ is incomplete (no PROJECT_STATE.md). Use horka-memory:horka-memory-restore, which creates the missing files."
         fi ;;
