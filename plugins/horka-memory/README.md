@@ -10,6 +10,8 @@ Project memory that lives in the repository, so a fresh clone is enough to know 
   in-progress/<task-id>/TASK.md  (+ DECISIONS.md)                               task: lives on its branch, removed before the merge
 ```
 
+The first save of a task writes the branch it merges into in `TASK.md` (`<!-- task-base: main -->`): from then on the task is measured against that base, whatever a teammate merges elsewhere. Until then the base is guessed (the nearest base branch).
+
 The task id is the branch name with `/` replaced by `-` (a short hash is added when the name holds characters a folder name should not; `feature/login` and `feature-login` share one id).
 
 ## Skills

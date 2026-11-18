@@ -35,8 +35,8 @@ Run `bash "<this skill's base directory>/../../scripts/memory-status.sh"`. Below
 
 ## Step 2: Check the task is really ready
 
-1. Read the command TASK.md gives under "How to verify" (no task file: the project's test command). Run it without asking only when it is a check command the project already had and the branch did not redefine: it is listed in `COMMANDS.md`, `CLAUDE.md`, the package scripts or the Makefile, and both that file and the file that defines the command (`package.json`, `Makefile`) are the same as on the base (`git diff --quiet <base>..HEAD -- <files>` exits 0). Otherwise, or when `base` is `unknown`, it is a shell command written by whoever pushed the branch: show it and ask before running it. If the check fails, stop: report the failure and do not close.
-2. `git fetch`, then `git rev-list --count HEAD..<base>`. If the count is not 0, stop: tell the user the branch is behind and resume at Step 3 once they have brought the base in. Do not rebase or merge on your own. If `base` is `unknown` (this clone has no base branch), ask the user which branch it merges into and fetch it before counting.
+1. Read the command TASK.md gives under "How to verify" (no task file: the project's test command). Run it without asking only when all of this holds: it is a check command the project already had (listed in `COMMANDS.md`, `CLAUDE.md`, the package scripts or the Makefile); the file that lists it and the file that defines it (`package.json`, `Makefile`) are unchanged on this branch, compared with `<base>` when `base_source` is `recorded`, otherwise with the remote's default branch (`git diff --quiet origin/<default_branch>..HEAD -- <files>` exits 0); and that reference is known. In every other case show the command and ask before running it. This rule is hygiene against a stale or odd command, not a boundary against a hostile branch: taking over a branch means running its code. If the check fails, stop: report the failure and do not close.
+2. The branch must be up to date with the branch it merges into. When `base_source` is `recorded`: `git fetch`, then `git rev-list --count HEAD..<base>`. When it is `guessed` or `base` is `unknown`, the guess may be wrong (a branch already merged elsewhere): ask the user which branch it merges into, then `git fetch origin <that branch>` and `git rev-list --count HEAD..FETCH_HEAD`. If the count is not 0, stop: tell the user the branch is behind and resume at Step 3 once they have brought the base in. Do not rebase or merge on your own.
 
 ## Step 3: Promote what lasts
 
@@ -66,7 +66,7 @@ git add .claude/memory
 git commit -m "update(memory) - close task <task-id>" -- .claude/memory   # use the project's commit convention when CLAUDE.md gives one
 ```
 
-The pathspec keeps anything else the user staged out of this commit; no attribution trailer in the message. It should be the last commit of the branch before the merge; commits added later (review fixes) are fine, the hooks know the task is closed.
+The pathspec keeps anything else the user staged out of this commit; no attribution trailer in the message. It should be the last commit of the branch before the merge; commits added later (review fixes) are fine: the hooks see that the task file was deleted on this branch and stop asking for one. After a close that had no task folder to delete, they cannot see it and keep asking until the merge: do not answer by running save.
 
 ## Step 5: Report
 

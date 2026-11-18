@@ -19,16 +19,28 @@ many() { if hm_is_number "$1" && [ "$1" -ge "$HM_COUNT_CAP" ]; then echo "more t
 BR="$(hm_clean "$HM_BRANCH")"
 
 if [ "$HM_TASK_BRANCH" = "yes" ]; then
+  # Work is measured two ways, so a wrong guess of the base cannot hide it: commits ahead of the base,
+  # and commits that are on no remote branch at all.
   HAS_WORK="no"
   if hm_is_number "$HM_AHEAD"; then [ "$HM_AHEAD" -gt 0 ] && HAS_WORK="yes"; else HAS_WORK="yes"; fi
+  LOCAL="no"; hm_is_number "$HM_LOCAL_ONLY" && [ "$HM_LOCAL_ONLY" -gt 0 ] && LOCAL="yes"
+  HAS_OWN="yes"; hm_is_number "$HM_OWN" && [ "$HM_OWN" -eq 0 ] && HAS_OWN="no"     # unknown counts as yes
   case "$HM_TASK_FILE" in
-    absent) [ "$HAS_WORK" = "yes" ] && flag "task-missing" "no task file for $(many "$HM_AHEAD") commits of work" ;;
+    absent)
+      if [ "$HAS_WORK" = "yes" ] || [ "$LOCAL" = "yes" ]; then
+        if hm_is_number "$HM_AHEAD" && [ "$HM_AHEAD" -gt 0 ]; then
+          flag "task-missing" "no task file for $(many "$HM_AHEAD") commits of work"
+        else
+          flag "task-missing" "no task file for the work on this branch"     # never a "?" as a count
+        fi
+      fi ;;
     present) [ "$HM_TASK_STALE" = "yes" ] && flag "task-stale" "task file $(many "$HM_TASK_BEHIND") commits behind" ;;
     closed) ;;                               # closed and waiting for its merge: do not ask for a new task file
   esac
-  HAS_OWN="yes"; hm_is_number "$HM_OWN" && [ "$HM_OWN" -eq 0 ] && HAS_OWN="no"     # unknown counts as yes
   case "$HM_UNPUSHED" in
-    not-on-remote) [ "$HAS_OWN" = "yes" ] && flag "not-on-remote" "branch is not on the remote" ;;
+    not-on-remote)
+      if [ "$LOCAL" = "yes" ]; then flag "not-on-remote" "branch is not on the remote ($(many "$HM_LOCAL_ONLY") commits on this machine only)"
+      elif [ "$HAS_OWN" = "yes" ]; then flag "not-on-remote" "branch is not on the remote"; fi ;;
     0|n/a) ;;
     *) hm_is_number "$HM_UNPUSHED" && flag "unpushed" "$HM_UNPUSHED commits not pushed" ;;
   esac

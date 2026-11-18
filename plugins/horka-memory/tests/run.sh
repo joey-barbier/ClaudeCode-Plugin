@@ -179,6 +179,11 @@ new_repo r5 prod; memory
 is    "the remote's default branch is a base whatever its name" "$(field task_branch)" "no"
 git init -q -b solo "$WORK/r6"; cd "$WORK/r6" || exit 1; commit code.txt init; memory
 is    "a branch with no base to compare with is not classified" "$(field task_branch)" "unknown"
+git init -q -b solo "$WORK/r6b"; cd "$WORK/r6b" || exit 1; commit code.txt init
+has   "without memory, session start asks before initializing there" "$(start)" "Ask whether it is the project's main line before initializing"
+mkdir -p .claude/memory; echo "# a" > .claude/memory/ARCHITECTURE.md
+has   "with partial memory, it asks before creating the missing files" "$(start)" "Ask whether it is the project's main line before creating the missing files"
+cd "$WORK/r6" || exit 1
 commits 20
 has   "its stale memory is still reported at stop" "$(stop u1)" "project memory 20 commits behind"
 mkdir -p .claude/memory/in-progress/other; echo x > .claude/memory/in-progress/other/TASK.md
@@ -288,6 +293,35 @@ cd "$WORK/r8" || exit 1
 git init -q -b main "$WORK/r9"; cd "$WORK/r9" || exit 1; commit code.txt init; memory; git checkout -q -b feature/local; commits 2
 hasnt "no remote at all: nothing is said about pushing" "$(stop n2)" "remote"
 
+echo "the base recorded in the task file beats the guess"
+new_repo r10; memory; git push -q
+git checkout -q -b feature/q; commit q.txt start
+mkdir -p .claude/memory/in-progress/feature-q
+printf '# Task\n\n<!-- task-base: main -->\n<!-- memory-saved: %s %s -->\n' "$(git rev-parse --short HEAD)" "$(date +%Y-%m-%d)" > .claude/memory/in-progress/feature-q/TASK.md
+git add -A >/dev/null; git commit -qm "task memory"; commits 7 q.txt; git push -q -u origin feature/q
+is    "the recorded base is used" "$(field base)" "origin/main"
+is    "and said to be recorded" "$(field base_source)" "recorded"
+git checkout -q -b staging main; git merge -q --no-ff --no-edit feature/q; git push -q -u origin staging; git checkout -q feature/q; git fetch -q
+is    "a teammate merging the branch into staging does not move its base" "$(field base)" "origin/main"
+is    "so the task file is still 7 commits behind" "$(field task_behind)" "7"
+has   "and the stop hook still says it" "$(stop q1)" "task file 7 commits behind"
+has   "session start too" "$(start)" "7 commits behind"
+sed -i.bak 's/task-base: main/task-base: nope/' .claude/memory/in-progress/feature-q/TASK.md
+is    "a recorded base that does not exist falls back to the guess" "$(field base_source)" "guessed"
+sed -i.bak 's/task-base: nope/task-base: -x/' .claude/memory/in-progress/feature-q/TASK.md
+is    "a recorded base that looks like an option is ignored" "$(field base_source)" "guessed"
+sed -i.bak 's/task-base: -x/task-base: feature\/q/' .claude/memory/in-progress/feature-q/TASK.md
+is    "a branch cannot be its own base" "$(field base_source)" "guessed"
+rm -f .claude/memory/in-progress/feature-q/TASK.md.bak; git checkout -q .
+git checkout -q -b feature/s main; commits 5 s.txt
+git checkout -q -b staging2 main; git checkout -q feature/s
+HORKA_MEMORY_BASE_BRANCHES="main staging2"; export HORKA_MEMORY_BASE_BRANCHES
+git checkout -q staging2; git merge -q --no-ff --no-edit feature/s; git checkout -q feature/s
+OUT="$(stop q2)"
+has   "work merged into a local base is still seen: no task file" "$OUT" "no task file"
+has   "and its commits exist on this machine only" "$OUT" "branch is not on the remote (5 commits on this machine only)"
+unset HORKA_MEMORY_BASE_BRANCHES
+
 echo "a closed task waiting for its merge"
 cd "$WORK/r7" || exit 1; git checkout -q feature/login-form
 git rm -rq .claude/memory/in-progress/feature-login-form; git commit -qm "close task"; git push -q
@@ -339,6 +373,9 @@ hasnt "and never prints a number of commits" "$OUT" "0 commits behind"
 empty "stop hook does not call an unknown memory stale" "$(stop sh1)"
 git checkout -q -b feature/in-shallow; commit sh.txt work
 is    "on a shallow clone the work of a branch is unknown, not a number" "$(field ahead_of_base)" "?"
+OUT="$(stop sh2)"
+has   "the stop hook still says there is work without a task file" "$OUT" "no task file for the work on this branch"
+hasnt "without printing a question mark as a count" "$OUT" "? commits"
 git checkout -q -
 echo x >> code.txt
 OUT="$(compact)"

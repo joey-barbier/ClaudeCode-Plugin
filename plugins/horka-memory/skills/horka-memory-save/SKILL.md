@@ -52,6 +52,7 @@ Replace the marker ending `PROJECT_STATE.md` with `<!-- memory-saved: <head> <to
 Everything goes in `<task_dir>` (`.claude/memory/in-progress/<task-id>/`); two people saving on two branches must never edit the same file.
 
 - **TASK.md**: create it from `references/task-template.md`, or update it. Every section must be true now. "Stopped at" names the exact point: file and function being edited, the failing test, the command that errors and its message.
+- **The base, once**: at the first save write the line `<!-- task-base: <branch> -->` in `TASK.md`, where `<branch>` is the branch this task will be merged into, without `origin/`. Take the status `base` when `base_source` is `guessed` and say which branch you wrote; ask when `base` is `unknown`. Never change it afterwards unless the user says the target changed. From then on the hooks and the other skills measure this branch against that base, whatever happens to the refs.
 - **DECISIONS.md** (same folder), only when there is a decision to record: decisions taken for this task, with rationale and date. `horka-memory-close` promotes the lasting ones. No empty placeholder file.
 - Do not write the push state into the file (it is wrong after the next commit); it goes in the report.
 
@@ -66,7 +67,7 @@ git add .claude/memory
 git commit -m "update(memory) - <what the save records>" -- .claude/memory   # use the project's commit convention when CLAUDE.md gives one
 ```
 
-No attribution trailer in the message. Then run the status script again. If `unpushed` is not `0` (a count, or `not-on-remote`), list every local-only commit by hash and subject (`git log --oneline origin/<branch>..HEAD`, or `<base>..HEAD` when the branch is not on the remote): the memory commit and each work commit. If `uncommitted` is not `0`, name the files. Say it plainly: work that is not on the remote cannot be taken over by anyone else.
+No attribution trailer in the message. Then run the status script again. If `unpushed` is not `0` (a count, or `not-on-remote`), list every local-only commit by hash and subject (`git log --oneline origin/<branch>..HEAD` when the branch is on the remote, `git log --oneline HEAD --not --remotes` when it is not): the memory commit and each work commit. If `uncommitted` is not `0`, name the files. Say it plainly: work that is not on the remote cannot be taken over by anyone else.
 
 ## Step 5: Report
 

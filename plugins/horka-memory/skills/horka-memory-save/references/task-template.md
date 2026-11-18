@@ -1,6 +1,6 @@
 # Task: <one-line title>
 
-**Branch**: `<branch>`   **Pull request**: <url or "none yet">   **Last worked on by**: <name>, <YYYY-MM-DD>
+**Branch**: `<branch>`   **Merges into**: `<base branch>`   **Pull request**: <url or "none yet">   **Last worked on by**: <name>, <YYYY-MM-DD>
 
 ## Goal
 
@@ -36,4 +36,5 @@ Expected now: <result at the time of this save, e.g. "212 tests pass, 1 fails: t
 
 - What only a human can unblock (access, a secret, a choice), and who.
 
+<!-- task-base: <base branch, without origin/> -->
 <!-- memory-saved: <commit> <YYYY-MM-DD> -->
