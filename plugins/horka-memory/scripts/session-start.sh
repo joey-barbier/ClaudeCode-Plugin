@@ -61,7 +61,7 @@ EOF2
           yes:present)
             add "Task in progress on branch $BR: .claude/memory/in-progress/$HM_TASK_ID/TASK.md ($(behind_text "$HM_TASK_BEHIND")). It says where the last person stopped: read it before continuing this task." ;;
           yes:closed)
-            add "The task of branch $BR was closed (its task folder was promoted and deleted) and waits for its merge. Commits made since the close: $HM_TASK_BEHIND." ;;
+            add "The task of branch $BR was closed (its task folder was promoted and deleted) and has not reached the default branch yet. Commits made since the close: $HM_TASK_BEHIND." ;;
           yes:absent)
             # Only when the branch has work of its own: a fresh branch, or one already merged, has nothing to write down.
             case "$HM_HAS_WORK" in

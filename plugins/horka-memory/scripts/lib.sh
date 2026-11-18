@@ -103,7 +103,7 @@ hm_task_base() {
   local file="$1" name remote="" loc=""
   [ -f "$file" ] || return 0
   name="$(sed -n 's/^<!-- task-base: \([A-Za-z0-9._/-]\{1,100\}\) -->[[:space:]]*$/\1/p' "$file" 2>/dev/null | tail -1)"
-  case "$name" in ''|-*|*..*|HEAD|*/HEAD) return 0 ;; esac
+  case "$name" in ''|HEAD|*/HEAD) return 0 ;; esac
   [ "$name" = "$HM_BRANCH" ] && return 0
   git -C "$HM_ROOT" rev-parse -q --verify "refs/remotes/origin/$name^{commit}" >/dev/null 2>&1 && remote="origin/$name"
   git -C "$HM_ROOT" rev-parse -q --verify "refs/heads/$name^{commit}" >/dev/null 2>&1 && loc="$name"
@@ -137,12 +137,13 @@ hm_work() {
 # Sets HM_OUT_REFS (one or two commits, the marker first) and HM_OUT_SAVED ("<hash> <date>" when usable).
 hm_refs() {
   local file="$1" firstparent="$2" mark hash last
-  HM_OUT_REFS=""; HM_OUT_SAVED=""
+  HM_OUT_REFS=""; HM_OUT_SAVED=""; HM_OUT_LAST=""
   mark="$(hm_marker "$file")"; hash="${mark%% *}"
   if [ -n "$hash" ] && git -C "$HM_ROOT" merge-base --is-ancestor "$hash" HEAD 2>/dev/null; then
     HM_OUT_REFS="$hash"; HM_OUT_SAVED="$mark"
   fi
   last="$(git -C "$HM_ROOT" log -1 ${firstparent:+--first-parent} --format=%H HEAD -- "$file" 2>/dev/null)"
+  HM_OUT_LAST="$last"
   [ -n "$last" ] && HM_OUT_REFS="$HM_OUT_REFS $last"
   HM_OUT_REFS="${HM_OUT_REFS# }"
 }
@@ -171,11 +172,18 @@ hm_max() {
 # that are the branch's own: those on its first-parent line (work done here, wherever it was merged since),
 # plus those that are on no base branch (a colleague's commits pulled into this branch).
 hm_task_behind() {
-  local ref="$1" n b not=""
-  # A base that already contains <ref> (the branch was merged into it since) would hide the commits made
-  # after <ref> as well: leave it out of the "on no base" test.
+  local ref="$1" n b mb line not=""
+  # A base that already contains <ref> because the branch was merged into it would hide the commits made
+  # after <ref> as well: leave it out of the "on no base" test. But a base that was merged back into the
+  # branch brings its teammates' commits: that one stays in the test. The two are told apart by where the
+  # base and the branch meet: on the branch's own first-parent line in the first case, off it in the second.
+  line="$(git -C "$HM_ROOT" rev-list --first-parent --max-count="$HM_COUNT_CAP" HEAD 2>/dev/null)"
   for b in $HM_BASES; do
-    git -C "$HM_ROOT" merge-base --is-ancestor "$ref" "$b" 2>/dev/null || not="$not $b"
+    if git -C "$HM_ROOT" merge-base --is-ancestor "$ref" "$b" 2>/dev/null; then
+      mb="$(git -C "$HM_ROOT" merge-base HEAD "$b" 2>/dev/null)"
+      printf '%s\n' "$line" | grep -q "^$mb\$" && continue
+    fi
+    not="$not $b"
   done
   n="$( { git -C "$HM_ROOT" rev-list --no-merges --first-parent --max-count="$HM_COUNT_CAP" "$ref"..HEAD -- . ':(exclude).claude/memory' 2>/dev/null
           [ -n "$not" ] && git -C "$HM_ROOT" rev-list --no-merges --max-count="$HM_COUNT_CAP" "$ref"..HEAD --not $not -- . ':(exclude).claude/memory' 2>/dev/null
@@ -244,6 +252,10 @@ hm_status() {
   if [ "$HM_MEM" = "present" ] && [ "$HM_SHALLOW" != "yes" ]; then
     hm_refs "$HM_MEM_DIR/PROJECT_STATE.md" firstparent
     HM_SAVED="$HM_OUT_SAVED"
+    # The default branch's history is the yardstick only when the memory lives on it: the commit that last
+    # updated the file must be part of that history. A memory kept on another base (develop) is judged the
+    # other way, or it would always read as current.
+    if [ -z "$HM_OUT_LAST" ] || ! git -C "$HM_ROOT" merge-base --is-ancestor "$HM_OUT_LAST" "${target:-HEAD}" 2>/dev/null; then target=""; fi
     for r in $HM_OUT_REFS; do
       if [ -n "$target" ]; then
         n="$(hm_work "$r".."$target")"

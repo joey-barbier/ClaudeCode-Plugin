@@ -11,7 +11,10 @@ if [ "$HM_TASK_BRANCH" != "yes" ] || { [ -z "$HM_CREATED" ] && [ -z "$HM_BASES" 
   echo "cannot tell which commits are this branch's own (no base branch in this clone, or not a task branch)"
   exit 0
 fi
-{ [ -n "$HM_CREATED" ] && git -C "$HM_ROOT" rev-list --max-count=200 "$HM_CREATED"..HEAD ${HM_OBASES:+--not $HM_OBASES}
-  [ -n "$HM_BASES" ] && [ "$HM_SHALLOW" != "yes" ] && git -C "$HM_ROOT" rev-list --max-count=200 HEAD --not $HM_BASES
-} 2>/dev/null | awk '!seen[$0]++' | head -200 | git -C "$HM_ROOT" log --no-walk=unsorted --oneline --stdin
+REVS="$( { [ -n "$HM_CREATED" ] && git -C "$HM_ROOT" rev-list --max-count=200 "$HM_CREATED"..HEAD ${HM_OBASES:+--not $HM_OBASES}
+           [ -n "$HM_BASES" ] && [ "$HM_SHALLOW" != "yes" ] && git -C "$HM_ROOT" rev-list --max-count=200 HEAD --not $HM_BASES
+         } 2>/dev/null | awk '!seen[$0]++' | head -200 )"
+# An empty list must print nothing: git log with no revision would fall back to HEAD and show a base commit.
+[ -n "$REVS" ] || exit 0
+printf '%s\n' "$REVS" | git -C "$HM_ROOT" log --no-walk=unsorted --oneline --stdin
 exit 0

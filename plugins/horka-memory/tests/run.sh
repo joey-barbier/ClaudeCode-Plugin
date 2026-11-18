@@ -424,13 +424,28 @@ git fetch -q --prune
 is    "a branch taken over from the remote, then deleted there, still has its five commits" "$(field own_commits)" "5"
 is    "and they are on this machine only" "$(field local_only)" "5"
 cd "$WORK/r13" || exit 1
+git checkout -q -b feature/empty main
+empty "a branch with no commit of its own lists nothing, not the base's last commit" "$(bash "$SCRIPTS/own-commits.sh")"
+new_repo r14; git checkout -q -b develop; memory; commits 30 dev.txt; git push -q -u origin develop
+is    "memory saved on develop is 30 commits behind there" "$(field behind)" "30"
+git checkout -q -b feature/from-develop
+is    "and just as far behind from a task branch cut from develop, though the default branch is main" "$(field behind)" "30"
+has   "session start says so" "$(start)" "30 commits behind the code"
+commit fd.txt start; task feature-from-develop; git push -q -u origin feature/from-develop
+git clone -q "$WORK/r14.git" "$WORK/r14-mate"; (cd "$WORK/r14-mate" && git checkout -q develop && git merge -q --no-ff --no-edit origin/feature/from-develop && commits 10 mate-dev.txt && git push -q)
+commit fd.txt mine; git fetch -q; git merge -q --no-edit origin/develop
+is    "merging the base back into the branch does not count its teammates' commits against the task file" "$(field task_behind)" "1"
+printf '<!-- task-base: main -->\n<!-- task-base: develop -->\n' >> .claude/memory/in-progress/feature-from-develop/TASK.md
+is    "two recorded bases: the last line wins" "$(field base)" "origin/develop"
+git checkout -q .
+cd "$WORK/r13" || exit 1
 
 echo "a closed task waiting for its merge"
 cd "$WORK/r7" || exit 1; git checkout -q feature/login-form
 git rm -rq .claude/memory/in-progress/feature-login-form; git commit -qm "close task"; git push -q
 is    "status says the task is closed" "$(field task_file)" "closed"
 empty "stop hook does not ask for a new task file" "$(stop c1)"
-has   "session start says the task waits for its merge" "$(start)" "was closed"
+has   "session start says the task is closed and not yet on the default branch" "$(start)" "was closed (its task folder was promoted and deleted) and has not reached the default branch yet"
 empty "pre-compact hook does not ask for a task file either" "$(compact)"
 echo x > stray.txt
 empty "uncommitted files on a closed task are not reported" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop c1)"
