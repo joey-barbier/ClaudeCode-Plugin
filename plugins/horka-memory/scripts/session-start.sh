@@ -52,7 +52,9 @@ EOF2
           add "Project memory in .claude/memory/ is incomplete (no PROJECT_STATE.md). Use horka-memory:horka-memory-restore, which creates the missing files."
         fi ;;
       present)
-        if [ "$HM_STALE" = "yes" ]; then
+        if [ "$HM_TASK_BRANCH" = "yes" ]; then
+          add "Project memory found in .claude/memory/. Its freshness is measured on a base branch, not from task branch $BR: read it with horka-memory:horka-memory-restore and trust the code where they differ."
+        elif [ "$HM_STALE" = "yes" ]; then
           add "Project memory found in .claude/memory/ but it is $(behind_text "$HM_BEHIND") the code. Treat it as outdated: the code wins. Use horka-memory:horka-memory-restore, which will say what to refresh."
         else
           add "Project memory found in .claude/memory/ ($(behind_text "$HM_BEHIND")). Use horka-memory:horka-memory-restore to read it before working on the project."
@@ -61,7 +63,7 @@ EOF2
           yes:present)
             add "Task in progress on branch $BR: .claude/memory/in-progress/$HM_TASK_ID/TASK.md ($(behind_text "$HM_TASK_BEHIND")). It says where the last person stopped: read it before continuing this task." ;;
           yes:closed)
-            add "The task of branch $BR was closed (its task folder was promoted and deleted) and has not reached the default branch yet. Commits made since the close: $HM_TASK_BEHIND." ;;
+            add "The task of branch $BR was closed (its task folder was promoted and deleted) and is not merged yet. Commits made since the close: $HM_TASK_BEHIND." ;;
           yes:absent)
             # Only when the branch has work of its own: a fresh branch, or one already merged, has nothing to write down.
             case "$HM_HAS_WORK" in

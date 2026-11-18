@@ -330,7 +330,9 @@ is    "a recorded base branch is flagged as one" "$(field base_kind)" "base-bran
 sed -i.bak 's/task-base: main/task-base: nope/' .claude/memory/in-progress/feature-q/TASK.md
 is    "a recorded base that does not exist is no base" "$(field base_source)" "none"
 sed -i.bak 's/task-base: nope/task-base: -x/' .claude/memory/in-progress/feature-q/TASK.md
-is    "a recorded base that looks like an option is ignored" "$(field base_source)" "none"
+git update-ref refs/heads/-x HEAD
+is    "a recorded base that looks like an option is ignored, even when such a ref exists" "$(field base_source)" "none"
+git update-ref -d refs/heads/-x
 sed -i.bak 's/task-base: -x/task-base: feature\/q/' .claude/memory/in-progress/feature-q/TASK.md
 is    "a branch cannot be its own base" "$(field base_source)" "none"
 rm -f .claude/memory/in-progress/feature-q/TASK.md.bak; git checkout -q .
@@ -398,6 +400,11 @@ git clone -q "$WORK/r13.git" "$WORK/r13-mate"; (cd "$WORK/r13-mate" && commits 1
 git pull -q --rebase origin main
 is    "a never-pushed branch rebased on a main that moved keeps its own two commits" "$(field own_commits)" "2"
 is    "and the listing shows those two only" "$(bash "$SCRIPTS/own-commits.sh" | grep -c .)" "2"
+git checkout -q main; git pull -q; commits 3 local-main.txt       # three commits on local main, not pushed
+git checkout -q -b feature/y HEAD~3; commits 2 y.txt; git rebase -q main
+is    "a never-pushed branch rebased on a local main with unpushed commits keeps its own two" "$(field own_commits)" "2"
+is    "and only those two are said to be on this machine only" "$(field local_only)" "2"
+git checkout -q main; git reset -q --hard origin/main
 git checkout -q -b feature/d main; commits 6 d.txt; git push -q -u origin feature/d
 (cd "$WORK/r13-mate" && git pull -q && git merge -q --no-ff --no-edit origin/feature/d && git push -q && git push -q origin --delete feature/d)
 git fetch -q --prune
@@ -407,7 +414,8 @@ git checkout -q -b feature/big main; commit big.txt start; task feature-big; com
 git push -q -u origin feature/big; mark .claude/memory/in-progress/feature-big/TASK.md; git add -A >/dev/null; git commit -qm "task memory"; git push -q
 (cd "$WORK/r13-mate" && git fetch -q && git checkout -q -b staging origin/main && git merge -q --no-ff --no-edit origin/feature/big && git push -q -u origin staging)
 git fetch -q
-is    "a task merged into staging does not make the project memory look behind from its branch" "$(field stale)" "no"
+is    "from a task branch the project memory is not dated" "$(field behind)" "not measured from a task branch"
+hasnt "so a task merged into staging cannot make it look outdated" "$(start)" "outdated"
 git checkout -q -b feature/sh main; commit sh.txt start; task feature-sh; git push -q -u origin feature/sh
 (cd "$WORK/r13-mate" && git fetch -q && git checkout -q feature/sh && commits 2 mate-sh.txt && git push -q)
 commit sh.txt mine; git pull -q --no-rebase --no-edit origin feature/sh; git push -q
@@ -429,8 +437,10 @@ empty "a branch with no commit of its own lists nothing, not the base's last com
 new_repo r14; git checkout -q -b develop; memory; commits 30 dev.txt; git push -q -u origin develop
 is    "memory saved on develop is 30 commits behind there" "$(field behind)" "30"
 git checkout -q -b feature/from-develop
-is    "and just as far behind from a task branch cut from develop, though the default branch is main" "$(field behind)" "30"
-has   "session start says so" "$(start)" "30 commits behind the code"
+is    "from a task branch cut from develop it is not dated, whatever the default branch" "$(field behind)" "not measured from a task branch"
+OUT="$(start)"
+has   "session start says where it is measured" "$OUT" "Its freshness is measured on a base branch, not from task branch"
+hasnt "and gives no number of commits for it" "$OUT" "commits behind)"
 commit fd.txt start; task feature-from-develop; git push -q -u origin feature/from-develop
 git clone -q "$WORK/r14.git" "$WORK/r14-mate"; (cd "$WORK/r14-mate" && git checkout -q develop && git merge -q --no-ff --no-edit origin/feature/from-develop && commits 10 mate-dev.txt && git push -q)
 commit fd.txt mine; git fetch -q; git merge -q --no-edit origin/develop
@@ -445,7 +455,7 @@ cd "$WORK/r7" || exit 1; git checkout -q feature/login-form
 git rm -rq .claude/memory/in-progress/feature-login-form; git commit -qm "close task"; git push -q
 is    "status says the task is closed" "$(field task_file)" "closed"
 empty "stop hook does not ask for a new task file" "$(stop c1)"
-has   "session start says the task is closed and not yet on the default branch" "$(start)" "was closed (its task folder was promoted and deleted) and has not reached the default branch yet"
+has   "session start says the task is closed and not yet on the default branch" "$(start)" "was closed (its task folder was promoted and deleted) and is not merged yet"
 empty "pre-compact hook does not ask for a task file either" "$(compact)"
 echo x > stray.txt
 empty "uncommitted files on a closed task are not reported" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop c1)"

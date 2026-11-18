@@ -21,8 +21,12 @@ if [ "$HM_KIND" = "repo" ]; then
   echo "default_branch: ${HM_DEFAULT_BRANCH:-unknown}"
   if [ "$HM_MEM" = "present" ]; then
     echo "saved: ${HM_SAVED:-no usable marker}"           # "<commit> <date>" of the last save, when that commit is in the history
-    echo "behind: $HM_BEHIND"               # commits since the memory was last updated, memory-only commits not counted
-    echo "stale: $HM_STALE"                 # yes when behind >= $HM_STALE_COMMITS
+    if [ "$HM_TASK_BRANCH" = "yes" ]; then
+      echo "behind: not measured from a task branch"   # the project memory is dated on a base branch only
+    else
+      echo "behind: $HM_BEHIND"             # commits since the memory was last updated, memory-only commits not counted
+      echo "stale: $HM_STALE"               # yes when behind >= $HM_STALE_COMMITS
+    fi
   fi
   echo "task_branch: $HM_TASK_BRANCH"       # yes | no (a base branch) | detached | unknown (no base branch in this clone to compare with)
   if [ "$HM_TASK_BRANCH" = "yes" ]; then

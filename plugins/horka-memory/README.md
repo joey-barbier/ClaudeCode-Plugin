@@ -32,6 +32,13 @@ The task id is the branch name with `/` replaced by `-` (a short hash is added w
 
 Freshness is measured in commits that changed something other than the memory itself, merge commits excluded, and stops counting at 1,000. A shallow clone cannot be measured and is reported as unknown. Each hook has a 10 second timeout.
 
+Known limits of the counting:
+
+- The project memory is dated on a base branch only. From a task branch the hooks and the status say it is not measured: no rule for telling the base's commits from the task's held in every workflow.
+- A task file's lag is over-counted when the base it was merged into is then fast-forwarded into the branch, or after a second merge of the branch into that base: the reminder to save comes too early, never too late.
+- Commits made on a local base before a branch is created from it stay that base's: the branch is told nothing about them.
+- A branch merged into a base before its first save has no work of its own until its next commit.
+
 ## Settings
 
 Set these in the `env` of your Claude Code settings so the hooks see them.

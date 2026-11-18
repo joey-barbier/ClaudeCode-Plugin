@@ -103,7 +103,7 @@ hm_task_base() {
   local file="$1" name remote="" loc=""
   [ -f "$file" ] || return 0
   name="$(sed -n 's/^<!-- task-base: \([A-Za-z0-9._/-]\{1,100\}\) -->[[:space:]]*$/\1/p' "$file" 2>/dev/null | tail -1)"
-  case "$name" in ''|HEAD|*/HEAD) return 0 ;; esac
+  case "$name" in ''|-*|*..*|HEAD|*/HEAD) return 0 ;; esac
   [ "$name" = "$HM_BRANCH" ] && return 0
   git -C "$HM_ROOT" rev-parse -q --verify "refs/remotes/origin/$name^{commit}" >/dev/null 2>&1 && remote="origin/$name"
   git -C "$HM_ROOT" rev-parse -q --verify "refs/heads/$name^{commit}" >/dev/null 2>&1 && loc="$name"
@@ -241,35 +241,19 @@ hm_status() {
     if [ -n "$HM_BASES" ] || [ -f "$own_file" ]; then HM_TASK_BRANCH="yes"; else HM_TASK_BRANCH="unknown"; HM_TASK_ID=""; HM_TASK_DIR=""; fi
   fi
 
-  # Project memory: commits since it was last updated. Seen from a task branch it is judged on the history
-  # of the remote's default branch (up to where this branch shares it), so the task's own commits never
-  # count, wherever the branch was merged since. Without a known default branch, the commits that are on
-  # no base are subtracted instead.
-  local r n own_in target=""
-  if [ "$HM_TASK_BRANCH" = "yes" ] && [ -n "$HM_DEFAULT_BRANCH" ]; then
-    target="$(git -C "$HM_ROOT" merge-base HEAD "origin/$HM_DEFAULT_BRANCH" 2>/dev/null)"
-  fi
+  # Project memory: commits since it was last updated, measured where it lives: on a base branch (or on a
+  # branch that could not be classified, or a detached HEAD). From a task branch it is NOT measured: which
+  # of the commits below belong to the base depends on where the branch comes from, and every way of
+  # deciding that gave a wrong number in some workflow. No number is better than a wrong one.
+  local r n
   if [ "$HM_MEM" = "present" ] && [ "$HM_SHALLOW" != "yes" ]; then
     hm_refs "$HM_MEM_DIR/PROJECT_STATE.md" firstparent
     HM_SAVED="$HM_OUT_SAVED"
-    # The default branch's history is the yardstick only when the memory lives on it: the commit that last
-    # updated the file must be part of that history. A memory kept on another base (develop) is judged the
-    # other way, or it would always read as current.
-    if [ -z "$HM_OUT_LAST" ] || ! git -C "$HM_ROOT" merge-base --is-ancestor "$HM_OUT_LAST" "${target:-HEAD}" 2>/dev/null; then target=""; fi
-    for r in $HM_OUT_REFS; do
-      if [ -n "$target" ]; then
-        n="$(hm_work "$r".."$target")"
-      else
-        n="$(hm_work "$r"..HEAD)"
-        if [ "$HM_TASK_BRANCH" = "yes" ] && [ -n "$HM_BASES" ] && hm_is_number "$n" && [ "$n" -lt "$HM_COUNT_CAP" ]; then
-          own_in="$(hm_work "$r"..HEAD --not $HM_BASES)"
-          hm_is_number "$own_in" && n=$((n - own_in))
-        fi
+    if [ "$HM_TASK_BRANCH" != "yes" ]; then
+      for r in $HM_OUT_REFS; do HM_BEHIND="$(hm_min "$HM_BEHIND" "$(hm_work "$r"..HEAD)")"; done
+      if hm_is_number "$HM_BEHIND"; then
+        if [ "$HM_BEHIND" -ge "$HM_STALE_COMMITS" ]; then HM_STALE="yes"; else HM_STALE="no"; fi
       fi
-      HM_BEHIND="$(hm_min "$HM_BEHIND" "$n")"
-    done
-    if hm_is_number "$HM_BEHIND"; then
-      if [ "$HM_BEHIND" -ge "$HM_STALE_COMMITS" ]; then HM_STALE="yes"; else HM_STALE="no"; fi
     fi
   fi
 
@@ -280,10 +264,19 @@ hm_status() {
     # The branch's own commits, counted two ways and the larger kept, because each way has a blind spot:
     #  - commits that are on no base branch: blind to work that was merged or fast-forwarded into a local base;
     #  - for a branch that is not on the remote, commits made since it was created on this machine (oldest
-    #    reflog entry), minus those the remote bases have (a rebase or a merge brings a teammate's commits
-    #    into that range): blind when the branch was created after the work, or when the reflog expired.
+    #    reflog entry), minus those of the bases it was rebased on or that were merged into it: blind when
+    #    the branch was created after the work, or when the reflog expired.
+    # Known limit: commits made on a local base before a branch is created from it stay that base's.
     local obases="" b own_r="?" work_r="?" own_n="?" work_n="?"
-    for b in $HM_BASES; do case "$b" in origin/*) obases="$obases $b" ;; esac; done
+    # Subtracted from the reflog range: the remote bases, and a local base unless it contains HEAD (a local
+    # main the branch was rebased on holds base commits; a local staging the branch was merged into holds
+    # the branch's own).
+    for b in $HM_BASES; do
+      case "$b" in
+        origin/*) obases="$obases $b" ;;
+        *) git -C "$HM_ROOT" merge-base --is-ancestor HEAD "$b" 2>/dev/null || obases="$obases $b" ;;
+      esac
+    done
     [ "$onremote" = "no" ] && created="$(git -C "$HM_ROOT" reflog show --format=%H "refs/heads/$HM_BRANCH" 2>/dev/null | tail -1)"
     if [ -n "$created" ] && git -C "$HM_ROOT" merge-base --is-ancestor "$created" HEAD 2>/dev/null; then
       own_r="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD ${obases:+--not $obases} 2>/dev/null || printf '?')"
@@ -333,7 +326,7 @@ hm_status() {
       # Its own commits that are on no remote branch at all: they exist on this machine only. Same two
       # counts as above, the larger kept.
       local lo_r="?" lo_n="?"
-      [ -n "$created" ] && lo_r="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD --not --remotes 2>/dev/null || printf '?')"
+      [ -n "$created" ] && lo_r="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD --not --remotes $HM_OBASES 2>/dev/null || printf '?')"
       if [ -n "$HM_BASES" ] && [ "$HM_SHALLOW" != "yes" ]; then
         lo_n="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" HEAD --not $HM_BASES --remotes 2>/dev/null || printf '?')"
       fi
