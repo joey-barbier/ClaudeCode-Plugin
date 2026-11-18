@@ -1,27 +1,39 @@
 #!/bin/bash
-# Pre-compact hook: remind Claude to save memory before context is compressed.
-# Context compaction means conversation history will be summarized, so saving now is critical.
+# PreCompact hook: the conversation is about to be summarized, so what is not in the memory files may be lost.
+# Says which file is behind, measured against the code, instead of a generic reminder.
 
-MEMORY_DIR=".claude/memory"
+. "$(dirname "$0")/lib.sh"
+cat >/dev/null 2>&1
+hm_status
 
-# No memory dir = nothing to save
-if [ ! -d "$MEMORY_DIR" ]; then
-  exit 0
-fi
+[ "$HM_KIND" = "repo" ] || exit 0
+[ "$HM_MEM" = "present" ] || exit 0
+[ "$HM_TASK_BRANCH" = "detached" ] && exit 0
 
-# Check if memory files exist
-if [ ! -f "$MEMORY_DIR/PROJECT_STATE.md" ]; then
-  exit 0
-fi
+BR="$(hm_clean "$HM_BRANCH")"
+DIRTY=""; [ "$HM_DIRTY" -gt 0 ] 2>/dev/null && DIRTY=" and there are uncommitted changes"
+gap() {   # <count> -> "is 3 commits behind" | "may be behind (freshness unknown)" | "" when current
+  if hm_is_number "$1"; then [ "$1" -gt 0 ] && echo "is $1 commits behind"; else echo "may be behind (freshness unknown)"; fi
+}
 
-# Check if there's meaningful session work to save
-GIT_CHANGES=$(git diff --stat HEAD 2>/dev/null | tail -1)
-GIT_NEW_COMMITS=$(git log --oneline --since="2 hours ago" 2>/dev/null | wc -l | tr -d ' ')
-
-if [ -n "$GIT_CHANGES" ] || [ "$GIT_NEW_COMMITS" -gt 0 ]; then
-  echo "IMPORTANT: Context is about to be compacted. Run /horka-memory:horka-memory-save NOW to persist session progress before context is lost. ($GIT_NEW_COMMITS recent commits, changes: $GIT_CHANGES)"
+if [ "$HM_TASK_BRANCH" = "yes" ]; then
+  case "$HM_TASK_FILE" in
+    absent)
+      # Only when the branch has work of its own or uncommitted changes: otherwise there is no stopping point to write down.
+      if [ "$HM_HAS_WORK" != "no" ] || [ -n "$DIRTY" ]; then
+        echo "IMPORTANT: context is about to be compacted and branch $BR has no task file. Run /horka-memory:horka-memory-save NOW so the stopping point of this task is written down."
+      fi ;;
+    present)
+      G="$(gap "$HM_TASK_BEHIND")"
+      if [ -n "$G" ] || [ -n "$DIRTY" ]; then
+        echo "IMPORTANT: context is about to be compacted. The task file of $BR ${G:-is current}$DIRTY. Run /horka-memory:horka-memory-save NOW."
+      fi ;;
+    closed) ;;
+  esac
 else
-  echo "Context compaction starting. Memory files exist at $MEMORY_DIR/ but no significant git changes detected since last save."
+  G="$(gap "$HM_BEHIND")"
+  if [ -n "$G" ] || [ -n "$DIRTY" ]; then
+    echo "IMPORTANT: context is about to be compacted. Project memory ${G:-is current}$DIRTY. Run /horka-memory:horka-memory-save NOW."
+  fi
 fi
-
 exit 0

@@ -22,7 +22,7 @@ Luego `/plugin` → pestaña **Discover** para explorar, o instala plugins indiv
 |---|---|---|
 | **[horka-mentor](#horka-mentor)** | IA pedagogica para devs juniors: evalua, ensena, construye paso a paso, sigue el progreso | 2 skills |
 | **[horka-setup](#horka-setup)** | `CLAUDE.md` personalizado + docs de arquitectura + extractor de design system | 3 skills |
-| **[horka-memory](#horka-memory)** | Memoria de proyecto persistente entre sesiones | 1 skill |
+| **[horka-memory](#horka-memory)** | Memoria de proyecto persistente entre sesiones, con traspaso por tarea entre desarrolladores | 3 skills + hooks |
 | **[horka-review](#horka-review)** | Antagonist + Tech Lead code review | agent + 2 skills + hook |
 | **[horka-dev-workflow](#horka-dev-workflow)** | Metodología dev + seguridad git | agent + 2 skills + hook |
 | **[horka-analytics](#horka-analytics)** | Experto en tracking / funnels SaaS | agent |
@@ -52,7 +52,7 @@ claude plugin install horka-setup
 claude plugin install horka-memory
 ```
 
-Restaura automáticamente el contexto del proyecto al iniciar sesión. `/horka-memory:horka-memory-restore` para inicializar en un nuevo proyecto — escanea tu codebase y crea los archivos PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS, COMMANDS.
+Al iniciar sesión, anuncia la memoria del proyecto y, en una rama base, cuántos commits lleva de retraso respecto al código. `/horka-memory:horka-memory-restore` inicializa un nuevo proyecto — escanea tu codebase y crea los archivos PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS, COMMANDS. En una rama de tarea, `/horka-memory:horka-memory-save` mantiene una ficha de tarea (punto de parada, siguientes pasos, cómo verificar) en `.claude/memory/in-progress/`, para que otro desarrollador retome el trabajo solo con el repositorio. `/horka-memory:horka-memory-close` promueve lo que debe perdurar y elimina la ficha antes de la fusión.
 
 ### 3. Elige las herramientas abajo
 

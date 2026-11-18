@@ -22,7 +22,7 @@ Dann `/plugin` → **Discover** Tab zum Durchsuchen, oder installiere Plugins ei
 |---|---|---|
 | **[horka-mentor](#horka-mentor)** | Padagogische KI fur Junior-Devs: bewertet, lehrt, baut Schritt fur Schritt, verfolgt Fortschritt | 2 Skills |
 | **[horka-setup](#horka-setup)** | Personalisierte `CLAUDE.md` + Architektur-Docs + Design System Extraktor | 3 Skills |
-| **[horka-memory](#horka-memory)** | Persistente Projekt-Memory zwischen Sitzungen | 1 Skill |
+| **[horka-memory](#horka-memory)** | Persistente Projekt-Memory zwischen Sitzungen, mit Übergabe pro Aufgabe zwischen Entwicklern | 3 Skills + Hooks |
 | **[horka-review](#horka-review)** | Antagonist + Tech Lead Code Review | Agent + 2 Skills + Hook |
 | **[horka-dev-workflow](#horka-dev-workflow)** | Dev-Methodik + Git-Sicherheit | Agent + 2 Skills + Hook |
 | **[horka-analytics](#horka-analytics)** | SaaS Tracking / Funnel Experte | Agent |
@@ -52,7 +52,7 @@ claude plugin install horka-setup
 claude plugin install horka-memory
 ```
 
-Stellt automatisch den Projektkontext bei Sitzungsbeginn wieder her. `/horka-memory:horka-memory-restore` zur Initialisierung in einem neuen Projekt — scannt deine Codebase und erstellt PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS, COMMANDS Dateien.
+Meldet bei Sitzungsbeginn die Projekt-Memory und, auf einem Basis-Branch, wie viele Commits sie hinter dem Code liegt. `/horka-memory:horka-memory-restore` initialisiert ein neues Projekt — scannt deine Codebase und erstellt PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS, COMMANDS Dateien. Auf einem Aufgaben-Branch führt `/horka-memory:horka-memory-save` eine Aufgabendatei (Haltepunkt, nächste Schritte, Prüfbefehl) in `.claude/memory/in-progress/`, damit ein anderer Entwickler die Arbeit allein aus dem Repository übernehmen kann. `/horka-memory:horka-memory-close` übernimmt, was bleiben soll, und entfernt die Aufgabendatei vor dem Merge.
 
 ### 3. Wähle die Tools unten
 
