@@ -15,14 +15,15 @@ hm_status
 
 FLAGS=""; PARTS=""
 flag() { FLAGS="${FLAGS}${FLAGS:+,}$1"; PARTS="${PARTS}${PARTS:+, }$2"; }
+many() { if hm_is_number "$1" && [ "$1" -ge "$HM_COUNT_CAP" ]; then echo "more than $HM_COUNT_CAP"; else echo "$1"; fi; }
 BR="$(hm_clean "$HM_BRANCH")"
 
 if [ "$HM_TASK_BRANCH" = "yes" ]; then
   HAS_WORK="no"
   if hm_is_number "$HM_AHEAD"; then [ "$HM_AHEAD" -gt 0 ] && HAS_WORK="yes"; else HAS_WORK="yes"; fi
   case "$HM_TASK_FILE" in
-    absent) [ "$HAS_WORK" = "yes" ] && flag "task-missing" "no task file for $HM_AHEAD commits of work" ;;
-    present) [ "$HM_TASK_STALE" = "yes" ] && flag "task-stale" "task file $HM_TASK_BEHIND commits behind" ;;
+    absent) [ "$HAS_WORK" = "yes" ] && flag "task-missing" "no task file for $(many "$HM_AHEAD") commits of work" ;;
+    present) [ "$HM_TASK_STALE" = "yes" ] && flag "task-stale" "task file $(many "$HM_TASK_BEHIND") commits behind" ;;
     closed) ;;                               # closed and waiting for its merge: do not ask for a new task file
   esac
   case "$HM_UNPUSHED" in
@@ -33,14 +34,20 @@ if [ "$HM_TASK_BRANCH" = "yes" ]; then
   WHERE="branch $BR"
   HINT="Run /horka-memory:horka-memory-save, then push, so someone else can take over."
 else
-  [ "$HM_STALE" = "yes" ] && flag "memory-stale" "project memory $HM_BEHIND commits behind"
+  [ "$HM_STALE" = "yes" ] && flag "memory-stale" "project memory $(many "$HM_BEHIND") commits behind"
   [ -n "$HM_LEFTOVER" ] && flag "leftover" "task folders left after merge: $HM_LEFTOVER"
   WHERE="$BR"
   HINT="Run /horka-memory:horka-memory-save."
 fi
-[ "$HM_DIRTY" -gt 0 ] 2>/dev/null && [ -n "$FLAGS" ] && flag "dirty" "$HM_DIRTY files uncommitted"
-[ "$HM_DIRTY" -gt 0 ] 2>/dev/null && [ -z "$FLAGS" ] && [ "$HM_TASK_BRANCH" = "yes" ] && [ "$HM_TASK_FILE" != "closed" ] \
-  && flag "dirty" "$HM_DIRTY files uncommitted on a task branch"
+if [ "$HM_DIRTY" -gt 0 ] 2>/dev/null; then
+  if [ -n "$FLAGS" ]; then
+    flag "dirty" "$HM_DIRTY files uncommitted"
+  elif [ "$HM_TASK_BRANCH" = "yes" ] && [ "$HM_TASK_FILE" != "closed" ]; then
+    # Nothing else is wrong: a save would not help, so the hint is its own.
+    flag "dirty" "$HM_DIRTY files uncommitted on a task branch"
+    HINT="Commit or stash them so they are not lost."
+  fi
+fi
 
 STATE_DIR="$(hm_state_dir)" || exit 0        # no safe place to remember what was said: stay silent rather than nag
 STATE="$STATE_DIR/stop-$SESSION"

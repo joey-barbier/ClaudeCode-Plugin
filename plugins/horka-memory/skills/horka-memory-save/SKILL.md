@@ -31,6 +31,7 @@ Run `bash "<this skill's base directory>/../../scripts/memory-status.sh"`. Below
 | `task_branch: yes` | Step 3 (task file). |
 | `task_file: closed` | The task was closed and waits for its merge. Review fixes need no task file: if they change what was promoted, correct the project files directly (they are this branch's until the merge) and say so. If the task is reopened, create `TASK.md` again (Step 3). |
 | `task_branch: detached` | Stop: no branch is checked out. Ask the user to return to their branch. |
+| `task_branch: unknown` | No base branch in this clone to compare with. Ask the user whether this branch is a task (Step 3) or the project's main line (Step 2); do not guess. |
 
 What happened since the last save: `git log --oneline <saved commit>..HEAD`, `git status`, `git diff --stat <saved commit>..HEAD` (no marker: the last 20 commits). Run the project's check command (tests) so the state you write is measured. Add, from the conversation: decisions with their reason, approaches tried and dropped, items waiting on a person.
 
@@ -51,7 +52,7 @@ Replace the marker ending `PROJECT_STATE.md` with `<!-- memory-saved: <head> <to
 Everything goes in `<task_dir>` (`.claude/memory/in-progress/<task-id>/`); two people saving on two branches must never edit the same file.
 
 - **TASK.md**: create it from `references/task-template.md`, or update it. Every section must be true now. "Stopped at" names the exact point: file and function being edited, the failing test, the command that errors and its message.
-- **DECISIONS.md** (same folder): decisions taken for this task, with rationale and date. `horka-memory-close` promotes the lasting ones.
+- **DECISIONS.md** (same folder), only when there is a decision to record: decisions taken for this task, with rationale and date. `horka-memory-close` promotes the lasting ones. No empty placeholder file.
 - Do not write the push state into the file (it is wrong after the next commit); it goes in the report.
 
 Replace the marker ending `TASK.md` with `<!-- memory-saved: <head> <today> -->`.
@@ -65,7 +66,7 @@ git add .claude/memory
 git commit -m "update(memory) - <what the save records>" -- .claude/memory   # use the project's commit convention when CLAUDE.md gives one
 ```
 
-No attribution trailer in the message. Then run the status script again: if `unpushed` is not `0` (a count, or `not-on-remote`) or `uncommitted` is not `0`, say it plainly: work that is not on the remote cannot be taken over by anyone else.
+No attribution trailer in the message. Then run the status script again. If `unpushed` is not `0` (a count, or `not-on-remote`), list every local-only commit by hash and subject (`git log --oneline origin/<branch>..HEAD`, or `<base>..HEAD` when the branch is not on the remote): the memory commit and each work commit. If `uncommitted` is not `0`, name the files. Say it plainly: work that is not on the remote cannot be taken over by anyone else.
 
 ## Step 5: Report
 
@@ -74,7 +75,7 @@ No attribution trailer in the message. Then run the status script again: if `unp
 
 **Where**: [project memory | task <task-id> on <branch>]
 **Files**: [file: what changed]
-**Commit**: [hash], [pushed | NOT pushed: n commits local only, listed]
+**Commit**: [hash], [pushed | NOT pushed: each local-only commit, hash and subject]
 **Stopped at**: [one line]
 **Next**: [the first thing the next person does]
 ```

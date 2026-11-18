@@ -11,7 +11,7 @@ hm_status
 MSG=""
 add() { MSG="${MSG}${MSG:+
 }$1"; }
-BR="$(hm_clean "$HM_BRANCH")"
+BR="\`$(hm_clean "$HM_BRANCH")\`"     # shown as a name, in backticks, never as a sentence
 
 behind_text() {   # <count> -> "12 commits behind" | "freshness unknown (...)"
   if hm_is_number "$1"; then
@@ -42,7 +42,11 @@ EOF2
           add "No project memory in this repository (.claude/memory/ is empty). Use the horka-memory:horka-memory-restore skill to initialize it before working on the project."
         fi ;;
       partial)
-        add "Project memory in .claude/memory/ is incomplete (no PROJECT_STATE.md). Use horka-memory:horka-memory-restore, which creates the missing files." ;;
+        if [ "$HM_TASK_BRANCH" = "yes" ]; then
+          add "Project memory in .claude/memory/ is incomplete (no PROJECT_STATE.md). The missing files are created from a base branch, not from task branch $BR: say so if the work needs them."
+        else
+          add "Project memory in .claude/memory/ is incomplete (no PROJECT_STATE.md). Use horka-memory:horka-memory-restore, which creates the missing files."
+        fi ;;
       present)
         if [ "$HM_STALE" = "yes" ]; then
           add "Project memory found in .claude/memory/ but it is $(behind_text "$HM_BEHIND") the code. Treat it as outdated: the code wins. Use horka-memory:horka-memory-restore, which will say what to refresh."
@@ -57,7 +61,10 @@ EOF2
           yes:absent)
             add "Branch $BR has no task file yet (.claude/memory/in-progress/$HM_TASK_ID/TASK.md). horka-memory:horka-memory-save creates it at the first milestone." ;;
           no:*)
-            [ -n "$HM_LEFTOVER" ] && add "Task folders were left in .claude/memory/in-progress/ on $BR: $HM_LEFTOVER. They should have been closed before the merge (horka-memory:horka-memory-close)." ;;
+            # The count only: a folder name is somebody else's text and does not belong in the assistant's context.
+            [ "$HM_LEFTOVER_COUNT" -gt 0 ] && add "$HM_LEFTOVER_COUNT task folder(s) were left in .claude/memory/in-progress/ on $BR. They should have been closed before the merge (horka-memory:horka-memory-close lists them)." ;;
+          unknown:*)
+            add "Branch $BR cannot be classified (no base branch in this clone to compare with): nothing is assumed about a task." ;;
         esac ;;
     esac
     ;;

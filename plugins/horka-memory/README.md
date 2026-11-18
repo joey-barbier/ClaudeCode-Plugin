@@ -28,7 +28,7 @@ The task id is the branch name with `/` replaced by `-` (a short hash is added w
 | Stop | One line to the user when work would be lost if nobody came back: task file behind, commits not pushed, branch not on the remote, uncommitted files. At most once per kind of finding every 30 minutes per session. |
 | PreCompact | Which memory file is behind before the conversation is summarized. |
 
-Freshness is measured in commits that changed something other than the memory itself, merge commits excluded. A shallow clone cannot be measured and is reported as unknown.
+Freshness is measured in commits that changed something other than the memory itself, merge commits excluded, and stops counting at 1,000. A shallow clone cannot be measured and is reported as unknown. Each hook has a 10 second timeout.
 
 ## Settings
 
@@ -36,14 +36,14 @@ Set these in the `env` of your Claude Code settings so the hooks see them.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `HORKA_MEMORY_BASE_BRANCHES` | `main master develop dev integration staging trunk` | Branches that are never a task. The remote's default branch, `release/*` and a repository's only branch are always bases. Add yours, e.g. `main production`. |
+| `HORKA_MEMORY_BASE_BRANCHES` | `main master develop dev integration staging trunk` | Branches that are never a task. The remote's default branch and `release/*` are always bases. Add yours, e.g. `main production`. A branch with no base to compare with (single-branch clone, a project with one line of work) is reported as `unknown` and nothing is assumed about a task. |
 | `HORKA_MEMORY_STALE_COMMITS` | `20` | Project memory is called stale from this many commits behind. |
 | `HORKA_MEMORY_TASK_STALE_COMMITS` | `3` | Same for a task file. |
 | `HORKA_MEMORY_REMIND_SECONDS` | `1800` | Delay before the stop check repeats the same finding. |
 
 ## Keeping task memory off the base branch
 
-`scripts/check-in-progress.sh` fails when anything is left in `.claude/memory/in-progress/`. The CI step to add to a project is in `skills/horka-memory-close/references/ci-check.md`. To let two branches add lines to the same memory file without a merge conflict, add `.claude/memory/*.md merge=union` to `.gitattributes`.
+`scripts/check-in-progress.sh` fails when anything is left in `.claude/memory/in-progress/`. The CI step to add to a project is in `skills/horka-memory-close/references/ci-check.md`. Two tasks closed in parallel can conflict when both add a row to the decisions table; `.claude/memory/DECISIONS.md merge=union` in `.gitattributes` avoids it (not for the other files: a line corrected on one side would be kept twice).
 
 ## Tests
 

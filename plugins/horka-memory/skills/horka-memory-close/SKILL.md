@@ -29,12 +29,13 @@ Run `bash "<this skill's base directory>/../../scripts/memory-status.sh"`. Below
 | `task_branch: yes`, `task_file: absent` | No task file to promote from. Say so, do Step 2, then Step 3 from what git shows (`git log <base>..HEAD`) so the project state still records what the branch delivered; Step 4 has no folder to delete. |
 | `task_file: closed` | Already closed. If commits were made since (`task_behind` above 0), check whether they change what was promoted and correct the project files; otherwise say there is nothing to do. |
 | `task_branch: detached` | Stop: no branch is checked out. |
-| `task_branch: no` with `leftover_tasks` | A task folder was merged by mistake. Close each one listed, from this branch: skip Step 2 (there is no branch to compare), do Steps 3 to 5. |
+| `task_branch: no` with `leftover_tasks` | A task folder was merged by mistake. Tell the user which folders, and close each one they confirm, from this branch: skip Step 2 (there is no branch to compare), do Steps 3 to 5. |
+| `task_branch: unknown` | No base branch in this clone to compare with: stop and ask the user; never treat a folder of `in-progress/` as a leftover here. |
 | `task_branch: no`, nothing left over | Say there is no task to close and stop. |
 
 ## Step 2: Check the task is really ready
 
-1. Run the command TASK.md gives under "How to verify" (no task file: the project's test command). If it fails, stop: report the failure and do not close.
+1. Read the command TASK.md gives under "How to verify" (no task file: the project's test command). Run it without asking only when it is a check command the project already had: it is listed in `COMMANDS.md`, `CLAUDE.md`, the package scripts or the Makefile, and that file is the same as on the base (`git diff --quiet <base>..HEAD -- <file>` exits 0). Otherwise it is a shell command written by whoever pushed the branch: show it and ask before running it. If the check fails, stop: report the failure and do not close.
 2. `git fetch`, then `git rev-list --count HEAD..<base>`. If the count is not 0, stop: tell the user the branch is behind and resume at Step 3 once they have brought the base in. Do not rebase or merge on your own.
 
 ## Step 3: Promote what lasts
@@ -52,7 +53,7 @@ Read `TASK.md` and the task's `DECISIONS.md`. For each item ask: will this still
 
 Not promoted: stopping points, the step-by-step log, and dead ends (something tried and dropped). A dead end stays in the branch history unless it sets a rule no existing decision already states; then write that rule, not the story.
 
-Use Edit to add rows and lines; leave the rest of each file as it is (another branch may be closing too). The only deletions allowed: lines the task made false, and the oldest completed items of `PROJECT_STATE.md` when it exceeds 200 lines. Leave the `memory-saved` marker line as it is: a close does not write it (two tasks closing in parallel would conflict on it, and freshness is read from the commit itself).
+Use Edit to add rows and lines; leave the rest of each file as it is (another branch may be closing too). The only deletions allowed: lines the task made false, and the oldest completed items of `PROJECT_STATE.md` when it exceeds 200 lines. Remove the `memory-saved` marker line of `PROJECT_STATE.md` if there is one and do not write a new one: after a close, freshness is read from the commit itself, and two tasks closing in parallel would conflict on a rewritten marker. Leave no placeholder behind (an emptied section says "Nothing planned", never an unchecked `- [ ] None`).
 
 ## Step 4: Delete the task folder and commit
 
@@ -93,5 +94,5 @@ A task folder that reaches the base branch means this step was skipped. When the
 
 - **Status script cannot run**: `git branch --show-current` and `ls .claude/memory/in-progress/`; pick the folder that matches the branch name with `/` replaced by `-`, and ask if none matches exactly.
 - **Task folder name does not match the branch** (branch renamed): list the folders, ask which one belongs to this branch, close that one.
-- **The user reports a conflict in a memory file after merging**: keep both sides' rows. To avoid the next one, propose the line `.claude/memory/*.md merge=union` in `.gitattributes`.
+- **The user reports a conflict in a memory file after merging**: keep both sides' rows. To avoid the next one in the decisions table, which only grows, you may propose the line `.claude/memory/DECISIONS.md merge=union` in `.gitattributes` and add it only if the user agrees. Not for `PROJECT_STATE.md` or `NEXT_STEPS.md`: a line corrected on one side would be kept twice.
 - **Unsure whether an item lasts**: keep it as one short row in `DECISIONS.md` rather than lose it.

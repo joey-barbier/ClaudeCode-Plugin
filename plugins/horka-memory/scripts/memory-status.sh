@@ -24,9 +24,9 @@ if [ "$HM_KIND" = "repo" ]; then
     echo "behind: $HM_BEHIND"               # commits since the memory was last updated, memory-only commits not counted
     echo "stale: $HM_STALE"                 # yes when behind >= $HM_STALE_COMMITS
   fi
-  echo "task_branch: $HM_TASK_BRANCH"       # yes | no (a base branch) | detached
+  echo "task_branch: $HM_TASK_BRANCH"       # yes | no (a base branch) | detached | unknown (no base branch in this clone to compare with)
   if [ "$HM_TASK_BRANCH" = "yes" ]; then
-    echo "base: $HM_BASE_REF"               # the base this branch is measured against
+    echo "base: ${HM_BASE_REF:-unknown}"    # the base this branch is measured against
     echo "task_id: $HM_TASK_ID"
     echo "task_dir: .claude/memory/in-progress/$HM_TASK_ID"
     echo "task_file: $HM_TASK_FILE"         # present | absent | closed (deleted by a close on this branch)
@@ -35,7 +35,7 @@ if [ "$HM_KIND" = "repo" ]; then
       echo "task_behind: $HM_TASK_BEHIND"   # this branch's own commits since the task file was written (or closed)
       echo "task_stale: $HM_TASK_STALE"     # yes when task_behind >= $HM_TASK_STALE_COMMITS
     fi
-    echo "ahead_of_base: $HM_AHEAD"
+    echo "ahead_of_base: $HM_AHEAD"         # this branch's own work commits (merges and memory-only commits left out)
     echo "unpushed: $HM_UNPUSHED"           # a count | not-on-remote (never pushed, or deleted there) | n/a (no remote)
   elif [ "$HM_TASK_BRANCH" = "no" ]; then
     [ -n "$HM_LEFTOVER" ] && echo "leftover_tasks: $HM_LEFTOVER"
