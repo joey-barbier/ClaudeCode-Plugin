@@ -292,6 +292,12 @@ hasnt "and session start does not call its folder a leftover" "$(start)" "left i
 cd "$WORK/r8" || exit 1
 git init -q -b main "$WORK/r9"; cd "$WORK/r9" || exit 1; commit code.txt init; memory; git checkout -q -b feature/local; commits 2
 hasnt "no remote at all: nothing is said about pushing" "$(stop n2)" "remote"
+is    "and the machine-only count does not apply" "$(field local_only)" "n/a"
+mkdir -p .claude/memory/in-progress/feature-local
+printf '# Task\n<!-- task-base: main -->\n' > .claude/memory/in-progress/feature-local/TASK.md
+is    "without a remote, a recorded base resolves to the local branch" "$(field base)" "main"
+is    "and counts as recorded" "$(field base_source)" "recorded"
+rm -rf .claude/memory/in-progress
 
 echo "the base recorded in the task file beats the guess"
 new_repo r10; memory; git push -q
@@ -306,6 +312,22 @@ is    "a teammate merging the branch into staging does not move its base" "$(fie
 is    "so the task file is still 7 commits behind" "$(field task_behind)" "7"
 has   "and the stop hook still says it" "$(stop q1)" "task file 7 commits behind"
 has   "session start too" "$(start)" "7 commits behind"
+sed -i.bak '/task-base/d' .claude/memory/in-progress/feature-q/TASK.md
+is    "a task file without the line: the guess skips a base the branch was merged into with a merge commit" "$(field base)" "origin/main"
+is    "so an older task file is still measured right" "$(field task_behind)" "7"
+is    "and its base is said to be a guess" "$(field base_source)" "guessed"
+git checkout -q .
+printf 'we first thought task-base: staging was right\n' >> .claude/memory/in-progress/feature-q/TASK.md
+is    "a sentence that mentions task-base is not the record" "$(field base)" "origin/main"
+git checkout -q .
+sed -i.bak 's/task-base: main/task-base: HEAD/' .claude/memory/in-progress/feature-q/TASK.md
+is    "HEAD is not accepted as a recorded base" "$(field base_source)" "guessed"
+git checkout -q .
+git push -q origin HEAD:refs/heads/feature/q-base
+sed -i.bak 's/task-base: main/task-base: feature\/q-base/' .claude/memory/in-progress/feature-q/TASK.md
+is    "a recorded base that is not a base branch is flagged as such" "$(field base_kind)" "other"
+git checkout -q .
+is    "a recorded base branch is flagged as one" "$(field base_kind)" "base-branch"
 sed -i.bak 's/task-base: main/task-base: nope/' .claude/memory/in-progress/feature-q/TASK.md
 is    "a recorded base that does not exist falls back to the guess" "$(field base_source)" "guessed"
 sed -i.bak 's/task-base: nope/task-base: -x/' .claude/memory/in-progress/feature-q/TASK.md
@@ -318,9 +340,25 @@ git checkout -q -b staging2 main; git checkout -q feature/s
 HORKA_MEMORY_BASE_BRANCHES="main staging2"; export HORKA_MEMORY_BASE_BRANCHES
 git checkout -q staging2; git merge -q --no-ff --no-edit feature/s; git checkout -q feature/s
 OUT="$(stop q2)"
+is    "the status reports the commits that are on no remote branch" "$(field local_only)" "5"
 has   "work merged into a local base is still seen: no task file" "$OUT" "no task file"
 has   "and its commits exist on this machine only" "$OUT" "branch is not on the remote (5 commits on this machine only)"
 unset HORKA_MEMORY_BASE_BRANCHES
+git checkout -q feature/q; git rm -rq .claude/memory/in-progress/feature-q; git commit -qm "close task"; git push -q
+git checkout -q staging; git merge -q --no-ff --no-edit feature/q; git push -q; git checkout -q feature/q; git fetch -q
+is    "a closed task merged into staging with a merge commit is still seen as closed" "$(field task_file)" "closed"
+git checkout -q main; commits 3 unpushed-main.txt; git checkout -q -b feature/fresh-off-local-main
+empty "a fresh branch cut from a local base with unpushed commits is not told it has work" "$(stop q3)"
+is    "those commits are the base's, not the task's" "$(field local_only)" "0"
+new_repo r11; memory; git push -q; commits 12 upstream.txt     # local main is ahead of a stale origin/main
+git checkout -q -b feature/f; commits 2 f.txt
+mkdir -p .claude/memory/in-progress/feature-f; printf '# Task\n<!-- task-base: main -->\n' > .claude/memory/in-progress/feature-f/TASK.md
+is    "a recorded base resolves to the nearer of the local and the remote branch" "$(field base)" "main"
+is    "so the work of the branch is its own" "$(field ahead_of_base)" "2"
+git checkout -q -b develop main; git push -q -u origin develop; git checkout -q feature/f
+sed -i.bak 's/task-base: main/task-base: develop/' .claude/memory/in-progress/feature-f/TASK.md; rm -f .claude/memory/in-progress/feature-f/TASK.md.bak
+git push -q origin --delete develop; git fetch -q --prune
+is    "a recorded base that is gone from the remote is said to be missing there" "$(field base_source)" "recorded-missing"
 
 echo "a closed task waiting for its merge"
 cd "$WORK/r7" || exit 1; git checkout -q feature/login-form

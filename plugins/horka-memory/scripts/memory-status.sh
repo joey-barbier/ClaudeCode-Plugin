@@ -27,7 +27,8 @@ if [ "$HM_KIND" = "repo" ]; then
   echo "task_branch: $HM_TASK_BRANCH"       # yes | no (a base branch) | detached | unknown (no base branch in this clone to compare with)
   if [ "$HM_TASK_BRANCH" = "yes" ]; then
     echo "base: ${HM_BASE_REF:-unknown}"    # the base this branch is measured against
-    echo "base_source: ${HM_BASE_SOURCE:-none}"   # recorded (written in TASK.md by a save) | guessed (nearest base branch) | none
+    echo "base_source: ${HM_BASE_SOURCE:-none}"   # recorded (in TASK.md) | recorded-missing (recorded, gone from the remote) | guessed | none
+    echo "base_kind: ${HM_BASE_KIND:-other}"      # base-branch (default branch, release/*, a configured base) | other
     echo "task_id: $HM_TASK_ID"
     echo "task_dir: .claude/memory/in-progress/$HM_TASK_ID"
     echo "task_file: $HM_TASK_FILE"         # present | absent | closed (deleted by a close on this branch)
