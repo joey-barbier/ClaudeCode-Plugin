@@ -26,9 +26,6 @@ if [ "$HM_KIND" = "repo" ]; then
   fi
   echo "task_branch: $HM_TASK_BRANCH"       # yes | no (a base branch) | detached | unknown (no base branch in this clone to compare with)
   if [ "$HM_TASK_BRANCH" = "yes" ]; then
-    echo "base: ${HM_BASE_REF:-unknown}"    # the base this branch is measured against
-    echo "base_source: ${HM_BASE_SOURCE:-none}"   # recorded (in TASK.md) | recorded-missing (recorded, gone from the remote) | guessed | none
-    echo "base_kind: ${HM_BASE_KIND:-other}"      # base-branch (default branch, release/*, a configured base) | other
     echo "task_id: $HM_TASK_ID"
     echo "task_dir: .claude/memory/in-progress/$HM_TASK_ID"
     echo "task_file: $HM_TASK_FILE"         # present | absent | closed (deleted by a close on this branch)
@@ -37,9 +34,13 @@ if [ "$HM_KIND" = "repo" ]; then
       echo "task_behind: $HM_TASK_BEHIND"   # this branch's own commits since the task file was written (or closed)
       echo "task_stale: $HM_TASK_STALE"     # yes when task_behind >= $HM_TASK_STALE_COMMITS
     fi
-    echo "ahead_of_base: $HM_AHEAD"         # this branch's own work commits (merges and memory-only commits left out)
+    echo "base: ${HM_BASE_REF:-unknown}"    # the branch this task merges into, as a save recorded it in TASK.md | unknown: ask
+    echo "base_source: ${HM_BASE_SOURCE:-none}"   # recorded | recorded-missing (that branch is gone from the remote) | none
+    [ -n "$HM_BASE_REF" ] && echo "base_kind: $HM_BASE_KIND"     # base-branch (default branch, release/*, a configured base) | other
+    [ "$HM_BASE_LOCAL_DIFFERS" = "yes" ] && echo "base_local_differs: yes"   # the local branch of that name is not where the remote one is
+    echo "own_commits: $HM_OWN_WORK"        # this branch's own work commits (merges and memory-only commits left out)
     echo "unpushed: $HM_UNPUSHED"           # a count | not-on-remote (never pushed, or deleted there) | n/a (no remote)
-    echo "local_only: $HM_LOCAL_ONLY"       # commits that are on no remote branch at all | n/a (no remote)
+    echo "local_only: $HM_LOCAL_ONLY"       # own commits that are on no remote branch (for a branch that is not on the remote) | n/a
   elif [ "$HM_TASK_BRANCH" = "no" ]; then
     [ -n "$HM_LEFTOVER" ] && echo "leftover_tasks: $HM_LEFTOVER"
   fi

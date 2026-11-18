@@ -10,7 +10,7 @@ Project memory that lives in the repository, so a fresh clone is enough to know 
   in-progress/<task-id>/TASK.md  (+ DECISIONS.md)                               task: lives on its branch, removed before the merge
 ```
 
-The first save of a task writes the branch it merges into in `TASK.md` (`<!-- task-base: main -->`): from then on the task is measured against that base, whatever a teammate merges elsewhere. Until then the base is guessed: the nearest base branch, skipping one the branch was merged into with a merge commit. A branch fast-forwarded into another base before its first save is the remaining blind spot of the guess.
+No hook guesses which base a task branch comes from. A branch's own work is the commits that are on no base branch (for a branch that never left the machine: the commits made since it was created there); a task file is behind by the branch's own commits since it was written. The first save writes the branch the task merges into in `TASK.md` (`<!-- task-base: main -->`); only the skills use it, to check that the branch is up to date before a close, and they ask when it is missing.
 
 The task id is the branch name with `/` replaced by `-` (a short hash is added when the name holds characters a folder name should not; `feature/login` and `feature-login` share one id).
 

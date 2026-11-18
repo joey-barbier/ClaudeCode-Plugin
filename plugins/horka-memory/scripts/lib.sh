@@ -65,37 +65,29 @@ hm_default_branch() {
   git -C "$HM_ROOT" symbolic-ref --short -q refs/remotes/origin/HEAD 2>/dev/null | sed 's#^origin/##'
 }
 
-# Nearest base ref of the current branch (fewest commits between it and HEAD), or nothing.
-# Looks at origin/HEAD and at every base branch, remote then local, so a clone without origin/HEAD
-# or a branch cut from develop is still measured against the right base.
-# This is a guess, used only until the task file records the base (hm_task_base). Known limit of the
-# guess: a branch fast-forwarded into one of these bases (no merge commit) is measured against that one.
-hm_base_ref() {
-  local best="" bestn="" spare="" sparen="" mb c n cands=""
-  [ -n "$HM_DEFAULT_BRANCH" ] && cands="origin/$HM_DEFAULT_BRANCH"
-  for c in $HM_BASE_BRANCHES; do cands="$cands origin/$c $c"; done
-  for c in $cands; do
-    [ "$c" = "$HM_BRANCH" ] && continue
-    git -C "$HM_ROOT" rev-parse -q --verify "$c^{commit}" >/dev/null 2>&1 || continue
-    n="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$c"..HEAD 2>/dev/null)" || continue
-    # A base this branch was merged into with a merge commit (a staging, say) is not where it comes from:
-    # the point where the two meet is then off that base's first-parent line. Keep it only as a last resort.
-    mb="$(git -C "$HM_ROOT" merge-base HEAD "$c" 2>/dev/null)"
-    if [ -n "$mb" ] && ! git -C "$HM_ROOT" rev-list --first-parent --max-count="$HM_COUNT_CAP" "$c" 2>/dev/null | grep -q "^$mb\$"; then
-      if [ -z "$sparen" ] || [ "$n" -lt "$sparen" ]; then spare="$c"; sparen="$n"; fi
-      continue
-    fi
-    if [ -z "$bestn" ] || [ "$n" -lt "$bestn" ]; then best="$c"; bestn="$n"; fi
-  done
-  printf '%s' "${best:-$spare}"
-}
+hm_is_number() { case "$1" in ''|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
 
 hm_is_base_branch() {
   local b="$1" x
+  [ -n "$b" ] || return 1
   [ "$b" = "$HM_DEFAULT_BRANCH" ] && return 0
   case "$b" in release/*) return 0 ;; esac
   for x in $HM_BASE_BRANCHES; do [ "$b" = "$x" ] && return 0; done
   return 1
+}
+
+# Every base branch that exists in this clone, remote and local, except the current branch.
+# Nothing here chooses "the" base of a task: the hooks only ask whether a commit is on some base or on none.
+hm_base_refs() {
+  local c out="" cands=""
+  [ -n "$HM_DEFAULT_BRANCH" ] && cands="origin/$HM_DEFAULT_BRANCH"
+  for c in $HM_BASE_BRANCHES; do cands="$cands origin/$c $c"; done
+  for c in $cands; do
+    [ "$c" = "$HM_BRANCH" ] && continue
+    case " $out " in *" $c "*) continue ;; esac
+    git -C "$HM_ROOT" rev-parse -q --verify "$c^{commit}" >/dev/null 2>&1 && out="$out $c"
+  done
+  printf '%s' "${out# }"
 }
 
 # Prints "<hash> <date>" from the last marker line of a memory file, or nothing.
@@ -104,28 +96,23 @@ hm_marker() {
   grep -o 'memory-saved: [0-9a-f]\{7,40\} [0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}' "$1" 2>/dev/null | tail -1 | sed 's/^memory-saved: //'
 }
 
-# Base recorded in a task file by a save ("<!-- task-base: main -->"), resolved to a ref of this clone.
-# Sets HM_BASE_REF and HM_BASE_SOURCE (recorded | recorded-missing), or leaves both empty.
-# A recorded base replaces the guess of hm_base_ref: it does not move when a teammate merges the branch
-# into another base.
+# Base recorded in a task file by a save ("<!-- task-base: main -->" on a line of its own).
+# Sets HM_BASE_REF, HM_BASE_SOURCE (recorded | recorded-missing) and HM_BASE_LOCAL_DIFFERS, or leaves them empty.
+# Only the skills use it (is the branch up to date, may a check command run unasked): no hook depends on it.
 hm_task_base() {
-  local file="$1" name remote="" loc="" rn ln
-  HM_BASE_SOURCE=""
+  local file="$1" name remote="" loc=""
   [ -f "$file" ] || return 0
-  # Only a whole comment line counts: a sentence that mentions "task-base:" in the text of the file does not.
   name="$(sed -n 's/^<!-- task-base: \([A-Za-z0-9._/-]\{1,100\}\) -->[[:space:]]*$/\1/p' "$file" 2>/dev/null | tail -1)"
   case "$name" in ''|-*|*..*|HEAD|*/HEAD) return 0 ;; esac
   [ "$name" = "$HM_BRANCH" ] && return 0
   git -C "$HM_ROOT" rev-parse -q --verify "refs/remotes/origin/$name^{commit}" >/dev/null 2>&1 && remote="origin/$name"
   git -C "$HM_ROOT" rev-parse -q --verify "refs/heads/$name^{commit}" >/dev/null 2>&1 && loc="$name"
-  if [ -n "$remote" ] && [ -n "$loc" ]; then
-    # Both exist: take the one nearer to HEAD (a fork whose origin is behind the local branch, for instance).
-    rn="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$remote"..HEAD 2>/dev/null)"
-    ln="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$loc"..HEAD 2>/dev/null)"
-    if [ "${ln:-$HM_COUNT_CAP}" -lt "${rn:-$HM_COUNT_CAP}" ]; then HM_BASE_REF="$loc"; else HM_BASE_REF="$remote"; fi
-    HM_BASE_SOURCE="recorded"
-  elif [ -n "$remote" ]; then
+  if [ -n "$remote" ]; then
     HM_BASE_REF="$remote"; HM_BASE_SOURCE="recorded"
+    # The local branch of the same name points elsewhere (a stale fork, a local merge): the skills must ask which one counts.
+    if [ -n "$loc" ] && [ "$(git -C "$HM_ROOT" rev-parse "$loc" 2>/dev/null)" != "$(git -C "$HM_ROOT" rev-parse "$remote" 2>/dev/null)" ]; then
+      HM_BASE_LOCAL_DIFFERS="yes"
+    fi
   elif [ -n "$loc" ]; then
     HM_BASE_REF="$loc"
     # The remote exists but no longer has this branch (merged and deleted there): the record is stale.
@@ -133,56 +120,61 @@ hm_task_base() {
   fi
 }
 
-# Commits between <ref> and <target> that changed something other than the memory, not counting merge
-# commits nor those already on <exclude> (the base, for a task). Prints "?" when it cannot be measured.
-hm_count() {
-  local ref="$1" target="$2" exclude="$3" n all
-  [ -n "$ref" ] || { printf '?'; return 0; }
-  # A path-limited walk is the expensive part and --max-count does not shorten it. Count the plain range
-  # first (cheap): past the cap, say so and skip the path-limited walk.
-  all="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$ref".."$target" ${exclude:+"^$exclude"} 2>/dev/null)"
+# Number of non-merge commits in a rev-list selection that changed something other than the memory.
+# Usage: hm_work <rev-list arguments...>. Prints "?" when git cannot answer, the cap when the plain
+# selection is already that large (the path-limited walk is the expensive part and is skipped then).
+hm_work() {
+  local all n
+  all="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$@" 2>/dev/null)"
   [ -n "$all" ] || { printf '?'; return 0; }
   if [ "$all" -ge "$HM_COUNT_CAP" ]; then printf '%s' "$HM_COUNT_CAP"; return 0; fi
-  if [ -n "$exclude" ]; then
-    n="$(git -C "$HM_ROOT" rev-list --count --no-merges --max-count="$HM_COUNT_CAP" "$ref".."$target" "^$exclude" -- . ':(exclude).claude/memory' 2>/dev/null)"
-  else
-    n="$(git -C "$HM_ROOT" rev-list --count --no-merges --max-count="$HM_COUNT_CAP" "$ref".."$target" -- . ':(exclude).claude/memory' 2>/dev/null)"
-  fi
+  n="$(git -C "$HM_ROOT" rev-list --count --no-merges "$@" -- . ':(exclude).claude/memory' 2>/dev/null)"
   printf '%s' "${n:-?}"
 }
 
-# How far <file> is behind <target>. Two references are tried and the nearer one wins:
-# the marker written by the last save (only if that commit is an ancestor of the target: a rebase or a
-# foreign hash does not count), and the last commit that touched the file (first-parent on a base branch,
-# so a merged task that updated the memory resets the count whatever its marker says).
-# Sets HM_OUT_BEHIND ("?" when unknown) and HM_OUT_SAVED ("<hash> <date>" only when the marker is usable).
-hm_freshness() {
-  local file="$1" target="$2" exclude="$3" firstparent="$4" mark hash a b last
-  HM_OUT_BEHIND="?"; HM_OUT_SAVED=""
-  [ "$HM_SHALLOW" = "yes" ] && return 0      # a shallow clone cannot count: say unknown, never a number
-  mark="$(hm_marker "$file")"; hash="${mark%% *}"; a="?"; b="?"
-  if [ -n "$hash" ] && git -C "$HM_ROOT" merge-base --is-ancestor "$hash" "$target" 2>/dev/null; then
-    a="$(hm_count "$hash" "$target" "$exclude")"; HM_OUT_SAVED="$mark"
+# Reference commit a memory file was last updated against: the marker of the last save when that commit is
+# an ancestor of HEAD (a rebase or a foreign hash does not count), and the last commit that touched the file.
+# Sets HM_OUT_REFS (one or two commits, the marker first) and HM_OUT_SAVED ("<hash> <date>" when usable).
+hm_refs() {
+  local file="$1" firstparent="$2" mark hash last
+  HM_OUT_REFS=""; HM_OUT_SAVED=""
+  mark="$(hm_marker "$file")"; hash="${mark%% *}"
+  if [ -n "$hash" ] && git -C "$HM_ROOT" merge-base --is-ancestor "$hash" HEAD 2>/dev/null; then
+    HM_OUT_REFS="$hash"; HM_OUT_SAVED="$mark"
   fi
-  last="$(git -C "$HM_ROOT" log -1 ${firstparent:+--first-parent} --format=%H "$target" -- "$file" 2>/dev/null)"
-  [ -n "$last" ] && b="$(hm_count "$last" "$target" "$exclude")"
-  case "$a:$b" in
-    '?:?') ;;
-    '?:'*) HM_OUT_BEHIND="$b" ;;
-    *':?') HM_OUT_BEHIND="$a" ;;
-    *) if [ "$a" -le "$b" ]; then HM_OUT_BEHIND="$a"; else HM_OUT_BEHIND="$b"; fi ;;
-  esac
-  return 0
+  last="$(git -C "$HM_ROOT" log -1 ${firstparent:+--first-parent} --format=%H HEAD -- "$file" 2>/dev/null)"
+  [ -n "$last" ] && HM_OUT_REFS="$HM_OUT_REFS $last"
+  HM_OUT_REFS="${HM_OUT_REFS# }"
 }
 
-hm_is_number() { case "$1" in ''|*[!0-9]*) return 1 ;; *) return 0 ;; esac; }
+# Smallest of several counts, "?" when none is a number.
+hm_min() {
+  local best="?" v
+  for v in "$@"; do
+    hm_is_number "$v" || continue
+    if [ "$best" = "?" ] || [ "$v" -lt "$best" ]; then best="$v"; fi
+  done
+  printf '%s' "$best"
+}
+
+# How far a task file is behind, without knowing the base of the branch. Since <ref>, counts the commits
+# that are the branch's own: those on its first-parent line (work done here, wherever it was merged since),
+# plus those that are on no base branch (a colleague's commits pulled into this branch).
+hm_task_behind() {
+  local ref="$1" n
+  n="$( { git -C "$HM_ROOT" rev-list --no-merges --first-parent --max-count="$HM_COUNT_CAP" "$ref"..HEAD -- . ':(exclude).claude/memory' 2>/dev/null
+          [ -n "$HM_BASES" ] && git -C "$HM_ROOT" rev-list --no-merges --max-count="$HM_COUNT_CAP" "$ref"..HEAD --not $HM_BASES -- . ':(exclude).claude/memory' 2>/dev/null
+        } | sort -u | grep -c . )"
+  printf '%s' "${n:-?}"
+}
 
 hm_status() {
   HM_ROOT=""; HM_KIND="folder"; HM_REPOS=""; HM_REPO_COUNT=0; HM_SHALLOW="no"
   HM_MEM="absent"; HM_MEM_DIR=""; HM_SAVED=""; HM_BEHIND="?"; HM_STALE="unknown"
-  HM_BRANCH=""; HM_DEFAULT_BRANCH=""; HM_BASE_REF=""; HM_TASK_BRANCH="no"; HM_TASK_ID=""; HM_TASK_DIR=""
+  HM_BRANCH=""; HM_DEFAULT_BRANCH=""; HM_BASES=""; HM_TASK_BRANCH="no"; HM_TASK_ID=""; HM_TASK_DIR=""
+  HM_BASE_REF=""; HM_BASE_SOURCE=""; HM_BASE_KIND=""; HM_BASE_LOCAL_DIFFERS=""
   HM_TASK_FILE="absent"; HM_TASK_SAVED=""; HM_TASK_BEHIND="?"; HM_TASK_STALE="unknown"
-  HM_AHEAD="?"; HM_OWN="?"; HM_UNPUSHED="n/a"; HM_LOCAL_ONLY="n/a"; HM_BASE_SOURCE=""; HM_BASE_KIND=""; HM_DIRTY=0; HM_LEFTOVER=""; HM_LEFTOVER_COUNT=0
+  HM_OWN_WORK="?"; HM_OWN="?"; HM_CREATED=""; HM_UNPUSHED="n/a"; HM_LOCAL_ONLY="n/a"; HM_DIRTY=0; HM_LEFTOVER=""; HM_LEFTOVER_COUNT=0
 
   if HM_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" && [ -n "$HM_ROOT" ]; then
     HM_KIND="repo"
@@ -211,82 +203,99 @@ hm_status() {
   HM_BRANCH="$(git -C "$HM_ROOT" symbolic-ref --short -q HEAD 2>/dev/null)"
   HM_DEFAULT_BRANCH="$(hm_default_branch)"
   HM_DIRTY="$(git -C "$HM_ROOT" status --porcelain 2>/dev/null | head -200 | grep -c .)"
+  HM_BASES="$(hm_base_refs)"
 
-  local target="HEAD"
-  if [ -n "$HM_BRANCH" ] && ! hm_is_base_branch "$HM_BRANCH"; then
-    local own="$HM_MEM_DIR/in-progress/$(hm_task_id "$HM_BRANCH")/TASK.md"
-    hm_task_base "$own"
-    if [ -n "$HM_BASE_REF" ]; then
-      HM_TASK_BRANCH="yes"
-    else
-      HM_BASE_REF="$(hm_base_ref)"
-      if [ -n "$HM_BASE_REF" ]; then
-        HM_BASE_SOURCE="guessed"; HM_TASK_BRANCH="yes"
-      elif [ -f "$own" ]; then
-        HM_TASK_BRANCH="yes"    # no base in this clone (single-branch, shallow), but the branch carries its own task file
-      else
-        # No base to compare with and a name that is not a base name: it may be the project's only line of
-        # work or a task cloned alone. Do not guess: freshness is still measured, nothing is said about tasks.
-        HM_TASK_BRANCH="unknown"
+  # What kind of branch is this? Decided by its name and by whether its own task file is there, never by
+  # comparing refs: a base name is a base; any other branch is a task when the clone has a base branch to
+  # tell it apart from, or when it carries its own task file; otherwise it cannot be classified.
+  local own_file=""
+  if [ -z "$HM_BRANCH" ]; then
+    HM_TASK_BRANCH="detached"   # rebase, bisect, a commit checked out: no task, the project memory is still measured
+  elif ! hm_is_base_branch "$HM_BRANCH"; then
+    HM_TASK_ID="$(hm_task_id "$HM_BRANCH")"
+    HM_TASK_DIR="$HM_MEM_DIR/in-progress/$HM_TASK_ID"
+    own_file="$HM_TASK_DIR/TASK.md"
+    if [ -n "$HM_BASES" ] || [ -f "$own_file" ]; then HM_TASK_BRANCH="yes"; else HM_TASK_BRANCH="unknown"; HM_TASK_ID=""; HM_TASK_DIR=""; fi
+  fi
+
+  # Project memory: commits since it was last updated. Seen from a task branch, the task's own commits
+  # are left out (they are the task's business until its close).
+  local r n own_in
+  if [ "$HM_MEM" = "present" ] && [ "$HM_SHALLOW" != "yes" ]; then
+    hm_refs "$HM_MEM_DIR/PROJECT_STATE.md" firstparent
+    HM_SAVED="$HM_OUT_SAVED"
+    for r in $HM_OUT_REFS; do
+      n="$(hm_work "$r"..HEAD)"
+      if [ "$HM_TASK_BRANCH" = "yes" ] && [ -n "$HM_BASES" ] && hm_is_number "$n" && [ "$n" -lt "$HM_COUNT_CAP" ]; then
+        own_in="$(hm_work "$r"..HEAD --not $HM_BASES)"
+        hm_is_number "$own_in" && n=$((n - own_in))
       fi
-    fi
-  fi
-  # Detached HEAD (rebase, bisect, a commit checked out): no branch, so no task; the project memory is still measured.
-  [ -n "$HM_BRANCH" ] || HM_TASK_BRANCH="detached"
-
-  if [ "$HM_TASK_BRANCH" = "yes" ] && [ -n "$HM_BASE_REF" ]; then
-    # Seen from a task branch, the project memory is judged at the point the branch left its base.
-    target="$(git -C "$HM_ROOT" merge-base HEAD "$HM_BASE_REF" 2>/dev/null)"; [ -n "$target" ] || target="HEAD"
-  fi
-  if [ "$HM_MEM" = "present" ]; then
-    hm_freshness "$HM_MEM_DIR/PROJECT_STATE.md" "$target" "" firstparent
-    HM_SAVED="$HM_OUT_SAVED"; HM_BEHIND="$HM_OUT_BEHIND"
+      HM_BEHIND="$(hm_min "$HM_BEHIND" "$n")"
+    done
     if hm_is_number "$HM_BEHIND"; then
       if [ "$HM_BEHIND" -ge "$HM_STALE_COMMITS" ]; then HM_STALE="yes"; else HM_STALE="no"; fi
     fi
+  elif [ "$HM_MEM" = "present" ]; then
+    HM_SAVED=""                 # shallow clone: nothing can be counted, say unknown
   fi
 
   if [ "$HM_TASK_BRANCH" = "yes" ]; then
-    HM_TASK_ID="$(hm_task_id "$HM_BRANCH")"
-    HM_TASK_DIR="$HM_MEM_DIR/in-progress/$HM_TASK_ID"
-    local rel=".claude/memory/in-progress/$HM_TASK_ID/TASK.md" closed
-    if [ -f "$HM_TASK_DIR/TASK.md" ]; then
-      HM_TASK_FILE="present"
-      hm_freshness "$HM_TASK_DIR/TASK.md" HEAD "$HM_BASE_REF" ""
-      HM_TASK_SAVED="$HM_OUT_SAVED"; HM_TASK_BEHIND="$HM_OUT_BEHIND"
+    local rel=".claude/memory/in-progress/$HM_TASK_ID/TASK.md" closed="" created="" onremote="no"
+    git -C "$HM_ROOT" rev-parse -q --verify "refs/remotes/origin/$HM_BRANCH" >/dev/null 2>&1 && onremote="yes"
+
+    # The branch's own commits. A branch that is on the remote may have been created anywhere: its own
+    # commits are those on no base branch. A branch that never left this machine was created here, and
+    # its reflog still knows from where: everything since is its own, whatever was merged where since.
+    # (The reflog range is local history, so it is exact even in a shallow clone; the other count is not.)
+    [ "$onremote" = "no" ] && created="$(git -C "$HM_ROOT" reflog show --format=%H "refs/heads/$HM_BRANCH" 2>/dev/null | tail -1)"
+    if [ -n "$created" ] && git -C "$HM_ROOT" merge-base --is-ancestor "$created" HEAD 2>/dev/null; then
+      HM_OWN="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD 2>/dev/null || printf '?')"
+      HM_OWN_WORK="$(hm_work "$created"..HEAD)"
     else
-      # Closed and waiting for its merge: a commit of this branch deleted the task file. Only a committed
-      # deletion counts (a file removed from the working tree is just missing).
-      # Known limit: a close that had no task folder to delete leaves no trace and is not recognised.
-      closed=""
-      [ -n "$HM_BASE_REF" ] && closed="$(git -C "$HM_ROOT" log -1 --diff-filter=D --format=%H "$HM_BASE_REF"..HEAD -- "$rel" 2>/dev/null)"
-      if [ -n "$closed" ]; then
-        HM_TASK_FILE="closed"
-        [ "$HM_SHALLOW" = "yes" ] || HM_TASK_BEHIND="$(hm_count "$closed" HEAD "$HM_BASE_REF")"
+      created=""
+      if [ -n "$HM_BASES" ] && [ "$HM_SHALLOW" != "yes" ]; then
+        HM_OWN="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" HEAD --not $HM_BASES 2>/dev/null || printf '?')"
+        HM_OWN_WORK="$(hm_work HEAD --not $HM_BASES)"
       fi
+    fi
+
+    if [ -f "$own_file" ]; then
+      HM_TASK_FILE="present"
+      hm_task_base "$own_file"
+      [ -n "$HM_BASE_REF" ] && { HM_BASE_KIND="other"; hm_is_base_branch "${HM_BASE_REF#origin/}" && HM_BASE_KIND="base-branch"; }
+      if [ "$HM_SHALLOW" != "yes" ]; then
+        hm_refs "$own_file" ""
+        HM_TASK_SAVED="$HM_OUT_SAVED"
+        for r in $HM_OUT_REFS; do HM_TASK_BEHIND="$(hm_min "$HM_TASK_BEHIND" "$(hm_task_behind "$r")")"; done
+      fi
+    elif [ "$HM_SHALLOW" != "yes" ]; then
+      # Closed and waiting for its merge: one of the branch's own commits deleted the task file. Only a
+      # committed deletion counts (a file removed from the working tree is just missing).
+      # Known limit: a close that had no task folder to delete leaves no trace and is not recognised.
+      if [ -n "$created" ]; then
+        closed="$(git -C "$HM_ROOT" log -1 --diff-filter=D --format=%H "$created"..HEAD -- "$rel" 2>/dev/null)"
+      elif [ -n "$HM_BASES" ]; then
+        closed="$(git -C "$HM_ROOT" log -1 --diff-filter=D --format=%H HEAD --not $HM_BASES -- "$rel" 2>/dev/null)"
+      fi
+      if [ -n "$closed" ]; then HM_TASK_FILE="closed"; HM_TASK_BEHIND="$(hm_task_behind "$closed")"; fi
     fi
     if hm_is_number "$HM_TASK_BEHIND"; then
       if [ "$HM_TASK_BEHIND" -ge "$HM_TASK_STALE_COMMITS" ]; then HM_TASK_STALE="yes"; else HM_TASK_STALE="no"; fi
     fi
-    # Work of this branch: its own commits, merges and memory-only commits left out.
-    # HM_OWN counts every commit of its own, memory included: that is what a push would send.
-    if [ -n "$HM_BASE_REF" ] && [ "$HM_SHALLOW" != "yes" ]; then
-      HM_AHEAD="$(hm_count "$HM_BASE_REF" HEAD "")"
-      HM_OWN="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$HM_BASE_REF"..HEAD 2>/dev/null || printf '?')"
-    fi
-    # Pushed means: on the remote under its own name. An upstream set to the base (git checkout -b x origin/main) says nothing.
-    if git -C "$HM_ROOT" rev-parse -q --verify "refs/remotes/origin/$HM_BRANCH" >/dev/null 2>&1; then
+
+    HM_CREATED="$created"
+    # Pushed means: on the remote under its own name. An upstream set to a base (git checkout -b x origin/main) says nothing.
+    if [ "$onremote" = "yes" ]; then
       HM_UNPUSHED="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "origin/$HM_BRANCH"..HEAD 2>/dev/null || printf '0')"
     elif git -C "$HM_ROOT" remote get-url origin >/dev/null 2>&1; then
       HM_UNPUSHED="not-on-remote"
+      # Its own commits that are on no remote branch at all: they exist on this machine only.
+      if [ -n "$created" ]; then
+        HM_LOCAL_ONLY="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD --not --remotes 2>/dev/null || printf '?')"
+      elif [ -n "$HM_BASES" ] && [ "$HM_SHALLOW" != "yes" ]; then
+        HM_LOCAL_ONLY="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" HEAD --not $HM_BASES --remotes 2>/dev/null || printf '?')"
+      fi
     fi
-    # Commits of this branch that exist on this machine only: on no remote branch, and not on its base
-    # (unpushed commits of a local base belong to that base, not to the task).
-    if git -C "$HM_ROOT" remote get-url origin >/dev/null 2>&1; then
-      HM_LOCAL_ONLY="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" HEAD ${HM_BASE_REF:+"^$HM_BASE_REF"} --not --remotes 2>/dev/null || printf '?')"
-    fi
-    # Is the base a real base branch (by name)? A recorded base with any other name is not a reference to trust.
-    HM_BASE_KIND="other"; hm_is_base_branch "${HM_BASE_REF#origin/}" && HM_BASE_KIND="base-branch"
   elif [ "$HM_TASK_BRANCH" = "no" ]; then
     # On a base branch nothing should be left in in-progress/: a task folder there was merged by mistake.
     # (Not on a detached HEAD nor on a branch we could not classify: the folder may be the branch's own.)

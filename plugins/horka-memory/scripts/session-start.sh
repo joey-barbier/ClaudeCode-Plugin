@@ -63,7 +63,10 @@ EOF2
           yes:closed)
             add "The task of branch $BR was closed (its task folder was promoted and deleted) and waits for its merge. Commits made since the close: $HM_TASK_BEHIND." ;;
           yes:absent)
-            add "Branch $BR has no task file yet (.claude/memory/in-progress/$HM_TASK_ID/TASK.md). horka-memory:horka-memory-save creates it at the first milestone." ;;
+            # Only when the branch has work of its own: a fresh branch, or one already merged, has nothing to write down.
+            if hm_is_number "$HM_OWN_WORK" && [ "$HM_OWN_WORK" -gt 0 ]; then
+              add "Branch $BR has $HM_OWN_WORK commits of its own and no task file yet (.claude/memory/in-progress/$HM_TASK_ID/TASK.md). horka-memory:horka-memory-save creates it."
+            fi ;;
           no:*)
             # The count only: a folder name is somebody else's text and does not belong in the assistant's context.
             [ "$HM_LEFTOVER_COUNT" -gt 0 ] && add "$HM_LEFTOVER_COUNT task folder(s) were left in .claude/memory/in-progress/ on $BR. They should have been closed before the merge (horka-memory:horka-memory-close lists them)." ;;

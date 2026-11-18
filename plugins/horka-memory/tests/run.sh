@@ -222,7 +222,7 @@ commit code.txt "first step"
 OUT="$(stop t1)"
 has   "work without a task file is stated" "$OUT" "no task file for 1 commits of work"
 has   "a branch that is not on the remote is stated" "$OUT" "branch is not on the remote"
-has   "session start says the branch has no task file" "$(start)" "has no task file yet"
+has   "session start says the branch has work and no task file" "$(start)" "has 1 commits of its own and no task file yet"
 has   "pre-compact hook asks for the task file" "$(compact)" "has no task file. Run /horka-memory:horka-memory-save NOW"
 
 echo "task branch with a task file"
@@ -257,19 +257,19 @@ echo "task branch: commits of other people do not count"
 git checkout -q main; commits 7 base.txt; git push -q; git checkout -q feature/login-form
 git merge -q --no-edit main
 is    "merging the base in does not put the task file behind" "$(field task_behind)" "0"
-is    "the branch's own work is counted from its base, memory-only commits left out" "$(field ahead_of_base)" "4"
+is    "the branch's own work is counted, merged-in base commits and memory-only commits left out" "$(field own_commits)" "4"
 git checkout -q -b feature/rebased main; commit rebased.txt a; task feature-rebased; commit other.txt b
 git checkout -q main; commit code2.txt c; git checkout -q feature/rebased; git rebase -q main
 is    "after a rebase the old marker is ignored and the count is still right" "$(field task_behind)" "1"
 
-echo "task branch measured against the nearest base, without origin/HEAD"
+echo "a task branch without origin/HEAD: nothing is guessed"
 git init -q --bare -b main "$WORK/r8.git"; git init -q -b main "$WORK/r8"; cd "$WORK/r8" || exit 1
 git remote add origin "$WORK/r8.git"; commit code.txt init; memory; git push -q -u origin main     # no set-head on purpose
 is    "the remote's default branch is unknown here" "$(field default_branch)" "unknown"
 git checkout -q -b develop; commits 5; git push -q -u origin develop
 git checkout -q -b feature/x; commits 2
-is    "the nearest base is found" "$(field base)" "origin/develop"
-is    "work is counted from that base, not from main" "$(field ahead_of_base)" "2"
+is    "no base is announced when none is recorded" "$(field base)" "unknown"
+is    "its own work is the commits that are on no base branch" "$(field own_commits)" "2"
 OUT="$(stop n1)"
 has   "work at risk is stated without origin/HEAD" "$OUT" "no task file for 2 commits of work"
 has   "and so is the missing remote branch" "$OUT" "branch is not on the remote"
@@ -281,8 +281,7 @@ has   "an upstream set to the base does not count as pushed" "$OUT" "branch is n
 git push -q origin feature/tracks-base
 hasnt "once pushed under its own name nothing is said about pushing" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop n3)" "remote"
 git checkout -q -b feature/fresh develop; git checkout -q develop; commits 2 moved-on.txt; git checkout -q feature/fresh
-case "$(field base)" in develop|origin/develop) ok "a branch without commits whose base moved on is still measured against that base" ;; *) ko "a branch without commits whose base moved on is still measured against that base" "$(field base)" ;; esac
-is    "and shows no work of its own" "$(field ahead_of_base)" "0"
+is    "a branch without commits whose base moved on has no work of its own" "$(field own_commits)" "0"
 empty "so the stop hook has nothing to say about it" "$(stop n4)"
 git clone -q --single-branch -b feature/tracks-base "file://$WORK/r8.git" "$WORK/single"; cd "$WORK/single" || exit 1
 is    "a task branch cloned alone, without its task file, is not classified" "$(field task_branch)" "unknown"
@@ -313,15 +312,15 @@ is    "so the task file is still 7 commits behind" "$(field task_behind)" "7"
 has   "and the stop hook still says it" "$(stop q1)" "task file 7 commits behind"
 has   "session start too" "$(start)" "7 commits behind"
 sed -i.bak '/task-base/d' .claude/memory/in-progress/feature-q/TASK.md
-is    "a task file without the line: the guess skips a base the branch was merged into with a merge commit" "$(field base)" "origin/main"
-is    "so an older task file is still measured right" "$(field task_behind)" "7"
-is    "and its base is said to be a guess" "$(field base_source)" "guessed"
+is    "a task file without the line has no base" "$(field base)" "unknown"
+is    "and is still measured right, merged into staging or not" "$(field task_behind)" "7"
+is    "nothing is guessed in its place" "$(field base_source)" "none"
 git checkout -q .
 printf 'we first thought task-base: staging was right\n' >> .claude/memory/in-progress/feature-q/TASK.md
 is    "a sentence that mentions task-base is not the record" "$(field base)" "origin/main"
 git checkout -q .
 sed -i.bak 's/task-base: main/task-base: HEAD/' .claude/memory/in-progress/feature-q/TASK.md
-is    "HEAD is not accepted as a recorded base" "$(field base_source)" "guessed"
+is    "HEAD is not accepted as a recorded base" "$(field base_source)" "none"
 git checkout -q .
 git push -q origin HEAD:refs/heads/feature/q-base
 sed -i.bak 's/task-base: main/task-base: feature\/q-base/' .claude/memory/in-progress/feature-q/TASK.md
@@ -329,11 +328,11 @@ is    "a recorded base that is not a base branch is flagged as such" "$(field ba
 git checkout -q .
 is    "a recorded base branch is flagged as one" "$(field base_kind)" "base-branch"
 sed -i.bak 's/task-base: main/task-base: nope/' .claude/memory/in-progress/feature-q/TASK.md
-is    "a recorded base that does not exist falls back to the guess" "$(field base_source)" "guessed"
+is    "a recorded base that does not exist is no base" "$(field base_source)" "none"
 sed -i.bak 's/task-base: nope/task-base: -x/' .claude/memory/in-progress/feature-q/TASK.md
-is    "a recorded base that looks like an option is ignored" "$(field base_source)" "guessed"
+is    "a recorded base that looks like an option is ignored" "$(field base_source)" "none"
 sed -i.bak 's/task-base: -x/task-base: feature\/q/' .claude/memory/in-progress/feature-q/TASK.md
-is    "a branch cannot be its own base" "$(field base_source)" "guessed"
+is    "a branch cannot be its own base" "$(field base_source)" "none"
 rm -f .claude/memory/in-progress/feature-q/TASK.md.bak; git checkout -q .
 git checkout -q -b feature/s main; commits 5 s.txt
 git checkout -q -b staging2 main; git checkout -q feature/s
@@ -346,19 +345,50 @@ has   "and its commits exist on this machine only" "$OUT" "branch is not on the 
 unset HORKA_MEMORY_BASE_BRANCHES
 git checkout -q feature/q; git rm -rq .claude/memory/in-progress/feature-q; git commit -qm "close task"; git push -q
 git checkout -q staging; git merge -q --no-ff --no-edit feature/q; git push -q; git checkout -q feature/q; git fetch -q
-is    "a closed task merged into staging with a merge commit is still seen as closed" "$(field task_file)" "closed"
+is    "a closed task already merged into a base has no work of its own left" "$(field own_commits)" "0"
+empty "so the stop hook says nothing about it" "$(stop q4)"
+hasnt "session start does not ask it for a task file" "$(start)" "no task file"
+empty "nor does the pre-compact hook" "$(compact)"
+commits 3 followup.txt
+has   "work added after that merge is asked for a task file again" "$(stop q5)" "no task file for 3 commits of work"
 git checkout -q main; commits 3 unpushed-main.txt; git checkout -q -b feature/fresh-off-local-main
 empty "a fresh branch cut from a local base with unpushed commits is not told it has work" "$(stop q3)"
 is    "those commits are the base's, not the task's" "$(field local_only)" "0"
 new_repo r11; memory; git push -q; commits 12 upstream.txt     # local main is ahead of a stale origin/main
 git checkout -q -b feature/f; commits 2 f.txt
 mkdir -p .claude/memory/in-progress/feature-f; printf '# Task\n<!-- task-base: main -->\n' > .claude/memory/in-progress/feature-f/TASK.md
-is    "a recorded base resolves to the nearer of the local and the remote branch" "$(field base)" "main"
-is    "so the work of the branch is its own" "$(field ahead_of_base)" "2"
+is    "a recorded base resolves to the remote branch" "$(field base)" "origin/main"
+has   "and a local branch of that name that points elsewhere is flagged, so the skills ask" "$(status)" "base_local_differs: yes"
+is    "the work of the branch is its own whichever main is meant" "$(field own_commits)" "2"
 git checkout -q -b develop main; git push -q -u origin develop; git checkout -q feature/f
 sed -i.bak 's/task-base: main/task-base: develop/' .claude/memory/in-progress/feature-f/TASK.md; rm -f .claude/memory/in-progress/feature-f/TASK.md.bak
 git push -q origin --delete develop; git fetch -q --prune
 is    "a recorded base that is gone from the remote is said to be missing there" "$(field base_source)" "recorded-missing"
+
+echo "a branch merged by a teammate, a branch merged locally"
+new_repo r12; memory; git push -q
+git checkout -q -b feature/r; commits 6 r.txt; git push -q -u origin feature/r
+has   "pushed work without a task file is stated" "$(stop m1)" "no task file for 6 commits of work"
+git clone -q "$WORK/r12.git" "$WORK/r12-mate"; (cd "$WORK/r12-mate" && git merge -q --no-ff --no-edit origin/feature/r && git push -q)
+git fetch -q
+is    "once a teammate merged the branch into main, it has no work of its own" "$(field own_commits)" "0"
+empty "and the stop hook stops asking for a task file" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop m1)"
+commits 2 r.txt
+has   "two commits later, it is asked for those two only" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop m1)" "no task file for 2 commits of work"
+git checkout -q -b feature/s-ff main; commits 5 sff.txt
+git checkout -q -b staging main; git merge -q --ff-only feature/s-ff; git checkout -q feature/s-ff
+OUT="$(stop m2)"
+has   "work fast-forwarded into a local base is still seen" "$OUT" "no task file for 5 commits of work"
+has   "and still said to exist on this machine only" "$OUT" "branch is not on the remote (5 commits on this machine only)"
+git checkout -q -b feature/q2 main; commit q2.txt start
+mkdir -p .claude/memory/in-progress/feature-q2
+printf '# Task\n\n<!-- task-base: main -->\n<!-- memory-saved: %s %s -->\n' "$(git rev-parse --short HEAD)" "$(date +%Y-%m-%d)" > .claude/memory/in-progress/feature-q2/TASK.md
+git add -A >/dev/null; git commit -qm "task memory"; commits 6 q2.txt; git push -q -u origin feature/q2
+git checkout -q main; git merge -q --no-edit feature/q2; git checkout -q feature/q2
+is    "merging the branch into the local base does not make its task file fresh" "$(field task_behind)" "6"
+git clone -q "$WORK/r12.git" "$WORK/r12-mate2"; (cd "$WORK/r12-mate2" && git checkout -q feature/q2 && commits 2 mate.txt && git push -q)
+commit q2.txt mine; git pull -q --no-rebase --no-edit origin feature/q2
+is    "a colleague's commits pulled into the branch count against the task file too" "$(field task_behind)" "9"
 
 echo "a closed task waiting for its merge"
 cd "$WORK/r7" || exit 1; git checkout -q feature/login-form
@@ -410,10 +440,16 @@ has   "session start says freshness is unknown" "$OUT" "freshness unknown (shall
 hasnt "and never prints a number of commits" "$OUT" "0 commits behind"
 empty "stop hook does not call an unknown memory stale" "$(stop sh1)"
 git checkout -q -b feature/in-shallow; commit sh.txt work
-is    "on a shallow clone the work of a branch is unknown, not a number" "$(field ahead_of_base)" "?"
-OUT="$(stop sh2)"
-has   "the stop hook still says there is work without a task file" "$OUT" "no task file for the work on this branch"
-hasnt "without printing a question mark as a count" "$OUT" "? commits"
+is    "a branch created in a shallow clone knows its own work exactly" "$(field own_commits)" "1"
+has   "and the stop hook counts it" "$(stop sh2)" "no task file for 1 commits of work"
+git clone -q --depth 1 --no-single-branch -b feature/r "file://$WORK/r12.git" "$WORK/shallow2"; cd "$WORK/shallow2" || exit 1
+is    "a branch fetched shallow from the remote has an unknown amount of work, not a number" "$(field own_commits)" "?"
+empty "with nothing local to lose, the stop hook is silent there" "$(stop sh3)"
+commit sh3.txt local
+OUT="$(stop sh3)"
+has   "a local commit there is stated without a count" "$OUT" "no task file for the work on this branch"
+hasnt "and never with a question mark as a count" "$OUT" "? commits"
+cd "$WORK/shallow" || exit 1
 git checkout -q -
 echo x >> code.txt
 OUT="$(compact)"
@@ -426,6 +462,12 @@ cd "$WORK/wt dir" || exit 1
 is    "in a worktree whose path has a space, the task is found" "$(field task_file)" "present"
 is    "and its id is the branch's" "$(field task_id)" "feature-x"
 valid_json "$(start)" .hookSpecificOutput.additionalContext && ok "session start output is valid JSON there" || ko "session start output is valid JSON there"
+
+echo "own commits listing"
+cd "$WORK/r12" || exit 1; git checkout -q feature/s-ff
+is    "a branch that never left the machine lists the commits made since it was created" "$(bash "$SCRIPTS/own-commits.sh" | grep -c .)" "5"
+git checkout -q feature/r
+is    "a pushed branch lists the commits that are on no base branch" "$(bash "$SCRIPTS/own-commits.sh" | grep -c .)" "2"
 
 echo "hook configuration"
 if command -v jq >/dev/null 2>&1; then
