@@ -66,7 +66,7 @@ git add .claude/memory
 git commit -m "update(memory) - close task <task-id>" -- .claude/memory   # use the project's commit convention when CLAUDE.md gives one
 ```
 
-The pathspec keeps anything else the user staged out of this commit; no attribution trailer in the message. It should be the last commit of the branch before the merge; commits added later (review fixes) are fine: the hooks see that the task file was deleted on this branch and stop asking for one. After a close that had no task folder to delete, they cannot see it and keep asking until the merge: do not answer by running save.
+The pathspec keeps anything else the user staged out of this commit; no attribution trailer in the message. It should be the last commit of the branch before the merge; commits added later (review fixes) are fine: the hooks see that the task file was deleted on this branch and stop asking for one, until the branch reaches the remote's default branch. Two limits: after a close that had no task folder to delete, they cannot see it and keep asking until the merge; and commits added to a branch already merged into the default branch are asked for a task file again. In both cases do not answer by running save.
 
 ## Step 5: Report
 

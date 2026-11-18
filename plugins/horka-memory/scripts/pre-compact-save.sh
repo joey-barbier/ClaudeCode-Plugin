@@ -20,7 +20,7 @@ if [ "$HM_TASK_BRANCH" = "yes" ]; then
   case "$HM_TASK_FILE" in
     absent)
       # Only when the branch has work of its own or uncommitted changes: otherwise there is no stopping point to write down.
-      if { hm_is_number "$HM_OWN_WORK" && [ "$HM_OWN_WORK" -gt 0 ]; } || [ -n "$DIRTY" ]; then
+      if [ "$HM_HAS_WORK" != "no" ] || [ -n "$DIRTY" ]; then
         echo "IMPORTANT: context is about to be compacted and branch $BR has no task file. Run /horka-memory:horka-memory-save NOW so the stopping point of this task is written down."
       fi ;;
     present)

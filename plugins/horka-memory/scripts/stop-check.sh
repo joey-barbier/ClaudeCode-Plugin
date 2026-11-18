@@ -21,16 +21,14 @@ BR="$(hm_clean "$HM_BRANCH")"
 if [ "$HM_TASK_BRANCH" = "yes" ]; then
   # Nothing here depends on guessing the base of the branch: own commits are those on no base branch (or,
   # for a branch that never left this machine, those made since it was created).
-  WORK="no"; hm_is_number "$HM_OWN_WORK" && [ "$HM_OWN_WORK" -gt 0 ] && WORK="yes"
   LOCAL="no"; hm_is_number "$HM_LOCAL_ONLY" && [ "$HM_LOCAL_ONLY" -gt 0 ] && LOCAL="yes"
   PUSHABLE="no"; hm_is_number "$HM_UNPUSHED" && [ "$HM_UNPUSHED" -gt 0 ] && PUSHABLE="yes"
   case "$HM_TASK_FILE" in
     absent)
-      if [ "$WORK" = "yes" ]; then
-        flag "task-missing" "no task file for $(many "$HM_OWN_WORK") commits of work"
-      elif ! hm_is_number "$HM_OWN_WORK" && { [ "$LOCAL" = "yes" ] || [ "$PUSHABLE" = "yes" ]; }; then
-        flag "task-missing" "no task file for the work on this branch"     # count unknown (shallow clone): never a "?"
-      fi ;;
+      case "$HM_HAS_WORK" in
+        yes) flag "task-missing" "no task file for $(many "$HM_OWN_WORK") commits of work" ;;
+        some) flag "task-missing" "no task file for the work on this branch" ;;     # count unknown (shallow clone): never a "?"
+      esac ;;
     present) [ "$HM_TASK_STALE" = "yes" ] && flag "task-stale" "task file $(many "$HM_TASK_BEHIND") commits behind" ;;
     closed) ;;                               # closed and waiting for its merge: do not ask for a new task file
   esac

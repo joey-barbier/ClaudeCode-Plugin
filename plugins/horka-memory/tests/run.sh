@@ -345,12 +345,13 @@ has   "and its commits exist on this machine only" "$OUT" "branch is not on the 
 unset HORKA_MEMORY_BASE_BRANCHES
 git checkout -q feature/q; git rm -rq .claude/memory/in-progress/feature-q; git commit -qm "close task"; git push -q
 git checkout -q staging; git merge -q --no-ff --no-edit feature/q; git push -q; git checkout -q feature/q; git fetch -q
-is    "a closed task already merged into a base has no work of its own left" "$(field own_commits)" "0"
+is    "a closed task merged into staging, not yet into the default branch, is still closed" "$(field task_file)" "closed"
 empty "so the stop hook says nothing about it" "$(stop q4)"
-hasnt "session start does not ask it for a task file" "$(start)" "no task file"
 empty "nor does the pre-compact hook" "$(compact)"
 commits 3 followup.txt
-has   "work added after that merge is asked for a task file again" "$(stop q5)" "no task file for 3 commits of work"
+is    "review commits added after the close do not reopen it" "$(field task_file)" "closed"
+has   "session start counts them" "$(start)" "Commits made since the close: 3"
+hasnt "and the stop hook does not ask for a new task file" "$(stop q5)" "no task file"
 git checkout -q main; commits 3 unpushed-main.txt; git checkout -q -b feature/fresh-off-local-main
 empty "a fresh branch cut from a local base with unpushed commits is not told it has work" "$(stop q3)"
 is    "those commits are the base's, not the task's" "$(field local_only)" "0"
@@ -389,6 +390,40 @@ is    "merging the branch into the local base does not make its task file fresh"
 git clone -q "$WORK/r12.git" "$WORK/r12-mate2"; (cd "$WORK/r12-mate2" && git checkout -q feature/q2 && commits 2 mate.txt && git push -q)
 commit q2.txt mine; git pull -q --no-rebase --no-edit origin feature/q2
 is    "a colleague's commits pulled into the branch count against the task file too" "$(field task_behind)" "9"
+
+echo "own work: rebases, deleted remote branches, late branches"
+new_repo r13; memory; git push -q
+git checkout -q -b feature/x; commits 2 x.txt
+git clone -q "$WORK/r13.git" "$WORK/r13-mate"; (cd "$WORK/r13-mate" && commits 10 mate.txt && git push -q)
+git pull -q --rebase origin main
+is    "a never-pushed branch rebased on a main that moved keeps its own two commits" "$(field own_commits)" "2"
+is    "and the listing shows those two only" "$(bash "$SCRIPTS/own-commits.sh" | grep -c .)" "2"
+git checkout -q -b feature/d main; commits 6 d.txt; git push -q -u origin feature/d
+(cd "$WORK/r13-mate" && git pull -q && git merge -q --no-ff --no-edit origin/feature/d && git push -q && git push -q origin --delete feature/d)
+git fetch -q --prune
+is    "a branch merged by a teammate and deleted on the remote has no work of its own" "$(field own_commits)" "0"
+empty "and is not asked for anything" "$(stop o1)"
+git checkout -q -b feature/big main; commit big.txt start; task feature-big; commits 22 big.txt
+git push -q -u origin feature/big; mark .claude/memory/in-progress/feature-big/TASK.md; git add -A >/dev/null; git commit -qm "task memory"; git push -q
+(cd "$WORK/r13-mate" && git fetch -q && git checkout -q -b staging origin/main && git merge -q --no-ff --no-edit origin/feature/big && git push -q -u origin staging)
+git fetch -q
+is    "a task merged into staging does not make the project memory look behind from its branch" "$(field stale)" "no"
+git checkout -q -b feature/sh main; commit sh.txt start; task feature-sh; git push -q -u origin feature/sh
+(cd "$WORK/r13-mate" && git fetch -q && git checkout -q feature/sh && commits 2 mate-sh.txt && git push -q)
+commit sh.txt mine; git pull -q --no-rebase --no-edit origin feature/sh; git push -q
+(cd "$WORK/r13-mate" && git fetch -q && git checkout -q staging && git merge -q --no-ff --no-edit origin/feature/sh && git push -q)
+git fetch -q
+is    "a colleague's pulled commits still count against the task file after a merge into staging" "$(field task_behind)" "3"
+git checkout -q main; git pull -q; commits 4 late.txt; git switch -q -c feature/late; git branch -f main origin/main
+is    "work committed before the branch was created is the branch's own once main is put back" "$(field own_commits)" "4"
+has   "and is said to exist on this machine only" "$(stop o2)" "(4 commits on this machine only)"
+git checkout -q -b feature/u main; commits 5 u.txt; git push -q -u origin feature/u
+git clone -q "$WORK/r13.git" "$WORK/r13-take"; cd "$WORK/r13-take" || exit 1; git checkout -q feature/u
+(cd "$WORK/r13-mate" && git push -q origin --delete feature/u)
+git fetch -q --prune
+is    "a branch taken over from the remote, then deleted there, still has its five commits" "$(field own_commits)" "5"
+is    "and they are on this machine only" "$(field local_only)" "5"
+cd "$WORK/r13" || exit 1
 
 echo "a closed task waiting for its merge"
 cd "$WORK/r7" || exit 1; git checkout -q feature/login-form
@@ -449,6 +484,8 @@ commit sh3.txt local
 OUT="$(stop sh3)"
 has   "a local commit there is stated without a count" "$OUT" "no task file for the work on this branch"
 hasnt "and never with a question mark as a count" "$OUT" "? commits"
+has   "session start says the same without a count" "$(start)" "has work of its own and no task file yet"
+has   "and so does the pre-compact hook" "$(compact)" "has no task file"
 cd "$WORK/shallow" || exit 1
 git checkout -q -
 echo x >> code.txt

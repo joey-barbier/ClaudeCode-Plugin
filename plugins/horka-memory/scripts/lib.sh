@@ -157,13 +157,28 @@ hm_min() {
   printf '%s' "$best"
 }
 
+# Largest of several counts, "?" when none is a number.
+hm_max() {
+  local best="?" v
+  for v in "$@"; do
+    hm_is_number "$v" || continue
+    if [ "$best" = "?" ] || [ "$v" -gt "$best" ]; then best="$v"; fi
+  done
+  printf '%s' "$best"
+}
+
 # How far a task file is behind, without knowing the base of the branch. Since <ref>, counts the commits
 # that are the branch's own: those on its first-parent line (work done here, wherever it was merged since),
 # plus those that are on no base branch (a colleague's commits pulled into this branch).
 hm_task_behind() {
-  local ref="$1" n
+  local ref="$1" n b not=""
+  # A base that already contains <ref> (the branch was merged into it since) would hide the commits made
+  # after <ref> as well: leave it out of the "on no base" test.
+  for b in $HM_BASES; do
+    git -C "$HM_ROOT" merge-base --is-ancestor "$ref" "$b" 2>/dev/null || not="$not $b"
+  done
   n="$( { git -C "$HM_ROOT" rev-list --no-merges --first-parent --max-count="$HM_COUNT_CAP" "$ref"..HEAD -- . ':(exclude).claude/memory' 2>/dev/null
-          [ -n "$HM_BASES" ] && git -C "$HM_ROOT" rev-list --no-merges --max-count="$HM_COUNT_CAP" "$ref"..HEAD --not $HM_BASES -- . ':(exclude).claude/memory' 2>/dev/null
+          [ -n "$not" ] && git -C "$HM_ROOT" rev-list --no-merges --max-count="$HM_COUNT_CAP" "$ref"..HEAD --not $not -- . ':(exclude).claude/memory' 2>/dev/null
         } | sort -u | grep -c . )"
   printf '%s' "${n:-?}"
 }
@@ -174,7 +189,7 @@ hm_status() {
   HM_BRANCH=""; HM_DEFAULT_BRANCH=""; HM_BASES=""; HM_TASK_BRANCH="no"; HM_TASK_ID=""; HM_TASK_DIR=""
   HM_BASE_REF=""; HM_BASE_SOURCE=""; HM_BASE_KIND=""; HM_BASE_LOCAL_DIFFERS=""
   HM_TASK_FILE="absent"; HM_TASK_SAVED=""; HM_TASK_BEHIND="?"; HM_TASK_STALE="unknown"
-  HM_OWN_WORK="?"; HM_OWN="?"; HM_CREATED=""; HM_UNPUSHED="n/a"; HM_LOCAL_ONLY="n/a"; HM_DIRTY=0; HM_LEFTOVER=""; HM_LEFTOVER_COUNT=0
+  HM_OWN_WORK="?"; HM_OWN="?"; HM_CREATED=""; HM_OBASES=""; HM_HAS_WORK="no"; HM_UNPUSHED="n/a"; HM_LOCAL_ONLY="n/a"; HM_DIRTY=0; HM_LEFTOVER=""; HM_LEFTOVER_COUNT=0
 
   if HM_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" && [ -n "$HM_ROOT" ]; then
     HM_KIND="repo"
@@ -218,46 +233,58 @@ hm_status() {
     if [ -n "$HM_BASES" ] || [ -f "$own_file" ]; then HM_TASK_BRANCH="yes"; else HM_TASK_BRANCH="unknown"; HM_TASK_ID=""; HM_TASK_DIR=""; fi
   fi
 
-  # Project memory: commits since it was last updated. Seen from a task branch, the task's own commits
-  # are left out (they are the task's business until its close).
-  local r n own_in
+  # Project memory: commits since it was last updated. Seen from a task branch it is judged on the history
+  # of the remote's default branch (up to where this branch shares it), so the task's own commits never
+  # count, wherever the branch was merged since. Without a known default branch, the commits that are on
+  # no base are subtracted instead.
+  local r n own_in target=""
+  if [ "$HM_TASK_BRANCH" = "yes" ] && [ -n "$HM_DEFAULT_BRANCH" ]; then
+    target="$(git -C "$HM_ROOT" merge-base HEAD "origin/$HM_DEFAULT_BRANCH" 2>/dev/null)"
+  fi
   if [ "$HM_MEM" = "present" ] && [ "$HM_SHALLOW" != "yes" ]; then
     hm_refs "$HM_MEM_DIR/PROJECT_STATE.md" firstparent
     HM_SAVED="$HM_OUT_SAVED"
     for r in $HM_OUT_REFS; do
-      n="$(hm_work "$r"..HEAD)"
-      if [ "$HM_TASK_BRANCH" = "yes" ] && [ -n "$HM_BASES" ] && hm_is_number "$n" && [ "$n" -lt "$HM_COUNT_CAP" ]; then
-        own_in="$(hm_work "$r"..HEAD --not $HM_BASES)"
-        hm_is_number "$own_in" && n=$((n - own_in))
+      if [ -n "$target" ]; then
+        n="$(hm_work "$r".."$target")"
+      else
+        n="$(hm_work "$r"..HEAD)"
+        if [ "$HM_TASK_BRANCH" = "yes" ] && [ -n "$HM_BASES" ] && hm_is_number "$n" && [ "$n" -lt "$HM_COUNT_CAP" ]; then
+          own_in="$(hm_work "$r"..HEAD --not $HM_BASES)"
+          hm_is_number "$own_in" && n=$((n - own_in))
+        fi
       fi
       HM_BEHIND="$(hm_min "$HM_BEHIND" "$n")"
     done
     if hm_is_number "$HM_BEHIND"; then
       if [ "$HM_BEHIND" -ge "$HM_STALE_COMMITS" ]; then HM_STALE="yes"; else HM_STALE="no"; fi
     fi
-  elif [ "$HM_MEM" = "present" ]; then
-    HM_SAVED=""                 # shallow clone: nothing can be counted, say unknown
   fi
 
   if [ "$HM_TASK_BRANCH" = "yes" ]; then
     local rel=".claude/memory/in-progress/$HM_TASK_ID/TASK.md" closed="" created="" onremote="no"
     git -C "$HM_ROOT" rev-parse -q --verify "refs/remotes/origin/$HM_BRANCH" >/dev/null 2>&1 && onremote="yes"
 
-    # The branch's own commits. A branch that is on the remote may have been created anywhere: its own
-    # commits are those on no base branch. A branch that never left this machine was created here, and
-    # its reflog still knows from where: everything since is its own, whatever was merged where since.
-    # (The reflog range is local history, so it is exact even in a shallow clone; the other count is not.)
+    # The branch's own commits, counted two ways and the larger kept, because each way has a blind spot:
+    #  - commits that are on no base branch: blind to work that was merged or fast-forwarded into a local base;
+    #  - for a branch that is not on the remote, commits made since it was created on this machine (oldest
+    #    reflog entry), minus those the remote bases have (a rebase or a merge brings a teammate's commits
+    #    into that range): blind when the branch was created after the work, or when the reflog expired.
+    local obases="" b own_r="?" work_r="?" own_n="?" work_n="?"
+    for b in $HM_BASES; do case "$b" in origin/*) obases="$obases $b" ;; esac; done
     [ "$onremote" = "no" ] && created="$(git -C "$HM_ROOT" reflog show --format=%H "refs/heads/$HM_BRANCH" 2>/dev/null | tail -1)"
     if [ -n "$created" ] && git -C "$HM_ROOT" merge-base --is-ancestor "$created" HEAD 2>/dev/null; then
-      HM_OWN="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD 2>/dev/null || printf '?')"
-      HM_OWN_WORK="$(hm_work "$created"..HEAD)"
+      own_r="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD ${obases:+--not $obases} 2>/dev/null || printf '?')"
+      work_r="$(hm_work "$created"..HEAD ${obases:+--not $obases})"
     else
       created=""
-      if [ -n "$HM_BASES" ] && [ "$HM_SHALLOW" != "yes" ]; then
-        HM_OWN="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" HEAD --not $HM_BASES 2>/dev/null || printf '?')"
-        HM_OWN_WORK="$(hm_work HEAD --not $HM_BASES)"
-      fi
     fi
+    if [ -n "$HM_BASES" ] && [ "$HM_SHALLOW" != "yes" ]; then
+      own_n="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" HEAD --not $HM_BASES 2>/dev/null || printf '?')"
+      work_n="$(hm_work HEAD --not $HM_BASES)"
+    fi
+    HM_OWN="$(hm_max "$own_r" "$own_n")"; HM_OWN_WORK="$(hm_max "$work_r" "$work_n")"
+    HM_OBASES="${obases# }"
 
     if [ -f "$own_file" ]; then
       HM_TASK_FILE="present"
@@ -269,11 +296,13 @@ hm_status() {
         for r in $HM_OUT_REFS; do HM_TASK_BEHIND="$(hm_min "$HM_TASK_BEHIND" "$(hm_task_behind "$r")")"; done
       fi
     elif [ "$HM_SHALLOW" != "yes" ]; then
-      # Closed and waiting for its merge: one of the branch's own commits deleted the task file. Only a
-      # committed deletion counts (a file removed from the working tree is just missing).
-      # Known limit: a close that had no task folder to delete leaves no trace and is not recognised.
-      if [ -n "$created" ]; then
-        closed="$(git -C "$HM_ROOT" log -1 --diff-filter=D --format=%H "$created"..HEAD -- "$rel" 2>/dev/null)"
+      # Closed and waiting for its merge: a commit deleted the task file and has not reached the remote's
+      # default branch yet. Only a committed deletion counts (a file removed from the working tree is just
+      # missing). Without a known default branch, the commit must be on no base at all.
+      # Known limits: a close that had no task folder to delete leaves no trace; once the branch is merged
+      # into the default branch the close is no longer seen (the branch then has no work of its own either).
+      if [ -n "$HM_DEFAULT_BRANCH" ]; then
+        closed="$(git -C "$HM_ROOT" log -1 --diff-filter=D --format=%H HEAD --not "origin/$HM_DEFAULT_BRANCH" -- "$rel" 2>/dev/null)"
       elif [ -n "$HM_BASES" ]; then
         closed="$(git -C "$HM_ROOT" log -1 --diff-filter=D --format=%H HEAD --not $HM_BASES -- "$rel" 2>/dev/null)"
       fi
@@ -289,12 +318,22 @@ hm_status() {
       HM_UNPUSHED="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "origin/$HM_BRANCH"..HEAD 2>/dev/null || printf '0')"
     elif git -C "$HM_ROOT" remote get-url origin >/dev/null 2>&1; then
       HM_UNPUSHED="not-on-remote"
-      # Its own commits that are on no remote branch at all: they exist on this machine only.
-      if [ -n "$created" ]; then
-        HM_LOCAL_ONLY="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD --not --remotes 2>/dev/null || printf '?')"
-      elif [ -n "$HM_BASES" ] && [ "$HM_SHALLOW" != "yes" ]; then
-        HM_LOCAL_ONLY="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" HEAD --not $HM_BASES --remotes 2>/dev/null || printf '?')"
+      # Its own commits that are on no remote branch at all: they exist on this machine only. Same two
+      # counts as above, the larger kept.
+      local lo_r="?" lo_n="?"
+      [ -n "$created" ] && lo_r="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD --not --remotes 2>/dev/null || printf '?')"
+      if [ -n "$HM_BASES" ] && [ "$HM_SHALLOW" != "yes" ]; then
+        lo_n="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" HEAD --not $HM_BASES --remotes 2>/dev/null || printf '?')"
       fi
+      HM_LOCAL_ONLY="$(hm_max "$lo_r" "$lo_n")"
+    fi
+    # One answer for the three hooks: yes (a count is known and above 0), some (the count is unknown but
+    # something is unpushed or exists on this machine only), no.
+    HM_HAS_WORK="no"
+    if hm_is_number "$HM_OWN_WORK"; then
+      [ "$HM_OWN_WORK" -gt 0 ] && HM_HAS_WORK="yes"
+    elif { hm_is_number "$HM_LOCAL_ONLY" && [ "$HM_LOCAL_ONLY" -gt 0 ]; } || { hm_is_number "$HM_UNPUSHED" && [ "$HM_UNPUSHED" -gt 0 ]; }; then
+      HM_HAS_WORK="some"
     fi
   elif [ "$HM_TASK_BRANCH" = "no" ]; then
     # On a base branch nothing should be left in in-progress/: a task folder there was merged by mistake.
