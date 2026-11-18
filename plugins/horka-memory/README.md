@@ -26,7 +26,7 @@ The task id is the branch name with `/` replaced by `-` (a short hash is added w
 
 | Event | What it says |
 |---|---|
-| SessionStart | Which memory exists and how far behind the code it is; the task file of the current branch; a folder of several repositories is not a project. |
+| SessionStart | Which memory exists and, on a base branch, how far behind the code it is; the task file of the current branch; a folder of several repositories is not a project. |
 | Stop | One line to the user when work would be lost if nobody came back: task file behind, commits not pushed, branch not on the remote, uncommitted files. At most once per kind of finding every 30 minutes per session. |
 | PreCompact | Which memory file is behind before the conversation is summarized. |
 
@@ -34,9 +34,10 @@ Freshness is measured in commits that changed something other than the memory it
 
 Known limits of the counting:
 
-- The project memory is dated on a base branch only. From a task branch the hooks and the status say it is not measured: no rule for telling the base's commits from the task's held in every workflow.
+- The project memory is not dated from a task branch: the hooks and the status say it is not measured there (no rule for telling the base's commits from the task's held in every workflow), so the warning about an outdated memory appears on a base branch only. On a detached HEAD or on a branch that could not be classified it is counted against whatever is checked out, a task's own commits included.
 - A task file's lag is over-counted when the base it was merged into is then fast-forwarded into the branch, or after a second merge of the branch into that base: the reminder to save comes too early, never too late.
 - Commits made on a local base before a branch is created from it stay that base's: the branch is told nothing about them.
+- A never-pushed branch rebased on a local base that has unpushed commits counts those commits as its own.
 - A branch merged into a base before its first save has no work of its own until its next commit.
 
 ## Settings

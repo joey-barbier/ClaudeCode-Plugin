@@ -52,7 +52,7 @@ claude plugin install horka-setup
 claude plugin install horka-memory
 ```
 
-Au début de session, annonce la mémoire du projet et de combien de commits elle est en retard sur le code. `/horka-memory:horka-memory-restore` initialise un nouveau projet — scanne ta codebase et crée les fichiers PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS, COMMANDS. Sur une branche de tâche, `/horka-memory:horka-memory-save` tient une fiche de tâche (point d'arrêt, suite, comment vérifier) dans `.claude/memory/in-progress/`, pour qu'un autre développeur reprenne le travail à partir du dépôt seul. `/horka-memory:horka-memory-close` promeut ce qui doit durer et supprime la fiche avant la fusion.
+Au début de session, annonce la mémoire du projet et, sur une branche de base, de combien de commits elle est en retard sur le code. `/horka-memory:horka-memory-restore` initialise un nouveau projet — scanne ta codebase et crée les fichiers PROJECT_STATE, ARCHITECTURE, DECISIONS, NEXT_STEPS, COMMANDS. Sur une branche de tâche, `/horka-memory:horka-memory-save` tient une fiche de tâche (point d'arrêt, suite, comment vérifier) dans `.claude/memory/in-progress/`, pour qu'un autre développeur reprenne le travail à partir du dépôt seul. `/horka-memory:horka-memory-close` promeut ce qui doit durer et supprime la fiche avant la fusion.
 
 ### 3. Choisis les outils ci-dessous
 

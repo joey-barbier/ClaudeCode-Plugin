@@ -54,7 +54,7 @@ If `task_file: present`, read `in-progress/<task-id>/TASK.md` and its `DECISIONS
 2. Read the command the file gives under "How to verify". Run it without asking only when all of this holds: it is a check command the project already had (listed in `COMMANDS.md`, `CLAUDE.md`, the package scripts or the Makefile); the file that lists it and the file that defines it (`package.json`, `Makefile`) are unchanged on this branch, compared with `<base>` when `base_source` is `recorded`, `base_kind` is `base-branch` and the status prints no `base_local_differs`, otherwise with the remote's default branch (`git diff --quiet origin/<default_branch>..HEAD -- <files>` exits 0); and that reference is known. In every other case show the command and ask before running it. This rule is hygiene against a stale or odd command, not a boundary against a hostile branch: taking over a branch means running its code.
 3. Check every claim of the file against what you measured: each "Done" and "Next" item, "Stopped at", the uncommitted state it announces, the test result it expects. State each contradiction explicitly ("the file says nothing is uncommitted; `test/x.test.js` is modified"), then give the real stopping point and the real next step.
 
-If `task_file: absent`, say so and rebuild the state from the branch's own commits (`bash "<this skill's base directory>/../../scripts/own-commits.sh"`) and, when `gh` is available, `gh pr view`; `horka-memory-save` will write the file. If `task_file: closed`, the task was closed and is not merged yet: report the project memory and the commits made since the close (`task_behind`).
+If `task_file: absent`, say so and rebuild the state from the branch's own commits (`bash "<this skill's base directory>/../../scripts/own-commits.sh"`) and, when `gh` is available, `gh pr view`; `horka-memory-save` will write the file. If `task_file: closed`, the task was closed and has not reached the default branch yet: report the project memory and the commits made since the close (`task_behind`).
 
 ## Output
 
@@ -62,7 +62,7 @@ If `task_file: absent`, say so and rebuild the state from the branch's own commi
 ## Context Restored
 
 **Project**: [name]   **Stack**: [technologies]   **Phase**: [current state]
-**Memory**: saved at [commit] on [date], [n] commits behind [fresh | STALE: what is outdated]
+**Memory**: saved at [commit] on [date], [n] commits behind [fresh | STALE: what is outdated]   (on a task branch: "freshness not measured from this branch")
 
 ### Done
 ### Remaining
@@ -79,9 +79,9 @@ End with what you will do next, or the one question that blocks.
 
 ## Example
 
-Status: `memory: present`, `behind: 4`, `stale: no`, `task_branch: yes`, `task_file: present`, `task_behind: 2`, `unpushed: 1` on `fix/refund-rounding`. TASK.md says "212 tests pass, 1 fails: test_refund_rounding; nothing uncommitted".
+Status: `memory: present`, `behind: not measured from a task branch`, `task_branch: yes`, `task_file: present`, `task_behind: 2`, `unpushed: 1` on `fix/refund-rounding`. TASK.md says "212 tests pass, 1 fails: test_refund_rounding; nothing uncommitted".
 
-Result: read the project files and TASK.md, run `npm test`, get 213 passing; `git status` shows `src/refund.js` modified. Report: "Memory fresh (4 commits behind). File vs reality: the failing test it names now passes (commit a1b2c3d, made after the file); the file says nothing is uncommitted but `src/refund.js` is modified; 1 commit is not pushed. Remaining: step 2 of its Next list, the migration."
+Result: read the project files and TASK.md, run `npm test`, get 213 passing; `git status` shows `src/refund.js` modified. Report: "Project memory read; its freshness is not measured from this branch. File vs reality: the failing test it names now passes (commit a1b2c3d, made after the file); the file says nothing is uncommitted but `src/refund.js` is modified; 1 commit is not pushed. Remaining: step 2 of its Next list, the migration."
 
 ## Error handling
 

@@ -402,8 +402,10 @@ is    "a never-pushed branch rebased on a main that moved keeps its own two comm
 is    "and the listing shows those two only" "$(bash "$SCRIPTS/own-commits.sh" | grep -c .)" "2"
 git checkout -q main; git pull -q; commits 3 local-main.txt       # three commits on local main, not pushed
 git checkout -q -b feature/y HEAD~3; commits 2 y.txt; git rebase -q main
-is    "a never-pushed branch rebased on a local main with unpushed commits keeps its own two" "$(field own_commits)" "2"
-is    "and only those two are said to be on this machine only" "$(field local_only)" "2"
+is    "known limit: a never-pushed branch rebased on a local main with unpushed commits counts them too" "$(field own_commits)" "5"
+git checkout -q -b feature/z main; commits 5 z.txt; git checkout -q main; git merge -q --no-edit feature/z; git checkout -q feature/z; commit z.txt more
+is    "a branch merged into the local main, then continued, keeps all its commits" "$(field own_commits)" "6"
+is    "and all are said to be on this machine only" "$(field local_only)" "6"
 git checkout -q main; git reset -q --hard origin/main
 git checkout -q -b feature/d main; commits 6 d.txt; git push -q -u origin feature/d
 (cd "$WORK/r13-mate" && git pull -q && git merge -q --no-ff --no-edit origin/feature/d && git push -q && git push -q origin --delete feature/d)
@@ -455,7 +457,10 @@ cd "$WORK/r7" || exit 1; git checkout -q feature/login-form
 git rm -rq .claude/memory/in-progress/feature-login-form; git commit -qm "close task"; git push -q
 is    "status says the task is closed" "$(field task_file)" "closed"
 empty "stop hook does not ask for a new task file" "$(stop c1)"
-has   "session start says the task is closed and not yet on the default branch" "$(start)" "was closed (its task folder was promoted and deleted) and is not merged yet"
+has   "session start says the task is closed and names the default branch it has not reached" "$(start)" "was closed (its task folder was promoted and deleted) and has not reached origin/main yet"
+git remote set-head origin -d
+hasnt "without a known default branch it does not name one" "$(start)" "origin/main yet"
+git remote set-head origin main >/dev/null
 empty "pre-compact hook does not ask for a task file either" "$(compact)"
 echo x > stray.txt
 empty "uncommitted files on a closed task are not reported" "$(HORKA_MEMORY_REMIND_SECONDS=0 stop c1)"

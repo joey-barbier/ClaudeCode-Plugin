@@ -30,7 +30,7 @@ if [ "$HM_TASK_BRANCH" = "yes" ]; then
         some) flag "task-missing" "no task file for the work on this branch" ;;     # count unknown (shallow clone): never a "?"
       esac ;;
     present) [ "$HM_TASK_STALE" = "yes" ] && flag "task-stale" "task file $(many "$HM_TASK_BEHIND") commits behind" ;;
-    closed) ;;                               # closed and waiting for its merge: do not ask for a new task file
+    closed) ;;                               # closed, not yet on the default branch: do not ask for a new task file
   esac
   case "$HM_UNPUSHED" in
     not-on-remote)

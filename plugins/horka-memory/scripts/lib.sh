@@ -264,19 +264,14 @@ hm_status() {
     # The branch's own commits, counted two ways and the larger kept, because each way has a blind spot:
     #  - commits that are on no base branch: blind to work that was merged or fast-forwarded into a local base;
     #  - for a branch that is not on the remote, commits made since it was created on this machine (oldest
-    #    reflog entry), minus those of the bases it was rebased on or that were merged into it: blind when
-    #    the branch was created after the work, or when the reflog expired.
+    #    reflog entry), minus those the remote bases have (a rebase or a merge brings a teammate's commits
+    #    into that range): blind when the branch was created after the work, or when the reflog expired.
     # Known limit: commits made on a local base before a branch is created from it stay that base's.
     local obases="" b own_r="?" work_r="?" own_n="?" work_n="?"
-    # Subtracted from the reflog range: the remote bases, and a local base unless it contains HEAD (a local
-    # main the branch was rebased on holds base commits; a local staging the branch was merged into holds
-    # the branch's own).
-    for b in $HM_BASES; do
-      case "$b" in
-        origin/*) obases="$obases $b" ;;
-        *) git -C "$HM_ROOT" merge-base --is-ancestor HEAD "$b" 2>/dev/null || obases="$obases $b" ;;
-      esac
-    done
+    # Subtracted from the reflog range: the remote bases only. A local base is not: its commits may be
+    # the branch's own (the branch was merged into it locally) and nothing tells the two cases apart.
+    # Known limit: a branch rebased on a local base with unpushed commits counts them as its own.
+    for b in $HM_BASES; do case "$b" in origin/*) obases="$obases $b" ;; esac; done
     [ "$onremote" = "no" ] && created="$(git -C "$HM_ROOT" reflog show --format=%H "refs/heads/$HM_BRANCH" 2>/dev/null | tail -1)"
     if [ -n "$created" ] && git -C "$HM_ROOT" merge-base --is-ancestor "$created" HEAD 2>/dev/null; then
       own_r="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD ${obases:+--not $obases} 2>/dev/null || printf '?')"
@@ -301,7 +296,7 @@ hm_status() {
         for r in $HM_OUT_REFS; do HM_TASK_BEHIND="$(hm_min "$HM_TASK_BEHIND" "$(hm_task_behind "$r")")"; done
       fi
     elif [ "$HM_SHALLOW" != "yes" ]; then
-      # Closed and waiting for its merge: a commit deleted the task file and has not reached the remote's
+      # Closed, not yet on the default branch: a commit deleted the task file and has not reached the remote's
       # default branch yet. Only a committed deletion counts (a file removed from the working tree is just
       # missing). Without a known default branch, the commit must be on no base at all.
       # Known limits: a close that had no task folder to delete leaves no trace; once the branch is merged
@@ -326,7 +321,7 @@ hm_status() {
       # Its own commits that are on no remote branch at all: they exist on this machine only. Same two
       # counts as above, the larger kept.
       local lo_r="?" lo_n="?"
-      [ -n "$created" ] && lo_r="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD --not --remotes $HM_OBASES 2>/dev/null || printf '?')"
+      [ -n "$created" ] && lo_r="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" "$created"..HEAD --not --remotes 2>/dev/null || printf '?')"
       if [ -n "$HM_BASES" ] && [ "$HM_SHALLOW" != "yes" ]; then
         lo_n="$(git -C "$HM_ROOT" rev-list --count --max-count="$HM_COUNT_CAP" HEAD --not $HM_BASES --remotes 2>/dev/null || printf '?')"
       fi

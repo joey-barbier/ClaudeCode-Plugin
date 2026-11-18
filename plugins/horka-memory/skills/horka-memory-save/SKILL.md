@@ -29,7 +29,7 @@ Run `bash "<this skill's base directory>/../../scripts/memory-status.sh"`. Below
 | `memory: absent` | Say "No memory files found. Run `/horka-memory:horka-memory-restore` first to initialize." and stop. |
 | `task_branch: no` | Step 2 (project memory). |
 | `task_branch: yes` | Step 3 (task file). |
-| `task_file: closed` | The task was closed and is not merged yet. Review fixes need no task file: if they change what was promoted, correct the project files directly (they are this branch's until the merge) and say so. If the task is reopened, create `TASK.md` again (Step 3). |
+| `task_file: closed` | The task was closed and has not reached the default branch yet. Review fixes need no task file: if they change what was promoted, correct the project files directly (they are this branch's until the merge) and say so. If the task is reopened, create `TASK.md` again (Step 3). |
 | `task_branch: detached` | Stop: no branch is checked out. Ask the user to return to their branch. |
 | `task_branch: unknown` | No base branch in this clone to compare with. Ask the user whether this branch is a task (Step 3) or the project's main line (Step 2); do not guess. |
 
