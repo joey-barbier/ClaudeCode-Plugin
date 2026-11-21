@@ -169,7 +169,7 @@ claude plugin install horka-played
 |---|---|---|
 | `/horka-played:played` | « /played », « combien de tokens j'ai consommé », « ma conso Claude Code » | Totaux, par jour / machine / modèle, part des sous-agents, jour record, choix de période (dernier jour, 7 jours, plage libre, −1/+1 jour), carte à partager et PNG story 1080×1920 |
 
-Lecture seule, aucun chiffre estimé. Plusieurs machines : lance-le sur chacune et copie `~/.claude/played/<label>.json` sur la machine où tu ouvres la page. Les sessions cloud ne sont pas mesurables, et la page le dit.
+Lecture seule, aucun chiffre estimé. Plusieurs machines : lance-le sur chacune et copie `~/.claude/played/<label>.json` sur la machine où tu ouvres la page. Les sessions cloud déposent leur relevé à la fin de chaque tour (fils de projet claude.ai, hook du plugin) et sont comptées à partir de l'installation.
 
 ---
 

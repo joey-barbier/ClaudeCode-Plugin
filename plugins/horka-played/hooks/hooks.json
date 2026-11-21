@@ -1,0 +1,16 @@
+{
+  "description": "Cloud sessions only: at the end of each turn, saves this session's token usage to /mnt/project-files/played/cloud/ so that /played can count it. Does nothing on a local machine. Opt out with PLAYED_CLOUD=0.",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "[ \"$CLAUDE_CODE_REMOTE\" = true ] && [ -d /mnt/project-files ] && python3 \"${CLAUDE_PLUGIN_ROOT}/skills/played/scripts/usage.py\" --cloud /mnt/project-files/played/cloud >/dev/null 2>&1; exit 0",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
