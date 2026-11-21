@@ -69,6 +69,12 @@
       "source": "./plugins/horka-played",
       "description": "/played for Claude Code, as in WoW: how many tokens you burned. Measures your local transcripts (30 days by default), merges your other machines, and builds a doc-style page with per-day, per-machine and per-model charts, subagent share, record day, a shareable card and a 9:16 story PNG. Read-only, no estimated number.",
       "version": "1.0.0"
+    },
+    {
+      "name": "horka-harness-audit",
+      "source": "./plugins/horka-harness-audit",
+      "description": "Audit how you develop with AI agents: for every rule and every check, what actually holds it (a sentence, a script, a hook, CI or the platform). Two or three questions, a scan of about 30 seconds that edits nothing (permission rules, your own hooks run against a set of risky commands that are never executed, CI dependencies, branch protection, merges on red, caps, unused agents), then one HTML page read in two minutes and opened at the end: a level from 0 to 3 on three separate axes (design, detection, enforcement), what holds, what does not, and the actions to take, cheapest first. Ships a digest of the primary sources on harness engineering, with verified figures.",
+      "version": "1.0.0"
     }
   ]
 }

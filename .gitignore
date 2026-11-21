@@ -11,6 +11,10 @@ Thumbs.db
 # Node (if testing)
 node_modules/
 
+# Python
+__pycache__/
+*.pyc
+
 # Misc
 *.log
 .env

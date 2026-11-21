@@ -30,6 +30,7 @@ Then `/plugin` → **Discover** tab to browse, or install plugins individually b
 | **[horka-agent-forge](#horka-agent-forge)** | Production-grade skill factory with enforced quality gates | skill |
 | **[horka-project-index](#horka-project-index)** | Global project index: resolves generic commands to the right project/workspace | skill + script |
 | **[horka-research-plan](#horka-research-plan)** | Right model and right effort for each agent role → multi-agent research that saves tokens and ends in a sourced action plan (doc-style page); code variant for a migration run by many agents (blind testers before implementers, integration branch green on a gate, separate validation threads); every run is a task graph on a live board with a token debrief per task and per model; checks that hold: the product run end to end before any push, old-vs-new differential tests, verdicts pinned to a commit | skill |
+| **[horka-harness-audit](#horka-harness-audit)** | What actually holds your rules? A scan that edits nothing (rules, your own hooks run against risky commands that are never executed, CI, branch protection), then a 0-3 level on design, detection and enforcement, on one HTML page opened at the end | skill + scripts |
 | **[horka-played](#horka-played)** | `/played` as in WoW: your Claude Code token usage per day, machine and model, with a shareable card and a story PNG | skill + scripts |
 
 ---
@@ -205,6 +206,22 @@ claude plugin install horka-played
 | `/horka-played:played` | "/played", "how many tokens did I use", "combien de tokens j'ai consommé" | Totals, per day / machine / model, subagent share, record day, period picker (last day, 7 days, free range, −1/+1 day), shareable card and a 1080×1920 story PNG |
 
 Read-only, no estimated number. Several machines: run it on each one and copy `~/.claude/played/<label>.json` to the machine you open the page on. Cloud sessions are not measurable, and the page says so.
+
+---
+
+## horka-harness-audit
+
+**What actually holds your rules?** An audit of how you develop with AI agents: for every rule and every check, is it held by a sentence, a script, a hook, CI or the platform.
+
+```bash
+claude plugin install horka-harness-audit
+```
+
+| Component | Trigger | Does |
+|---|---|---|
+| `/horka-harness-audit:horka-harness-audit` | "audit my harness", "do my guardrails hold", "what level am I", "audite mon harness" | Two or three questions, a scan of about 30 seconds that edits nothing, then one HTML page opened at the end: a 0-3 level on three axes (design, detection, enforcement), what holds, what does not, and the actions to take, cheapest first |
+
+The scan tests your permission rules and runs your own PreToolUse hooks against a set of risky commands (the commands are never executed, but a hook that logs will log them; hooks defined by a scanned repository are not run), reads CI dependencies and, through `gh`, branch protection and merges on red. Details: [plugin README](plugins/horka-harness-audit/README.md).
 
 ---
 

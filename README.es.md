@@ -30,6 +30,7 @@ Luego `/plugin` → pestaña **Discover** para explorar, o instala plugins indiv
 | **[horka-agent-forge](#horka-agent-forge)** | Factory de skills con quality gates obligatorios | skill |
 | **[horka-project-index](#horka-project-index)** | Índice global de proyectos: resuelve comandos genéricos al proyecto/workspace correcto | skill + script |
 | **[horka-research-plan](#horka-research-plan)** | El modelo y el esfuerzo adecuados para cada rol de agente → investigación multi-agente que ahorra tokens y termina en un plan de acción con fuentes (página doc-style); variante código para una migración llevada por muchos agentes (testers ciegos antes de los implementadores, rama de integración verde en una puerta, hilos de validación separados); cada ejecución es un grafo de tareas en un tablero en vivo, con el balance de tokens por tarea y por modelo; verificaciones sólidas: el producto ejecutado de punta a punta antes de cada push, pruebas diferenciales viejo/nuevo, veredictos ligados a un commit | skill |
+| **[horka-harness-audit](#horka-harness-audit)** | ¿Qué sostiene de verdad tus reglas? Un escaneo que no modifica nada (reglas, tus propios hooks lanzados ante comandos de riesgo que nunca se ejecutan, CI, protección de rama) y un nivel de 0 a 3 en diseño, detección y aplicación, en una página HTML que se abre al final | skill + scripts |
 | **[horka-played](#horka-played)** | `/played` como en WoW: tu consumo de tokens de Claude Code por día, máquina y modelo, con tarjeta para compartir y PNG para stories | skill + scripts |
 
 ---
@@ -169,6 +170,22 @@ claude plugin install horka-played
 | `/horka-played:played` | "/played", "how many tokens did I use", "cuántos tokens he usado" | Totales, por día / máquina / modelo, parte de los subagentes, día récord, selector de periodo (último día, 7 días, rango libre, −1/+1 día), tarjeta para compartir y PNG para stories 1080×1920 |
 
 Solo lectura, ninguna cifra estimada. Varias máquinas: ejecútalo en cada una y copia `~/.claude/played/<label>.json` a la máquina donde abres la página. Las sesiones en la nube no se pueden medir, y la página lo dice.
+
+---
+
+## horka-harness-audit
+
+**¿Qué sostiene de verdad tus reglas?** Una auditoría de tu forma de desarrollar con agentes de IA: para cada regla y cada control, si lo sostiene una frase, un script, un hook, la CI o la plataforma.
+
+```bash
+claude plugin install horka-harness-audit
+```
+
+| Componente | Disparador | Función |
+|---|---|---|
+| `/horka-harness-audit:horka-harness-audit` | "audit my harness", "do my guardrails hold", "audita mi harness", "¿qué nivel tengo?" | Dos o tres preguntas, un escaneo de unos 30 segundos que no modifica nada y una página HTML que se abre al final: un nivel de 0 a 3 en tres ejes (diseño, detección, aplicación), lo que aguanta, lo que no, y las acciones por hacer, de la más barata a la más cara |
+
+El escaneo prueba tus reglas de permisos y lanza tus propios hooks PreToolUse ante una serie de comandos de riesgo (los comandos nunca se ejecutan, pero un hook que escribe un registro los registrará; los hooks definidos por un repositorio escaneado no se lanzan), lee las dependencias de la CI y, mediante `gh`, la protección de rama y las fusiones en rojo. Detalles: [README del plugin](plugins/horka-harness-audit/README.md).
 
 ---
 
