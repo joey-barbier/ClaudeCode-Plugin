@@ -43,7 +43,7 @@ python3 "<this skill's base directory>/scripts/scan.py" --json "$R/scan.json" --
 Options: `--home <dir>` when the Claude Code config is not in `~/.claude`, `--no-network` to skip GitHub, `--no-hook-probe` to run no hook at all, `--usage-days N`. `--probe-repo-hooks` also runs the hooks a scanned repository defines, and runs every hook from inside that repository: pass it only when the user says the repository is theirs or trusted, never for a repository they just cloned. For a narrow question, drop the folder and `--json`.
 
 - Every output line reads `[criterion] fact (source)`.
-- Tracked files are read at `origin/<default branch>`, not in the working tree: a stale checkout tells a false story. When the scan prints an old last fetch, ask the user to run `git fetch` and scan again; if nobody can answer, carry on and put the fetch date in the limits.
+- Tracked files are read at `origin/<default branch>`, not in the working tree: a stale checkout tells a false story. When the scan prints `STALE` next to the last fetch (more than 7 days), ask the user to run `git fetch` and scan again; if nobody can answer, carry on and put the fetch date in the limits.
 - A headless agent call "with no turn or budget flag and no `timeout` on the same line" may be capped by its caller: open the caller before writing that it has no cap.
 - The probe passes 13 risky commands as text to the permission rules and as input to the PreToolUse hooks, and lists the ones nothing stops. The commands are never run; the hooks are. A probe line that says a hook was not run, gave no answer or has a filter the scan did not understand is not a "passes": open that hook before writing that nothing stops the command.
 - Write "tested" for what the probe shows and "read in the code" for what you deduced: they are not the same strength of evidence.
@@ -80,7 +80,7 @@ The six **design pieces**. Count each one that exists in writing, in the reposit
 1. state kept outside the chat (a state or memory file, even stale);
 2. a definition of done written before the work (specs, acceptance lines, a gate named as the definition);
 3. a verifier role other than the author, and launched at least once in the usage window;
-4. a lessons file or loop;
+4. a lessons file or loop (in the repository, or a global one: a lessons file the scan lists under GLOBAL counts for every repository);
 5. permissions sorted by how hard an action is to undo (ask or deny rules, a soft-deny list, a guard hook);
 6. caps written down (turns, budget, attempts, batch size).
 
@@ -159,4 +159,4 @@ Levels: design 2, detection 2, enforcement 1. The `summary` of the page: "Your t
 - `references/grid.md`: the twelve criteria. Read at step 4.
 - `references/report-schema.md`: the fields of `audit.json`, their limits, an example. Read at step 5.
 - `references/sources.md`: what the articles and primary sources say, verified figures with URL and date, where popular advice departs from its sources, a short reading list. Read when the user asks why, wants sources, or brings an article to be compared with.
-- `references/fixes.md`: ready-to-adapt walls. Read when asked to fix something.
+- `references/fixes.md`: ready-to-adapt walls. Read at step 5 for the lines to paste in `how`, and when asked to fix something.

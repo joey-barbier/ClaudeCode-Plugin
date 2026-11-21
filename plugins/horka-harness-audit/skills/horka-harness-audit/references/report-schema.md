@@ -24,7 +24,7 @@ The judgement of a full audit is written as one JSON file, then rendered by `scr
 | `actions[].target` | yes | `branch`, `production`, `spend`, `secrets`, `cleanup` or `other` | |
 | `actions[].how` | no | the few lines to paste (a YAML fragment, a rule, a command); shown folded | 900 |
 | `criteria[]` | yes, C1 to C12 | `id`, `held_by`, `note`. One line per criterion; when repositories differ on one, repeat it with a `repo` field for each (72 lines at most) | note 120 |
-| `criteria[].held_by` | yes | `nothing`, `sentence`, `script`, `hook`, `ci_reports`, `blocks` or `na` (not measured) | |
+| `criteria[].held_by` | yes | `nothing`, `sentence`, `script`, `hook`, `ci_reports`, `blocks` or `na` (not measured). One value: when a criterion covers two things held differently (a CI budget that blocks, agent calls with no cap), give the weaker one and name the other in the note | |
 | `debt[]` | only for v1 and experiment repositories | `gap`, `repay_when` | 120 each |
 | `limits[]` | 0 to 8 | what was not measured, what was assumed | 170 each |
 

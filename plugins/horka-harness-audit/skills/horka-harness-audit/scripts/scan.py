@@ -929,14 +929,20 @@ def scan_repo(path, home_rules, home_hooks, args, mode, baseline):
         _, cur, _ = git(repo, "branch", "--show-current")
         _, date, _ = git(repo, "log", "-1", "--format=%cs", ref)
         _, fh, _ = git(repo, "rev-parse", "--git-path", "FETCH_HEAD")
-        fetched = "never"
+        fetched, age = "never", None
         fp = Path(fh) if os.path.isabs(fh) else repo / fh
         if fp.exists():
             fetched = time.strftime("%Y-%m-%d", time.localtime(fp.stat().st_mtime))
+            age = int((time.time() - fp.stat().st_mtime) // 86400)
         fresh = ""
         if ref != "HEAD":
-            fresh = (", fetched today" if fetched == time.strftime("%Y-%m-%d")
-                     else f", LAST FETCH {fetched}: run `git fetch` for fresh facts")
+            # a fetch is called stale after 7 days: before that, the remote branch is recent enough to judge
+            if age is not None and age <= 7:
+                fresh = f", last fetch {fetched}" + (" (today)" if age == 0 else f" ({age} day(s) ago)")
+            elif age is None:
+                fresh = ", no fetch recorded since the clone"
+            else:
+                fresh = f", STALE: last fetch {fetched} ({age} days ago), run `git fetch` for fresh facts"
         fact(scope, "C9", f"tracked files read at {ref} (last commit {date or 'none'}{fresh}) · working tree on "
              f"{cur or 'a detached commit'}"
              + (f" · remote {slug}" if slug else " · no GitHub remote")
@@ -1058,8 +1064,9 @@ def scan_repo(path, home_rules, home_hooks, args, mode, baseline):
     # C12 measuring the harness
     evals = sorted({re.sub(r"/evals?/.*$", "", f) for f in tree.files if re.search(r"(^|/)evals?/", f)})
     hook_tests = [f for f in tree.files if re.search(r"(?i)hook[^/]*(test|spec)|(test|spec)[^/]*hook", f)]
-    fact(scope, "C12", f"eval suites in the repository: {len(evals)} · tests that exercise a hook: {len(hook_tests)}",
-         tree.where)
+    fact(scope, "C12", f"eval suites in the repository: {len(evals)} · test files with `hook` in their name: "
+         f"{len(hook_tests)}" + (f" ({', '.join(hook_tests[:3])}): open one to see whether it tests an agent hook or "
+                                  "an application hook" if hook_tests else ""), tree.where)
 
     if not is_git:
         return
