@@ -27,7 +27,7 @@ L = {
                essentials='The essentials', waiting_on='Waiting on {who}', decisions='Decisions taken', probes='Real probes: what we found',
                k_tasks='tasks done', k_run='tasks running', k_agents='agents launched', k_asks='direct calls to a cheaper model',
                k_tok='tokens in all, {cr} of them cache reads', k_out='output tokens',
-               k_time='elapsed, for {cum} of agent work ({par})', graph='Task graph',
+               k_time='elapsed, for {cum} of agent work ({par})', u_day='d', graph='Task graph',
                graph_note='A task starts as soon as the tasks it depends on are done; the others do not wait for it. A solid arrow comes from a finished task.',
                tasks='Tasks and agents', by_model='Tokens by model',
                h=['Id', 'Task', 'Role', 'Model', 'Effort', 'State', 'Agents', 'Duration', 'Turns', 'Tokens', 'Output'],
@@ -50,7 +50,7 @@ L = {
                essentials="L'essentiel", waiting_on='En attente de {who}', decisions='Décisions prises', probes="Sondes réelles : ce qu'on a relevé",
                k_tasks='tâches faites', k_run='tâches en cours', k_agents='agents lancés', k_asks='appels directs à un modèle moins cher',
                k_tok='jetons au total, dont {cr} de lectures de cache', k_out='jetons de sortie',
-               k_time="écoulées, pour {cum} de travail d'agents ({par})", graph='Graphe des tâches',
+               k_time="de temps écoulé, pour {cum} de travail d'agents ({par})", u_day='j', graph='Graphe des tâches',
                graph_note="Une tâche part dès que celles dont elle dépend sont faites ; les autres ne l'attendent pas. Une flèche pleine vient d'une tâche terminée.",
                tasks='Tâches et agents', by_model='Jetons par modèle',
                h=['Id', 'Tâche', 'Rôle', 'Modèle', 'Effort', 'État', 'Agents', 'Durée', 'Tours', 'Jetons', 'Sortie'],
@@ -111,6 +111,20 @@ def fmt(n):
     if n >= 1e3:
         return '%d k' % round(n / 1e3)
     return str(n)
+
+
+def span(minutes, day='d'):
+    """A duration given in minutes, as text: minutes under an hour ("45 min"), hours and minutes under a day ("2 h 15"),
+    days and hours beyond ("2 d 16 h"). Non-breaking spaces, so that a line never cuts a duration in two."""
+    m = max(0, int(round(minutes)))
+    if m < 60:
+        s = '%d min' % m
+    elif m < 1440:
+        s = ('%d h %02d' % divmod(m, 60)) if m % 60 else '%d h' % (m // 60)
+    else:
+        d, h = divmod(int(round(m / 60)), 24)
+        s = ('%d %s %d h' % (d, day, h)) if h else '%d %s' % (d, day)
+    return s.replace(' ', '\u00a0')
 
 
 def allin(c):
@@ -302,7 +316,7 @@ def main():
             tot.update(a['tot'])
             t0 = min(filter(None, [t0, a['t0']]))
             t1 = max(filter(None, [t1, a['t1']]))
-        dur = '%d min' % max(1, round((ts(t1) - ts(t0)).total_seconds() / 60)) if t0 else '—'
+        dur = span(max(1, (ts(t1) - ts(t0)).total_seconds() / 60), lab['u_day']) if t0 else '—'
         trs.append('<tr id="t-%s"><td class="mono"><a href="#graph-section" data-go="%s">%s</a></td><td>%s%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="num">%s</td>'
                    '<td class="num">%s</td><td class="num">%s</td><td class="num">%s</td><td class="num">%s</td></tr>' % (
                        E(n['id']), E(n['id']), E(n['id']), E(n['title']), ('<div class="note">%s</div>' % E(n['note'])) if n.get('note') else '',
@@ -337,7 +351,7 @@ def main():
         '{{DECISIONS}}': lis('decisions'), '{{PROBES}}': lis('probes', 'sondes'),
         '{{K_TASKS}}': '%d / %d' % (count['done'], len(G['nodes'])), '{{K_RUN}}': str(count['running']),
         '{{K_AGENTS}}': str(len(agents)), '{{K_ASKS}}': str(n_asks), '{{K_TOK}}': fmt(tot_all), '{{K_OUT}}': fmt(tot_out),
-        '{{K_ELAPSED}}': '%d min' % round(elapsed),
+        '{{K_ELAPSED}}': span(elapsed, lab['u_day']),
         '{{SVG}}': '\n'.join(svg), '{{ROWS}}': '\n'.join(trs), '{{MROWS}}': '\n'.join(mrows),
         '{{CHIPS}}': ''.join(chip(ST[s], label(s)) for s in ('done', 'running', 'waiting', 'user', 'failed')),
     }
@@ -346,7 +360,7 @@ def main():
         rep['{{L_%s}}' % k.upper()] = E(lab[k])
     rep['{{L_WAITING_ON}}'] = E(lab['waiting_on'].format(who=who))
     rep['{{L_K_TOK}}'] = E(lab['k_tok'].format(cr='%d %%' % round(100 * tot_cr / tot_all) if tot_all else '—'))
-    rep['{{L_K_TIME}}'] = E(lab['k_time'].format(cum='%d min' % round(cum), par=('×%.1f' % (cum / elapsed)) if elapsed else '—'))
+    rep['{{L_K_TIME}}'] = E(lab['k_time'].format(cum=span(cum, lab['u_day']), par=('×%.1f' % (cum / elapsed)) if elapsed else '—'))
     rep['{{L_H}}'] = ''.join('<th%s>%s</th>' % (' class="num"' if i >= 6 else '', E(h)) for i, h in enumerate(lab['h']))
     rep['{{L_HM}}'] = ''.join('<th%s>%s</th>' % (' class="num"' if i >= 1 else '', E(h)) for i, h in enumerate(lab['hm']))
     for k in ('toc', 'tools', 'z_in', 'z_out', 'z_fit', 'z_full', 'z_hint', 'graph_hint', 'p_label', 'p_close'):
