@@ -99,10 +99,16 @@ html.fs-on,html.fs-on body{overflow:hidden}
 .node:focus{outline:none} .node:focus-visible .bx{stroke:var(--focus);stroke-width:5;stroke-dasharray:none}
 .node:hover .bx{stroke-width:3}
 .nid{font:700 11px var(--mono)} .nwho{font:11px var(--mono)} .ntt{font-size:12.5px;font-weight:600}
-svg.focusing .node,svg.focusing .edge{opacity:.16}
-svg.focusing .node.hl,svg.focusing .node.sel{opacity:1}
-svg.focusing .edge.hl{opacity:1;stroke:var(--ink);stroke-width:3}
-.node.sel .bx{stroke-width:5;stroke-dasharray:none}
+/* Selection: the whole upstream chain stays lit (direct dependencies thicker), direct dependents
+   and, on demand, every descendant in the focus colour; the rest fades. */
+svg.focusing .node,svg.focusing .edge{opacity:.14}
+svg.focusing .node.up,svg.focusing .node.dn,svg.focusing .node.sel{opacity:1}
+svg.focusing .edge.up{opacity:1;stroke:var(--ink);stroke-width:2;stroke-dasharray:none}
+svg.focusing .edge.d1{stroke-width:5}
+svg.focusing .edge.dn{opacity:1;stroke:var(--focus);stroke-width:3}
+.node.d1 .bx{stroke-width:4.5;stroke-dasharray:none}
+.node.dn .bx{stroke:var(--focus);stroke-width:3}
+.node.sel .bx{stroke-width:6;stroke-dasharray:none}
 
 /* Detail panel: inside the graph box, so it stays with the graph in full screen. */
 .dp{position:absolute;z-index:5;right:10px;top:10px;max-height:calc(100% - 20px);width:min(380px,calc(100% - 20px));overflow:auto;
@@ -117,15 +123,30 @@ svg.focusing .edge.hl{opacity:1;stroke:var(--ink);stroke-width:3}
 .dp .dp-note{margin-top:10px;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px;border-left:4px solid var(--soft);padding-left:10px}
 .dp h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
 .dp ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
-.dp li button{display:flex;gap:8px;align-items:baseline;width:100%;text-align:left;font-weight:400;box-shadow:none;min-height:0;padding:5px 8px}
+/* One entry: number, status, id, "direct" and state on a line, the title under it (two lines at most in a chain). */
+.dp li button{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:center;width:100%;text-align:left;font-weight:400;box-shadow:none;min-height:0;padding:5px 8px}
 .dp li button b{font-family:var(--mono);font-size:12px;flex:none}
-.dp li button span.t{flex:1;min-width:0;overflow-wrap:anywhere}
+.dp li button span.t{order:9;flex:1 0 100%;min-width:0;overflow-wrap:anywhere}
+.dp li button .muted{margin-left:auto;font-size:12px}
 .dp .sw{flex:none;width:10px;height:10px;border:1.5px solid var(--line);border-radius:2px;align-self:center}
 .sw.ok{background:var(--ok)} .sw.run{background:var(--run)} .sw.todo{background:var(--todo)} .sw.you{background:var(--you)} .sw.ko{background:var(--ko)}
 .dp .dp-row{display:inline-block;margin-top:14px;font-size:13px}
+.dp .cnt{margin:0 0 6px;font-size:13px}
+.dp .chain{max-height:min(42vh,380px);overflow:auto;border:1.5px solid var(--soft);border-radius:4px;padding:6px;margin-top:6px}
+.dp .chain details{margin:0 0 6px}
+.dp .chain summary{cursor:pointer;font-weight:700;font-size:13px;padding:3px 2px}
+.dp .chain summary .muted{font-weight:400}
+.dp .chain ul{gap:4px;margin:4px 0 2px}
+.dp .chain li button{padding:3px 6px;font-size:13px}
+.dp .chain span.t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dp li button.d1{border-width:3px}
+.dp .num{font:11px var(--mono);color:var(--mute);flex:none;min-width:3.5ch;text-align:right}
+.dp .tag{font:700 10.5px var(--mono);border:1.5px solid var(--line);border-radius:3px;padding:0 4px;flex:none;align-self:center}
+.dp .more{margin-top:8px;font-size:12.5px;min-height:30px}
 .dp .muted{color:var(--mute)}
 @media (max-width:640px){
   .dp{top:auto;left:6px;right:6px;bottom:6px;width:auto;max-height:62%}
+  .dp .chain{max-height:32vh}
   .gtools .ghint{display:none}
 }
 
@@ -298,7 +319,7 @@ a{color:inherit}
     const z = b.dataset.z;
     if (z === 'in') zoomAt(1.4, cw / 2, ch / 2);
     else if (z === 'out') zoomAt(1 / 1.4, cw / 2, ch / 2);
-    else if (z === 'fit') fit();
+    else if (z === 'fit') sel ? frameSet(chainIds()) : fit();
     else if (z === 'full') setFull(!wrap.classList.contains('fs'));
   });
   // Full screen is a layer of the page: the browser API may be refused inside a sandboxed frame.
@@ -354,9 +375,13 @@ a{color:inherit}
   view.addEventListener('pointerup', up);
   view.addEventListener('pointercancel', e => { up(e); dragged = true; });
 
-  // ── Selection: the card, what it waits for and what depends on it; the rest fades ──
-  let sel = null, lit = [];
+  // ── Selection: the card, its whole upstream chain and what depends on it; the rest fades ──
+  // Computed once per click. Every walk keeps a visited set, so a cycle in faulty data ends.
+  let sel = null, lit = [], upS = new Set(), downS = new Set(), downAll = false;
   const dp = $('dp'), dpT = $('dp-t'), dpB = $('dp-b');
+  const edges = [...svg.querySelectorAll('.edge')].map(e => ({e, f: e.dataset.f, t: e.dataset.t}));
+  const depsOf = id => (byId.get(id) || {d: []}).d, kidsOf = id => kids.get(id) || [];
+  const plural = (n, key) => { const [one, many] = L[key].split('|'); return n + ' ' + (n === 1 ? one : many); };
   view.addEventListener('click', e => {
     const g = e.target.closest('.node');
     if (g) e.preventDefault();
@@ -371,17 +396,66 @@ a{color:inherit}
   // Tabbing through the cards keeps the focused one in view.
   svg.addEventListener('focusin', e => { const g = e.target.closest('.node'); if (g && g.matches(':focus-visible')) show(g.dataset.id, false); });
 
+  function reach(id, next){
+    const seen = new Set(), todo = [id];
+    while (todo.length) for (const n of next(todo.pop())) if (n !== id && !seen.has(n) && byId.has(n)) { seen.add(n); todo.push(n); }
+    return seen;
+  }
+  // Longest number of steps from each task of `set` to the selected one, walking `next` towards it.
+  // Sorting by it, larger first, gives an order in which the work can have been done.
+  function steps(set, root, next){
+    const memo = new Map([[root, 0]]), on = new Set();
+    const f = v => {
+      if (memo.has(v)) return memo.get(v);
+      if (on.has(v)) return 0;
+      on.add(v);
+      let m = 0;
+      for (const w of next(v)) if (w === root || set.has(w)) m = Math.max(m, 1 + f(w));
+      on.delete(v); memo.set(v, m);
+      return m;
+    };
+    set.forEach(f);
+    return memo;
+  }
   function el(tag, cls, text){ const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
-  function list(ids){
+  function item(id, num, direct){
+    const n = byId.get(id), li = el('li'), b = el('button', direct ? 'd1' : '');
+    b.type = 'button'; b.dataset.go = id; if (n) b.title = n.t;
+    if (num) b.append(el('span', 'num', num));
+    b.append(el('span', 'sw ' + (n ? n.k : 'todo')), el('b', null, id), el('span', 't', n ? n.t : ''));
+    if (direct) b.append(el('span', 'tag', L.p_direct));
+    b.append(el('span', 'muted', n ? n.s : ''));
+    li.append(b);
+    return li;
+  }
+  function list(ids, direct){
     const ul = el('ul');
-    if (!ids.length) { ul.append(el('li', 'muted', L.p_none)); return ul; }
-    ids.forEach(id => {
-      const n = byId.get(id), li = el('li'), b = el('button');
-      b.type = 'button'; b.dataset.go = id;
-      b.append(el('span', 'sw ' + (n ? n.k : 'todo')), el('b', null, id), el('span', 't', n ? n.t : ''), el('span', 'muted', n ? n.s : ''));
-      li.append(b); ul.append(li);
-    });
+    if (!ids.length) ul.append(el('li', 'muted', L.p_none));
+    ids.forEach(id => ul.append(item(id, '', direct)));
     return ul;
+  }
+  // A chain in work order, one group per lane (a lane is one thread of the run), each entry numbered
+  // in the global order. Groups holding a direct link start open; all start open on a short chain.
+  function chain(ids, direct){
+    const box = el('div', 'chain'), groups = new Map();
+    ids.forEach((id, i) => {
+      const l = (byId.get(id) || {}).l || L.p_nolane;
+      if (!groups.has(l)) groups.set(l, []);
+      groups.get(l).push([id, i + 1]);
+    });
+    groups.forEach((rows, l) => {
+      const d = el('details'), s = el('summary', null, l + ' '), nd = rows.filter(([id]) => direct.has(id)).length;
+      s.append(el('span', 'muted', '· ' + plural(rows.length, 'p_task') + (nd ? ', ' + plural(nd, 'p_dir') : '')));
+      d.open = ids.length <= 30 || nd > 0;
+      const ul = el('ul');
+      rows.forEach(([id, num]) => ul.append(item(id, num, direct.has(id))));
+      d.append(s, ul); box.append(d);
+    });
+    return box;
+  }
+  function order(set, next, desc){
+    const st = steps(set, sel, next), rank = id => (byId.get(id) || {}).h || 0;
+    return [...set].sort((a, b) => desc ? (st.get(b) - st.get(a) || rank(a) - rank(b)) : (st.get(a) - st.get(b) || rank(a) - rank(b)));
   }
   function panel(n){
     dpT.textContent = '';
@@ -398,38 +472,79 @@ a{color:inherit}
     row(L.p_tok, n.to ? n.to + (n.o ? ' · ' + n.o + ' ' + L.p_out : '') : '');
     dpB.append(dl);
     if (n.n) dpB.append(el('p', 'dp-note', n.n));
-    dpB.append(el('h4', null, L.p_deps + ' (' + n.d.length + ')'), list(n.d));
-    const ks = kids.get(n.id) || [];
-    dpB.append(el('h4', null, L.p_kids + ' (' + ks.length + ')'), list(ks));
+    // Upstream: the whole chain that leads to the card, in work order.
+    const direct = new Set(n.d.filter(d => byId.has(d)));
+    dpB.append(el('h4', null, L.p_deps));
+    if (!upS.size) dpB.append(el('p', 'muted cnt', L.p_none));
+    else {
+      dpB.append(el('p', 'cnt', L.p_up_n.replace('{n}', plural(upS.size, 'p_task')).replace('{d}', plural(direct.size, 'p_dir'))));
+      dpB.append(chain(order(upS, kidsOf, true), direct));
+    }
+    // Downstream: direct dependents, the whole descent on demand.
+    const ks = kidsOf(n.id), all = reach(n.id, kidsOf);
+    dpB.append(el('h4', null, L.p_kids));
+    if (ks.length) dpB.append(el('p', 'cnt', L.p_down_n.replace('{d}', plural(ks.length, 'p_dir')).replace('{n}', String(all.size))));
+    dpB.append(list(ks, false));
+    if (all.size > ks.length) {
+      const b = el('button', 'more', (downAll ? L.p_less : L.p_all).replace('{n}', all.size));
+      b.type = 'button'; b.dataset.down = '1'; b.setAttribute('aria-expanded', String(downAll));
+      dpB.append(b);
+      if (downAll) dpB.append(chain(order(all, depsOf, false), new Set(ks)));
+    }
     const a = el('a', 'dp-row', L.p_row); a.href = '#t-' + n.id; dpB.append(a);
     dp.hidden = false;
-    dp.scrollTop = 0;
+  }
+  function light(){
+    lit.forEach(e => e.classList.remove('up', 'd1', 'dn', 'sel'));
+    lit = [];
+    const mark = (node, ...c) => { node.classList.add(...c); lit.push(node); };
+    const n = byId.get(sel), direct = new Set(n.d);
+    mark(cards.get(sel), 'sel');
+    upS.forEach(i => { const g = cards.get(i); if (g) direct.has(i) ? mark(g, 'up', 'd1') : mark(g, 'up'); });
+    downS = downAll ? reach(sel, kidsOf) : new Set(kidsOf(sel));
+    downS.forEach(i => { const g = cards.get(i); if (g) mark(g, 'dn'); });
+    edges.forEach(({e, f, t}) => {
+      if (upS.has(f) && (t === sel || upS.has(t))) t === sel ? mark(e, 'up', 'd1') : mark(e, 'up');
+      else if (downS.has(t) && (f === sel || (downAll && downS.has(f)))) mark(e, 'dn');
+    });
   }
   function select(id, opts){
-    lit.forEach(e => e.classList.remove('hl', 'sel'));
-    lit = [];
     sel = id && byId.has(id) ? id : null;
     svg.classList.toggle('focusing', !!sel);
-    if (!sel) { dp.hidden = true; return; }
-    const n = byId.get(sel), c = cards.get(sel);
-    c.classList.add('sel'); lit.push(c);
-    [...n.d, ...(kids.get(sel) || [])].forEach(i => { const g = cards.get(i); if (g) { g.classList.add('hl'); lit.push(g); } });
-    (edgesOf.get(sel) || []).forEach(e => { e.classList.add('hl'); lit.push(e); });
-    panel(n);
+    if (!sel) { lit.forEach(e => e.classList.remove('up', 'd1', 'dn', 'sel')); lit = []; upS = new Set(); dp.hidden = true; return; }
+    downAll = false;
+    upS = reach(sel, depsOf);
+    light();
+    panel(byId.get(sel));
+    dp.scrollTop = 0;
     show(sel, opts && opts.go);
+  }
+  const chainIds = () => [sel, ...upS, ...downS];
+  // Frame a set of cards in the free part of the view.
+  function frameSet(ids){
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    ids.forEach(i => { const g = cards.get(i); if (!g) return; const gx = +g.dataset.x, gy = +g.dataset.y;
+      x0 = Math.min(x0, gx); y0 = Math.min(y0, gy); x1 = Math.max(x1, gx + BW); y1 = Math.max(y1, gy + BH); });
+    if (x0 === Infinity) return fit();
+    const [fw, fh] = free(), P = 24;
+    k = clamp(Math.min(fw / (x1 - x0 + 2 * P), fh / (y1 - y0 + 2 * P)), minK(), 1.2);
+    x = (x0 + x1) / 2 - fw / 2 / k; y = (y0 + y1) / 2 - fh / 2 / k;
+    later();
+  }
+  function free(){
+    const r = view.getBoundingClientRect(), pr = dp.hidden ? null : dp.getBoundingClientRect();
+    const side = pr && pr.left > r.left + r.width / 2;
+    return [Math.max(side ? pr.left - r.left - 10 : cw, 40), Math.max(pr && !side ? pr.top - r.top - 10 : ch, 40)];
   }
   // Bring a card into the free part of the view (left of the panel, or above it on a phone).
   function show(id, go){
     const g = cards.get(id); if (!g) return;
     if (go && k < 0.6) k = Math.min(0.8, MAXK);
-    const gx = +g.dataset.x, gy = +g.dataset.y;
-    const r = view.getBoundingClientRect(), pr = dp.hidden ? null : dp.getBoundingClientRect();
-    const side = pr && pr.left > r.left + r.width / 2;
-    const fw = side ? pr.left - r.left - 10 : cw, fh = pr && !side ? pr.top - r.top - 10 : ch;
+    const gx = +g.dataset.x, gy = +g.dataset.y, [fw, fh] = free();
     const sx0 = (gx - x) * k, sy0 = (gy - y) * k, sx1 = sx0 + BW * k, sy1 = sy0 + BH * k;
     if (go || sx0 < 8 || sy0 < 8 || sx1 > fw - 8 || sy1 > fh - 8) {
-      x = gx + BW / 2 - Math.max(fw, 40) / 2 / k;
-      y = gy + BH / 2 - Math.max(fh, 40) / 2 / k;
+      x = gx + BW / 2 - fw / 2 / k;
+      y = gy + BH / 2 - fh / 2 / k;
       later();
     }
   }
@@ -438,7 +553,15 @@ a{color:inherit}
     const g = cards.get(id);
     if (g) g.focus({preventScroll: true});
   }
-  dpB.addEventListener('click', e => { const b = e.target.closest('button[data-go]'); if (b) go(b.dataset.go); });
+  dpB.addEventListener('click', e => {
+    const b = e.target.closest('button[data-go]');
+    if (b) return go(b.dataset.go);
+    if (e.target.closest('button[data-down]')) {
+      const top = dp.scrollTop;
+      downAll = !downAll; light(); panel(byId.get(sel)); dp.scrollTop = top;
+      const m = dpB.querySelector('button[data-down]'); if (m) m.focus({preventScroll: true});
+    }
+  });
   $('dp-x').addEventListener('click', () => { const id = sel; select(null); const g = cards.get(id); if (g) g.focus({preventScroll: true}); });
   // Task table: the id leads to the card in the graph.
   document.querySelectorAll('a[data-go]').forEach(a => a.addEventListener('click', e => {

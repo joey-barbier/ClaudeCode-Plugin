@@ -39,10 +39,13 @@ L = {
                n_probes='Probes', n_graph='Graph', n_tasks='Tokens per task', n_models='Tokens per model',
                tools='Graph controls', z_in='Zoom in', z_out='Zoom out', z_fit='Fit to window', z_full='Full screen',
                z_exit='Exit full screen', z_hint='Drag to move · Ctrl + wheel or pinch to zoom · Esc to leave',
-               graph_hint='Click a task to see what it waits for and what depends on it.',
+               graph_hint='Click a task to light the whole chain that leads to it, thicker for its direct dependencies, and what depends on it.',
                p_label='Task detail', p_close='Close', p_role='Role', p_model='Model', p_effort='effort',
                p_agents='Agents', p_dur='Duration', p_turns='Turns', p_tok='Tokens', p_out='output',
-               p_deps='Waits for', p_kids='Depends on it', p_none='None', p_row='Its row in the task table'),
+               p_deps='What it took to get here', p_kids='Depends on it', p_none='None',
+               p_up_n='{n} upstream, {d}', p_down_n='{d}, {n} in the whole descent',
+               p_task='task|tasks', p_dir='direct|direct', p_direct='direct', p_all='Show the whole descent ({n})',
+               p_less='Fold the descent ({n})', p_nolane='No lane', p_row='Its row in the task table'),
     'fr': dict(title='Suivi du chantier', updated='Mis à jour le', tok_note='Jetons lus dans les transcripts, lectures de cache comprises.',
                essentials="L'essentiel", waiting_on='En attente de {who}', decisions='Décisions prises', probes="Sondes réelles : ce qu'on a relevé",
                k_tasks='tâches faites', k_run='tâches en cours', k_agents='agents lancés', k_asks='appels directs à un modèle moins cher',
@@ -59,10 +62,13 @@ L = {
                n_probes='Sondes', n_graph='Graphe', n_tasks='Jetons par tâche', n_models='Jetons par modèle',
                tools='Commandes du graphe', z_in='Zoom avant', z_out='Zoom arrière', z_fit='Ajuster à la fenêtre', z_full='Plein écran',
                z_exit='Quitter le plein écran', z_hint='Glisser pour déplacer · Ctrl + molette ou pincement pour zoomer · Échap pour sortir',
-               graph_hint="Touche une tâche pour voir ce qu'elle attend et ce qui dépend d'elle.",
+               graph_hint="Touche une tâche : toute la chaîne qui y mène s'allume, en trait épais pour ses dépendances directes, avec ce qui dépend d'elle.",
                p_label="Détail d'une tâche", p_close='Fermer', p_role='Rôle', p_model='Modèle', p_effort='effort',
                p_agents='Agents', p_dur='Durée', p_turns='Tours', p_tok='Jetons', p_out='de sortie',
-               p_deps='Elle attend', p_kids="Ce qui dépend d'elle", p_none='Aucune', p_row='Sa ligne dans le tableau des tâches'),
+               p_deps="Ce qu'il a fallu pour y arriver", p_kids="Ce qui dépend d'elle", p_none='Aucune',
+               p_up_n='{n} en amont, dont {d}', p_down_n='{d}, {n} dans toute la descendance',
+               p_task='tâche|tâches', p_dir='directe|directes', p_direct='directe', p_all='Voir toute la descendance ({n})',
+               p_less='Replier la descendance ({n})', p_nolane='Sans couloir', p_row='Sa ligne dans le tableau des tâches'),
 }
 
 
@@ -180,7 +186,8 @@ def main():
 
     def dep(i):
         if i not in depth:
-            depth[i] = 1 + max([dep(d) for d in N[i].get('deps', [])], default=-1)
+            depth[i] = 0   # placeholder first: a cycle in faulty data ends here instead of recursing forever
+            depth[i] = 1 + max([dep(d) for d in N[i].get('deps', []) if d in N], default=-1)
         return depth[i]
 
     for i in N:
@@ -306,7 +313,7 @@ def main():
         # What the detail panel shows; plain text, set with textContent by the page script.
         data.append(dict(id=n['id'], t=n['title'], k=ST.get(n['status'], 'todo'), s=label(n['status']),
                          l=lane_names.get(n.get('lane'), ''), r=n.get('role', ''), m=n.get('model', ''), e=n.get('effort', ''),
-                         n=n.get('note', ''), a=n.get('agents', []), d=n.get('deps', []), du=dur if t0 else '',
+                         n=n.get('note', ''), a=n.get('agents', []), d=n.get('deps', []), h=depth[n['id']], du=dur if t0 else '',
                          tu=tot['turns'] or '', to=fmt(allin(tot)) if tot else '', o=fmt(tot['output_tokens']) if tot else ''))
     mrows = []
     for m in sorted(models, key=lambda m: -allin(models[m])):
@@ -349,7 +356,7 @@ def main():
            ('probes', 'n_probes'), ('models', 'n_models'), ('tasks', 'n_tasks')]   # page order
     rep['{{NAV}}'] = ''.join('<li><a href="#%s">%s</a></li>' % (a, E(lab[k].format(who=who))) for a, k in nav)
     # Data of the detail panel and its labels. "</" is escaped so that no note can close the script element.
-    ui = {k: lab[k].format(who=who) for k in lab if k[:2] in ('p_', 'z_')}
+    ui = {k: lab[k].replace('{who}', who) for k in lab if k[:2] in ('p_', 'z_')}
     rep['{{DATA}}'] = json.dumps({'nodes': data, 'lab': ui}, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     for k, v in rep.items():
         page = page.replace(k, v)
