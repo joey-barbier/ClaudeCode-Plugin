@@ -1,34 +1,42 @@
 <!doctype html>
-<html><head><meta charset="utf-8">
+<html lang="{{LANG}}"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{TITLE}}</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<script>document.documentElement.classList.add('js')</script>
 <style>
-/* Layout: one column, summary first, then the task graph (scrolls sideways in its own box), then tables. */
+/* Layout: one column, a sticky contents bar, summary first, then the task graph in a pan and zoom
+   view (its own box, full screen on demand, detail panel inside it), then the lists, tokens per
+   model, and the long table of tasks last.
+   Without script: the graph scrolls in its box and a card leads to its row in the task table. */
 :root{
   --bg:#FAF4F0; --card:#FFFFFF; --ink:#111111; --mute:#5C5550; --line:#111111; --soft:#E9DFD8;
   --ok:#8FE388; --run:#FFDB58; --todo:#FFFFFF; --you:#FF8ACD; --ko:#FF6B6B; --ai:#AE7AFF; --info:#87CEEB;
-  --on-chip:#111111; --shadow:#111111;
+  --focus:#2F6FEB; --on-chip:#111111; --shadow:#111111;
   --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#17141A; --card:#221E26; --ink:#F3EEEA; --mute:#B3A9A6; --line:#F3EEEA; --soft:#3A3340;
   --ok:#5FB85A; --run:#D9B53A; --todo:#221E26; --you:#D96BAA; --ko:#D95757; --ai:#8E63D9; --info:#5FA6C4;
-  --on-chip:#111111; --shadow:#000000; color-scheme:dark } }
+  --focus:#7FA8FF; --on-chip:#111111; --shadow:#000000; color-scheme:dark } }
 :root[data-theme="dark"]{
   --bg:#17141A; --card:#221E26; --ink:#F3EEEA; --mute:#B3A9A6; --line:#F3EEEA; --soft:#3A3340;
   --ok:#5FB85A; --run:#D9B53A; --todo:#221E26; --you:#D96BAA; --ko:#D95757; --ai:#8E63D9; --info:#5FA6C4;
-  --on-chip:#111111; --shadow:#000000; color-scheme:dark }
-body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);
+  --focus:#7FA8FF; --on-chip:#111111; --shadow:#000000; color-scheme:dark }
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:72px}
+html:not(.js) .js-only{display:none}
+@media (prefers-reduced-motion: no-preference){ html{scroll-behavior:smooth} }
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--sans);margin:0;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
 main{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:22px}
-h1{font-size:28px;font-weight:900;line-height:1.15;margin:0;text-wrap:balance}
+h1{font-size:28px;font-weight:900;line-height:1.15;margin:0;text-wrap:balance;overflow-wrap:anywhere}
 h2{font-size:18px;font-weight:900;margin:0 0 10px}
 p{margin:0}
 .sub{color:var(--mute);font-size:13px;margin-top:4px}
 .card{background:var(--card);border:2px solid var(--line);border-radius:4px;box-shadow:4px 4px 0 var(--shadow);padding:16px 18px;min-width:0}
 .card ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;max-width:78ch}
-.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(300px,100%),1fr));gap:22px}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
 .kpi{background:var(--card);border:2px solid var(--line);border-radius:4px;padding:10px 12px;min-width:0}
 .kpi b{display:block;font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;line-height:1.2}
@@ -38,23 +46,120 @@ p{margin:0}
 .chip.you{background:var(--you)} .chip.ko{background:var(--ko)} .chip.ai{background:var(--ai)}
 .legend{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .scroll{overflow-x:auto}
+button{font:700 13px var(--sans);color:var(--ink);background:var(--card);border:2px solid var(--line);border-radius:4px;
+  padding:5px 10px;cursor:pointer;box-shadow:2px 2px 0 var(--shadow);min-height:34px}
+button:active{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--shadow)}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+
+/* Contents bar: sticky; on a phone it folds behind one button. */
+.toc{position:sticky;top:0;z-index:30;background:var(--bg);margin:0 -4px;padding:8px 4px;border-bottom:2px solid var(--line)}
+.toc-btn{display:none}
+.toc ul{list-style:none;margin:0;padding:0;display:flex;gap:6px;overflow-x:auto;scrollbar-width:thin}
+.toc a{display:block;white-space:nowrap;text-decoration:none;font-size:13px;font-weight:700;padding:4px 10px;border:2px solid transparent;border-radius:3px}
+.toc a:hover{border-color:var(--soft)}
+.toc a.on{border-color:var(--line);background:var(--card);box-shadow:2px 2px 0 var(--shadow)}
+@media (max-width:720px){
+  .js .toc-btn{display:flex;align-items:center;gap:8px;width:100%;justify-content:space-between}
+  .js .toc-btn::after{content:"";width:8px;height:8px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg) translateY(-2px)}
+  .js .toc.open .toc-btn::after{transform:rotate(-135deg) translateY(-2px)}
+  .js .toc ul{display:none}
+  .js .toc.open ul{display:flex;flex-direction:column;gap:2px;margin-top:8px;max-height:70vh;overflow:auto}
+  .js .toc.open a{padding:8px 10px}
+  .toc-cur{font-weight:400;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;text-align:left}
+}
+
+/* Graph */
 svg{display:block}
+.gwrap{position:relative}
+.gtools{display:none}
+.gview{overflow:auto;max-height:80vh;border:2px solid var(--soft);border-radius:4px}
+.js .gtools{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px}
+.gtools .zv{font:700 12px var(--mono);min-width:5ch;text-align:center;font-variant-numeric:tabular-nums}
+.gtools .ghint{font-size:12px;color:var(--mute);margin-left:4px}
+.js .gview{overflow:hidden;max-height:none;height:min(72vh,760px);min-height:300px;cursor:grab;touch-action:pan-y;
+  user-select:none;-webkit-user-select:none;background:var(--card)}
+.js .gview.grabbing{cursor:grabbing}
+.js .gview svg{width:100%;height:100%}
+.gwrap.fs{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;
+  padding:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
+.gbox{position:relative}
+.gwrap.fs .gbox{flex:1;min-height:0;display:flex;flex-direction:column}
+.js .gwrap.fs .gview{flex:1;height:auto;min-height:0;touch-action:none}
+html.fs-on,html.fs-on body{overflow:hidden}
 .edge{fill:none;stroke:var(--mute);stroke-width:1.5;stroke-dasharray:4 4}
 .edge.done{stroke:var(--ink);stroke-dasharray:none}
 .arh{fill:var(--ink)}
 .lane{fill:var(--soft);opacity:.45} .lane-t{font:800 12px var(--sans);fill:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+.node{cursor:pointer;-webkit-user-drag:none}
 .node .sh{fill:var(--shadow)} .node .bx{stroke:var(--line);stroke-width:2}
 .node.ok .bx{fill:var(--ok)} .node.run .bx{fill:var(--run)} .node.todo .bx{fill:var(--todo);stroke-dasharray:5 4}
 .node.todo .sh{fill:none} .node.you .bx{fill:var(--you)} .node.ko .bx{fill:var(--ko)}
-.node text{font-family:var(--sans);fill:#111111}
+.node text{font-family:var(--sans);fill:#111111;pointer-events:none}
 .node.todo text{fill:var(--ink)}
+.node:focus{outline:none} .node:focus-visible .bx{stroke:var(--focus);stroke-width:5;stroke-dasharray:none}
+.node:hover .bx{stroke-width:3}
 .nid{font:700 11px var(--mono)} .nwho{font:11px var(--mono)} .ntt{font-size:12.5px;font-weight:600}
+/* Selection: the whole upstream chain stays lit (direct dependencies thicker), direct dependents
+   and, on demand, every descendant in the focus colour; the rest fades. */
+svg.focusing .node,svg.focusing .edge{opacity:.14}
+svg.focusing .node.up,svg.focusing .node.dn,svg.focusing .node.sel{opacity:1}
+svg.focusing .edge.up{opacity:1;stroke:var(--ink);stroke-width:2;stroke-dasharray:none}
+svg.focusing .edge.d1{stroke-width:5}
+svg.focusing .edge.dn{opacity:1;stroke:var(--focus);stroke-width:3}
+.node.d1 .bx{stroke-width:4.5;stroke-dasharray:none}
+.node.dn .bx{stroke:var(--focus);stroke-width:3}
+.node.sel .bx{stroke-width:6;stroke-dasharray:none}
+
+/* Detail panel: inside the graph box, so it stays with the graph in full screen. */
+.dp{position:absolute;z-index:5;right:10px;top:10px;max-height:calc(100% - 20px);width:min(380px,calc(100% - 20px));overflow:auto;
+  background:var(--card);border:2px solid var(--line);border-radius:4px;box-shadow:4px 4px 0 var(--shadow);padding:14px 16px;font-size:14px}
+.dp-h{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.dp-h h3{margin:0;font-size:16px;font-weight:900;line-height:1.3;overflow-wrap:anywhere}
+.dp-h h3 .mono{display:block;font-size:12px;color:var(--mute)}
+.dp-x{flex:none;min-width:34px;font-size:18px;line-height:1;padding:4px 8px}
+.dp .chip{margin-top:8px}
+.dp dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:12px 0 0}
+.dp dt{color:var(--mute)} .dp dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.dp .dp-note{margin-top:10px;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;font-size:13.5px;border-left:4px solid var(--soft);padding-left:10px}
+.dp h4{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
+.dp ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+/* One entry: number, status, id, "direct" and state on a line, the title under it (two lines at most in a chain). */
+.dp li button{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:center;width:100%;text-align:left;font-weight:400;box-shadow:none;min-height:0;padding:5px 8px}
+.dp li button b{font-family:var(--mono);font-size:12px;flex:none}
+.dp li button span.t{order:9;flex:1 0 100%;min-width:0;overflow-wrap:anywhere}
+.dp li button .muted{margin-left:auto;font-size:12px}
+.dp .sw{flex:none;width:10px;height:10px;border:1.5px solid var(--line);border-radius:2px;align-self:center}
+.sw.ok{background:var(--ok)} .sw.run{background:var(--run)} .sw.todo{background:var(--todo)} .sw.you{background:var(--you)} .sw.ko{background:var(--ko)}
+.dp .dp-row{display:inline-block;margin-top:14px;font-size:13px}
+.dp .cnt{margin:0 0 6px;font-size:13px}
+.dp .chain{max-height:min(42vh,380px);overflow:auto;border:1.5px solid var(--soft);border-radius:4px;padding:6px;margin-top:6px}
+.dp .chain details{margin:0 0 6px}
+.dp .chain summary{cursor:pointer;font-weight:700;font-size:13px;padding:3px 2px}
+.dp .chain summary .muted{font-weight:400}
+.dp .chain ul{gap:4px;margin:4px 0 2px}
+.dp .chain li button{padding:3px 6px;font-size:13px}
+.dp .chain span.t{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.dp li button.d1{border-width:3px}
+.dp .num{font:11px var(--mono);color:var(--mute);flex:none;min-width:3.5ch;text-align:right}
+.dp .tag{font:700 10.5px var(--mono);border:1.5px solid var(--line);border-radius:3px;padding:0 4px;flex:none;align-self:center}
+.dp .more{margin-top:8px;font-size:12.5px;min-height:30px}
+.dp .muted{color:var(--mute)}
+@media (max-width:640px){
+  .dp{top:auto;left:6px;right:6px;bottom:6px;width:auto;max-height:62%}
+  .dp .chain{max-height:32vh}
+  .gtools .ghint{display:none}
+}
+
 table{border-collapse:collapse;width:100%;font-size:13.5px}
 th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--soft);vertical-align:top}
 th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute);border-bottom:2px solid var(--line);white-space:nowrap}
 td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:target td{background:var(--soft)}
 .mono{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
 .note{color:var(--mute);font-size:12.5px;margin-top:2px;max-width:60ch}
+/* Long notes fold to two lines in the task table (click to unfold); the detail panel shows them whole. */
+.js td .note{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.js td .note.open{display:block}
 code{font-family:var(--mono);font-size:.92em}
 a{color:inherit}
 </style>
@@ -65,12 +170,17 @@ a{color:inherit}
   <p class="sub">{{STAMP}}. {{L_TOK_NOTE}}</p>
 </header>
 
-<section class="card" aria-label="{{L_ESSENTIALS}}">
+<nav class="toc" id="toc" aria-label="{{L_TOC}}">
+  <button class="toc-btn" type="button" aria-expanded="false" aria-controls="toc-list"><span>{{L_TOC}}</span><span class="toc-cur" id="toc-cur"></span></button>
+  <ul id="toc-list">{{NAV}}</ul>
+</nav>
+
+<section class="card" id="essentials" aria-label="{{L_ESSENTIALS}}">
   <h2>{{L_ESSENTIALS}}</h2>
   <ul>{{ESSENTIALS}}</ul>
 </section>
 
-<section class="kpis">
+<section class="kpis" id="figures" aria-label="{{L_K_TASKS}}">
   <div class="kpi"><b>{{K_TASKS}}</b><span>{{L_K_TASKS}}</span></div>
   <div class="kpi"><b>{{K_RUN}}</b><span>{{L_K_RUN}}</span></div>
   <div class="kpi"><b>{{K_AGENTS}}</b><span>{{L_K_AGENTS}}</span></div>
@@ -80,32 +190,40 @@ a{color:inherit}
   <div class="kpi"><b>{{K_ELAPSED}}</b><span>{{L_K_TIME}}</span></div>
 </section>
 
-<section class="card" aria-label="{{L_GRAPH}}">
+<section class="card" id="graph-section" aria-label="{{L_GRAPH}}">
   <h2>{{L_GRAPH}}</h2>
   <div class="legend">{{CHIPS}}</div>
-  <p class="note" style="margin-bottom:12px">{{L_GRAPH_NOTE}}</p>
-  <div class="scroll">{{SVG}}</div>
+  <p class="note" style="margin-bottom:12px">{{L_GRAPH_NOTE}} <span class="js-only">{{L_GRAPH_HINT}}</span></p>
+  <div class="gwrap" id="gwrap">
+    <div class="gtools" role="toolbar" aria-label="{{L_TOOLS}}">
+      <button type="button" data-z="out" aria-label="{{L_Z_OUT}}" title="{{L_Z_OUT}}">−</button>
+      <span class="zv" id="zv" aria-live="off">100 %</span>
+      <button type="button" data-z="in" aria-label="{{L_Z_IN}}" title="{{L_Z_IN}}">+</button>
+      <button type="button" data-z="fit">{{L_Z_FIT}}</button>
+      <button type="button" data-z="full" id="zfull" aria-pressed="false">{{L_Z_FULL}}</button>
+      <span class="ghint">{{L_Z_HINT}}</span>
+    </div>
+    <div class="gbox">
+      <div class="gview" id="gview">{{SVG}}</div>
+      <aside class="dp" id="dp" hidden aria-label="{{L_P_LABEL}}">
+        <div class="dp-h"><h3 id="dp-t" aria-live="polite"></h3><button type="button" class="dp-x" id="dp-x" aria-label="{{L_P_CLOSE}}" title="{{L_P_CLOSE}}">×</button></div>
+        <div id="dp-b"></div>
+      </aside>
+    </div>
+  </div>
 </section>
 
 <div class="two">
-  <section class="card" aria-label="{{L_WAITING_ON}}"><h2>{{L_WAITING_ON}}</h2><ul>{{WAITING}}</ul></section>
-  <section class="card" aria-label="{{L_DECISIONS}}"><h2>{{L_DECISIONS}}</h2><ul>{{DECISIONS}}</ul></section>
+  <section class="card" id="waiting" aria-label="{{L_WAITING_ON}}"><h2>{{L_WAITING_ON}}</h2><ul>{{WAITING}}</ul></section>
+  <section class="card" id="decisions" aria-label="{{L_DECISIONS}}"><h2>{{L_DECISIONS}}</h2><ul>{{DECISIONS}}</ul></section>
 </div>
 
-<section class="card" aria-label="{{L_PROBES}}">
+<section class="card" id="probes" aria-label="{{L_PROBES}}">
   <h2>{{L_PROBES}}</h2>
   <ul>{{PROBES}}</ul>
 </section>
 
-<section class="card" aria-label="{{L_TASKS}}">
-  <h2>{{L_TASKS}}</h2>
-  <div class="scroll"><table>
-    <thead><tr>{{L_H}}</tr></thead>
-    <tbody>{{ROWS}}</tbody>
-  </table></div>
-</section>
-
-<section class="card" aria-label="{{L_BY_MODEL}}">
+<section class="card" id="models" aria-label="{{L_BY_MODEL}}">
   <h2>{{L_BY_MODEL}}</h2>
   <div class="scroll"><table>
     <thead><tr>{{L_HM}}</tr></thead>
@@ -113,5 +231,360 @@ a{color:inherit}
   </table></div>
   <p class="note" style="margin-top:10px">{{L_MODEL_NOTE}}</p>
 </section>
+<section class="card" id="tasks" aria-label="{{L_TASKS}}">
+  <h2>{{L_TASKS}}</h2>
+  <div class="scroll"><table>
+    <thead><tr>{{L_H}}</tr></thead>
+    <tbody>{{ROWS}}</tbody>
+  </table></div>
+</section>
+
 </main>
+<script type="application/json" id="board-data">{{DATA}}</script>
+<script>
+(() => {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const D = JSON.parse($('board-data').textContent), L = D.lab;
+  const byId = new Map(D.nodes.map(n => [n.id, n]));
+  const kids = new Map(D.nodes.map(n => [n.id, []]));
+  D.nodes.forEach(n => n.d.forEach(d => kids.has(d) && kids.get(d).push(n.id)));
+
+  // ── Contents bar: current section marked while scrolling; folds on a phone ──
+  const toc = $('toc'), tocBtn = toc.querySelector('.toc-btn');
+  const links = [...toc.querySelectorAll('a')];
+  const secs = links.map(a => document.getElementById(a.getAttribute('href').slice(1)));
+  let cur = -1, tocTick = false;
+  function markToc(){
+    tocTick = false;
+    const top = toc.getBoundingClientRect().bottom + 30;
+    let i = 0;
+    secs.forEach((s, j) => { if (s && s.getBoundingClientRect().top <= top) i = j; });
+    if (innerHeight + scrollY >= document.documentElement.scrollHeight - 4) i = secs.length - 1;
+    if (i === cur) return;
+    cur = i;
+    links.forEach((a, j) => { a.classList.toggle('on', j === i); j === i ? a.setAttribute('aria-current', 'location') : a.removeAttribute('aria-current'); });
+    $('toc-cur').textContent = links[i].textContent;
+  }
+  addEventListener('scroll', () => { if (!tocTick) { tocTick = true; requestAnimationFrame(markToc); } }, {passive: true});
+  markToc();
+  const setToc = open => { toc.classList.toggle('open', open); tocBtn.setAttribute('aria-expanded', String(open)); };
+  tocBtn.addEventListener('click', () => setToc(!toc.classList.contains('open')));
+  links.forEach(a => a.addEventListener('click', () => setToc(false)));
+
+  // ── Graph view: pan and zoom by moving the viewBox (vector stays sharp, no page relayout) ──
+  const wrap = $('gwrap'), view = $('gview'), svg = $('graph'), zv = $('zv'), full = $('zfull');
+  if (!svg) return;
+  const GW = +svg.dataset.w, GH = +svg.dataset.h, BW = 152, BH = 66;
+  const cards = new Map([...svg.querySelectorAll('.node')].map(g => [g.dataset.id, g]));
+  const edgesOf = new Map([...cards.keys()].map(id => [id, []]));
+  svg.querySelectorAll('.edge').forEach(e => { [e.dataset.f, e.dataset.t].forEach(id => edgesOf.has(id) && edgesOf.get(id).push(e)); });
+  let cw = 1, ch = 1, k = 1, x = 0, y = 0, drawn = false, frame = 0;
+  const fitK = () => Math.min(cw / GW, ch / GH);
+  const minK = () => Math.min(fitK(), 1) * 0.8;
+  const MAXK = 3;
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  function bound(){
+    const vw = cw / k, vh = ch / k;
+    x = clamp(x, Math.min(0, GW - vw) - vw / 2, Math.max(0, GW - vw) + vw / 2);
+    y = clamp(y, Math.min(0, GH - vh) - vh / 2, Math.max(0, GH - vh) + vh / 2);
+  }
+  function draw(){
+    frame = 0;
+    bound();
+    svg.setAttribute('viewBox', `${x.toFixed(1)} ${y.toFixed(1)} ${(cw / k).toFixed(1)} ${(ch / k).toFixed(1)}`);
+    zv.textContent = Math.round(k * 100) + ' %';
+  }
+  const later = () => { if (!frame) frame = requestAnimationFrame(draw); };
+  function zoomAt(f, px, py){
+    const gx = x + px / k, gy = y + py / k;
+    k = clamp(k * f, minK(), MAXK);
+    x = gx - px / k; y = gy - py / k;
+    later();
+  }
+  function fit(){ k = fitK(); x = (GW - cw / k) / 2; y = (GH - ch / k) / 2; later(); }
+  // First view: the whole width, top first; on a narrow screen no smaller than a tappable card.
+  function start(){ k = Math.min(1, Math.max(cw / GW, cw < 700 ? 0.35 : 0)); x = (GW - cw / k) / 2; y = 0; later(); }
+  new ResizeObserver(() => {
+    const r = view.getBoundingClientRect();
+    if (!r.width || !r.height) return;
+    const cx = x + cw / k / 2, cy = y + ch / k / 2;   // keep the centre where it was
+    cw = r.width; ch = r.height;
+    if (!drawn) { drawn = true; start(); return; }
+    x = cx - cw / k / 2; y = cy - ch / k / 2; later();
+  }).observe(view);
+
+  wrap.querySelector('.gtools').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const z = b.dataset.z;
+    if (z === 'in') zoomAt(1.4, cw / 2, ch / 2);
+    else if (z === 'out') zoomAt(1 / 1.4, cw / 2, ch / 2);
+    else if (z === 'fit') sel ? frameSet(chainIds()) : fit();
+    else if (z === 'full') setFull(!wrap.classList.contains('fs'));
+  });
+  // Full screen is a layer of the page: the browser API may be refused inside a sandboxed frame.
+  function setFull(on){
+    wrap.classList.toggle('fs', on);
+    document.documentElement.classList.toggle('fs-on', on);
+    full.textContent = on ? L.z_exit : L.z_full;
+    full.setAttribute('aria-pressed', String(on));
+    if (!on) wrap.scrollIntoView({block: 'nearest'});
+  }
+
+  const local = e => { const r = view.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  view.addEventListener('wheel', e => {
+    const fs = wrap.classList.contains('fs');
+    if (!e.ctrlKey && !e.metaKey && !fs) return;          // plain wheel scrolls the page
+    e.preventDefault();
+    const m = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? ch : 1;
+    if (e.ctrlKey || e.metaKey) { const [px, py] = local(e); zoomAt(Math.exp(-e.deltaY * m * 0.0022), px, py); }
+    else { x += e.deltaX * m / k; y += e.deltaY * m / k; later(); }
+  }, {passive: false});
+  // Safari trackpad pinch
+  let gs = 1;
+  view.addEventListener('gesturestart', e => { e.preventDefault(); gs = 1; });
+  view.addEventListener('gesturechange', e => { e.preventDefault(); const [px, py] = local(e); zoomAt(e.scale / gs, px, py); gs = e.scale; });
+  view.addEventListener('dblclick', e => { if (!e.target.closest('.node')) { const [px, py] = local(e); zoomAt(2, px, py); } });
+  view.addEventListener('dragstart', e => e.preventDefault());
+
+  // Drag to pan (one pointer), pinch to zoom (two pointers). A drag never counts as a click.
+  const pts = new Map();
+  let dragged = false, sx = 0, sy = 0, pinch = 0;
+  view.addEventListener('pointerdown', e => {
+    if (e.button !== 0 || e.target.closest('.dp')) return;
+    pts.set(e.pointerId, [e.clientX, e.clientY]);
+    if (pts.size === 1) { dragged = false; sx = e.clientX; sy = e.clientY; }
+    if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = Math.hypot(a[0] - b[0], a[1] - b[1]); dragged = true; }
+  });
+  view.addEventListener('pointermove', e => {
+    const p = pts.get(e.pointerId); if (!p) return;
+    if (pts.size === 1) {
+      if (!dragged && Math.hypot(e.clientX - sx, e.clientY - sy) > 5) { dragged = true; view.setPointerCapture(e.pointerId); view.classList.add('grabbing'); }
+      if (dragged) { x -= (e.clientX - p[0]) / k; y -= (e.clientY - p[1]) / k; later(); }
+    } else if (pts.size === 2) {
+      pts.set(e.pointerId, [e.clientX, e.clientY]);
+      const [a, b] = [...pts.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      const r = view.getBoundingClientRect();
+      if (pinch) zoomAt(d / pinch, (a[0] + b[0]) / 2 - r.left, (a[1] + b[1]) / 2 - r.top);
+      pinch = d;
+      return;
+    }
+    pts.set(e.pointerId, [e.clientX, e.clientY]);
+  });
+  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = 0; if (!pts.size) view.classList.remove('grabbing'); };
+  view.addEventListener('pointerup', up);
+  view.addEventListener('pointercancel', e => { up(e); dragged = true; });
+
+  // ── Selection: the card, its whole upstream chain and what depends on it; the rest fades ──
+  // Computed once per click. Every walk keeps a visited set, so a cycle in faulty data ends.
+  let sel = null, lit = [], upS = new Set(), downS = new Set(), downAll = false;
+  const dp = $('dp'), dpT = $('dp-t'), dpB = $('dp-b');
+  const edges = [...svg.querySelectorAll('.edge')].map(e => ({e, f: e.dataset.f, t: e.dataset.t}));
+  const depsOf = id => (byId.get(id) || {d: []}).d, kidsOf = id => kids.get(id) || [];
+  const plural = (n, key) => { const [one, many] = L[key].split('|'); return n + ' ' + (n === 1 ? one : many); };
+  view.addEventListener('click', e => {
+    const g = e.target.closest('.node');
+    if (g) e.preventDefault();
+    if (dragged) { dragged = false; return; }
+    if (g) select(g.dataset.id === sel ? null : g.dataset.id);
+    else select(null);
+  });
+  svg.addEventListener('keydown', e => {
+    const g = e.target.closest('.node');
+    if (g && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); select(g.dataset.id === sel ? null : g.dataset.id); }
+  });
+  // Tabbing through the cards keeps the focused one in view.
+  svg.addEventListener('focusin', e => { const g = e.target.closest('.node'); if (g && g.matches(':focus-visible')) show(g.dataset.id, false); });
+
+  function reach(id, next){
+    const seen = new Set(), todo = [id];
+    while (todo.length) for (const n of next(todo.pop())) if (n !== id && !seen.has(n) && byId.has(n)) { seen.add(n); todo.push(n); }
+    return seen;
+  }
+  // Longest number of steps from each task of `set` to the selected one, walking `next` towards it.
+  // Sorting by it, larger first, gives an order in which the work can have been done.
+  function steps(set, root, next){
+    const memo = new Map([[root, 0]]), on = new Set();
+    const f = v => {
+      if (memo.has(v)) return memo.get(v);
+      if (on.has(v)) return 0;
+      on.add(v);
+      let m = 0;
+      for (const w of next(v)) if (w === root || set.has(w)) m = Math.max(m, 1 + f(w));
+      on.delete(v); memo.set(v, m);
+      return m;
+    };
+    set.forEach(f);
+    return memo;
+  }
+  function el(tag, cls, text){ const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function item(id, num, direct){
+    const n = byId.get(id), li = el('li'), b = el('button', direct ? 'd1' : '');
+    b.type = 'button'; b.dataset.go = id; if (n) b.title = n.t;
+    if (num) b.append(el('span', 'num', num));
+    b.append(el('span', 'sw ' + (n ? n.k : 'todo')), el('b', null, id), el('span', 't', n ? n.t : ''));
+    if (direct) b.append(el('span', 'tag', L.p_direct));
+    b.append(el('span', 'muted', n ? n.s : ''));
+    li.append(b);
+    return li;
+  }
+  function list(ids, direct){
+    const ul = el('ul');
+    if (!ids.length) ul.append(el('li', 'muted', L.p_none));
+    ids.forEach(id => ul.append(item(id, '', direct)));
+    return ul;
+  }
+  // A chain in work order, one group per lane (a lane is one thread of the run), each entry numbered
+  // in the global order. Groups holding a direct link start open; all start open on a short chain.
+  function chain(ids, direct){
+    const box = el('div', 'chain'), groups = new Map();
+    ids.forEach((id, i) => {
+      const l = (byId.get(id) || {}).l || L.p_nolane;
+      if (!groups.has(l)) groups.set(l, []);
+      groups.get(l).push([id, i + 1]);
+    });
+    groups.forEach((rows, l) => {
+      const d = el('details'), s = el('summary', null, l + ' '), nd = rows.filter(([id]) => direct.has(id)).length;
+      s.append(el('span', 'muted', '· ' + plural(rows.length, 'p_task') + (nd ? ', ' + plural(nd, 'p_dir') : '')));
+      d.open = ids.length <= 30 || nd > 0;
+      const ul = el('ul');
+      rows.forEach(([id, num]) => ul.append(item(id, num, direct.has(id))));
+      d.append(s, ul); box.append(d);
+    });
+    return box;
+  }
+  function order(set, next, desc){
+    const st = steps(set, sel, next), rank = id => (byId.get(id) || {}).h || 0;
+    return [...set].sort((a, b) => desc ? (st.get(b) - st.get(a) || rank(a) - rank(b)) : (st.get(a) - st.get(b) || rank(a) - rank(b)));
+  }
+  function panel(n){
+    dpT.textContent = '';
+    dpT.append(el('span', 'mono', n.id + (n.l ? ' · ' + n.l : '')), document.createTextNode(n.t));
+    dpB.textContent = '';
+    dpB.append(el('span', 'chip ' + n.k, n.s));
+    const dl = el('dl');
+    const row = (t, v) => { if (v !== '' && v != null) dl.append(el('dt', null, t), el('dd', null, String(v))); };
+    row(L.p_role, n.r);
+    row(L.p_model, [n.m, n.e && n.e !== '—' ? L.p_effort + ' ' + n.e : ''].filter(Boolean).join(' · '));
+    row(L.p_agents, n.a.length ? n.a.length + ' · ' + n.a.map(a => a.slice(0, 7)).join(' ') : '');
+    row(L.p_dur, n.du);
+    row(L.p_turns, n.tu);
+    row(L.p_tok, n.to ? n.to + (n.o ? ' · ' + n.o + ' ' + L.p_out : '') : '');
+    dpB.append(dl);
+    if (n.n) dpB.append(el('p', 'dp-note', n.n));
+    // Upstream: the whole chain that leads to the card, in work order.
+    const direct = new Set(n.d.filter(d => byId.has(d)));
+    dpB.append(el('h4', null, L.p_deps));
+    if (!upS.size) dpB.append(el('p', 'muted cnt', L.p_none));
+    else {
+      dpB.append(el('p', 'cnt', L.p_up_n.replace('{n}', plural(upS.size, 'p_task')).replace('{d}', plural(direct.size, 'p_dir'))));
+      dpB.append(chain(order(upS, kidsOf, true), direct));
+    }
+    // Downstream: direct dependents, the whole descent on demand.
+    const ks = kidsOf(n.id), all = reach(n.id, kidsOf);
+    dpB.append(el('h4', null, L.p_kids));
+    if (ks.length) dpB.append(el('p', 'cnt', L.p_down_n.replace('{d}', plural(ks.length, 'p_dir')).replace('{n}', String(all.size))));
+    dpB.append(list(ks, false));
+    if (all.size > ks.length) {
+      const b = el('button', 'more', (downAll ? L.p_less : L.p_all).replace('{n}', all.size));
+      b.type = 'button'; b.dataset.down = '1'; b.setAttribute('aria-expanded', String(downAll));
+      dpB.append(b);
+      if (downAll) dpB.append(chain(order(all, depsOf, false), new Set(ks)));
+    }
+    const a = el('a', 'dp-row', L.p_row); a.href = '#t-' + n.id; dpB.append(a);
+    dp.hidden = false;
+  }
+  function light(){
+    lit.forEach(e => e.classList.remove('up', 'd1', 'dn', 'sel'));
+    lit = [];
+    const mark = (node, ...c) => { node.classList.add(...c); lit.push(node); };
+    const n = byId.get(sel), direct = new Set(n.d);
+    mark(cards.get(sel), 'sel');
+    upS.forEach(i => { const g = cards.get(i); if (g) direct.has(i) ? mark(g, 'up', 'd1') : mark(g, 'up'); });
+    downS = downAll ? reach(sel, kidsOf) : new Set(kidsOf(sel));
+    downS.forEach(i => { const g = cards.get(i); if (g) mark(g, 'dn'); });
+    edges.forEach(({e, f, t}) => {
+      if (upS.has(f) && (t === sel || upS.has(t))) t === sel ? mark(e, 'up', 'd1') : mark(e, 'up');
+      else if (downS.has(t) && (f === sel || (downAll && downS.has(f)))) mark(e, 'dn');
+    });
+  }
+  function select(id, opts){
+    sel = id && byId.has(id) ? id : null;
+    svg.classList.toggle('focusing', !!sel);
+    if (!sel) { lit.forEach(e => e.classList.remove('up', 'd1', 'dn', 'sel')); lit = []; upS = new Set(); dp.hidden = true; return; }
+    downAll = false;
+    upS = reach(sel, depsOf);
+    light();
+    panel(byId.get(sel));
+    dp.scrollTop = 0;
+    show(sel, opts && opts.go);
+  }
+  const chainIds = () => [sel, ...upS, ...downS];
+  // Frame a set of cards in the free part of the view.
+  function frameSet(ids){
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    ids.forEach(i => { const g = cards.get(i); if (!g) return; const gx = +g.dataset.x, gy = +g.dataset.y;
+      x0 = Math.min(x0, gx); y0 = Math.min(y0, gy); x1 = Math.max(x1, gx + BW); y1 = Math.max(y1, gy + BH); });
+    if (x0 === Infinity) return fit();
+    const [fw, fh] = free(), P = 24;
+    k = clamp(Math.min(fw / (x1 - x0 + 2 * P), fh / (y1 - y0 + 2 * P)), minK(), 1.2);
+    x = (x0 + x1) / 2 - fw / 2 / k; y = (y0 + y1) / 2 - fh / 2 / k;
+    later();
+  }
+  function free(){
+    const r = view.getBoundingClientRect(), pr = dp.hidden ? null : dp.getBoundingClientRect();
+    const side = pr && pr.left > r.left + r.width / 2;
+    return [Math.max(side ? pr.left - r.left - 10 : cw, 40), Math.max(pr && !side ? pr.top - r.top - 10 : ch, 40)];
+  }
+  // Bring a card into the free part of the view (left of the panel, or above it on a phone).
+  function show(id, go){
+    const g = cards.get(id); if (!g) return;
+    if (go && k < 0.6) k = Math.min(0.8, MAXK);
+    const gx = +g.dataset.x, gy = +g.dataset.y, [fw, fh] = free();
+    const sx0 = (gx - x) * k, sy0 = (gy - y) * k, sx1 = sx0 + BW * k, sy1 = sy0 + BH * k;
+    if (go || sx0 < 8 || sy0 < 8 || sx1 > fw - 8 || sy1 > fh - 8) {
+      x = gx + BW / 2 - fw / 2 / k;
+      y = gy + BH / 2 - fh / 2 / k;
+      later();
+    }
+  }
+  function go(id){
+    select(id, {go: true});
+    const g = cards.get(id);
+    if (g) g.focus({preventScroll: true});
+  }
+  dpB.addEventListener('click', e => {
+    const b = e.target.closest('button[data-go]');
+    if (b) return go(b.dataset.go);
+    if (e.target.closest('button[data-down]')) {
+      const top = dp.scrollTop;
+      downAll = !downAll; light(); panel(byId.get(sel)); dp.scrollTop = top;
+      const m = dpB.querySelector('button[data-down]'); if (m) m.focus({preventScroll: true});
+    }
+  });
+  $('dp-x').addEventListener('click', () => { const id = sel; select(null); const g = cards.get(id); if (g) g.focus({preventScroll: true}); });
+  // Task table: the id leads to the card in the graph.
+  document.querySelectorAll('a[data-go]').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    $('graph-section').scrollIntoView({block: 'start'});
+    go(a.dataset.go);
+  }));
+
+  document.querySelectorAll('#tasks td .note').forEach(n => n.addEventListener('click', () => n.classList.toggle('open')));
+
+  // Keyboard: Escape closes the panel, then leaves full screen; + - 0 zoom while in the graph.
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (toc.classList.contains('open')) { setToc(false); return; }
+      if (sel) { const id = sel; select(null); const g = cards.get(id); if (g && wrap.contains(document.activeElement)) g.focus({preventScroll: true}); return; }
+      if (wrap.classList.contains('fs')) { setFull(false); full.focus({preventScroll: true}); }
+      return;
+    }
+    if (!wrap.contains(document.activeElement) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === '+' || e.key === '=') { zoomAt(1.4, cw / 2, ch / 2); e.preventDefault(); }
+    else if (e.key === '-') { zoomAt(1 / 1.4, cw / 2, ch / 2); e.preventDefault(); }
+    else if (e.key === '0') { fit(); e.preventDefault(); }
+  });
+})();
+</script>
 </body></html>

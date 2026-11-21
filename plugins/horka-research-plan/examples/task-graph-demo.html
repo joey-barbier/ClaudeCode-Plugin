@@ -79,14 +79,36 @@ button.on{background:var(--ink);color:var(--bg)}
 @keyframes pulse{50%{stroke-width:4}}
 .node text.badge,.node.done text.badge{font:800 9px var(--mono);fill:#FFFFFF}
 .badge-bg{fill:#111111}
-svg.focusing .node{opacity:.22} svg.focusing .edge{opacity:.08}
-svg.focusing .node.hl,svg.focusing .node.sel{opacity:1} svg.focusing .edge.hl{opacity:1;stroke:var(--ink);stroke-width:2.2}
-.node.sel .bx{stroke-width:4}
+/* Selection, as on the real board: the whole upstream chain lit (direct dependencies thicker),
+   direct dependents and, on demand, every descendant in blue; the rest fades. */
+svg.focusing .node{opacity:.2} svg.focusing .edge{opacity:.07}
+svg.focusing .node.up,svg.focusing .node.dn,svg.focusing .node.sel{opacity:1}
+svg.focusing .edge.up{opacity:1;stroke:var(--ink);stroke-width:1.8;stroke-dasharray:none}
+svg.focusing .edge.d1{stroke-width:4}
+svg.focusing .edge.dn{opacity:1;stroke:var(--m-opus);stroke-width:2.6}
+.node.d1 .bx{stroke-width:3.5}
+.node.dn .bx{stroke:var(--m-opus);stroke-width:3}
+.node.sel .bx{stroke-width:4.5}
 .decision{background:var(--you);color:var(--on);border-color:#111111}
 .decision .note{color:#111111}
 .decision .bar{margin-top:10px}
 .decision button{background:#FFFFFF;color:#111111;border-color:#111111}
 #detail dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:8px 0 0;font-size:13.5px}
+/* A selected task's detail floats over the page, next to the graph that was clicked, as on the real board. */
+#detail.open{position:fixed;right:16px;bottom:16px;width:min(380px,calc(100% - 32px));max-height:70vh;overflow:auto;z-index:20}
+#detail .dh{display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
+#detail h4{margin:12px 0 4px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mute)}
+#detail .cnt{margin:0 0 4px;font-size:13px}
+#detail .chain{max-height:min(40vh,320px);overflow:auto;border:1.5px solid var(--soft);border-radius:4px;padding:6px}
+#detail details{margin:0 0 4px} #detail summary{font-size:13px}
+#detail ul{list-style:none;margin:4px 0;padding:0;display:flex;flex-direction:column;gap:4px}
+#detail li button{display:flex;flex-wrap:wrap;gap:2px 8px;align-items:center;width:100%;text-align:left;font:400 13px var(--sans);padding:3px 7px;box-shadow:none}
+#detail li button.d1{border-width:3px}
+#detail li b{font:700 12px var(--mono)} #detail li .t{order:9;flex:1 0 100%}
+#detail li .num{font:11px var(--mono);color:var(--mute);min-width:2.5ch;text-align:right}
+#detail li .tag{font:700 10.5px var(--mono);border:1.5px solid var(--line);border-radius:3px;padding:0 4px}
+#detail li .st{margin-left:auto;font-size:12px;color:var(--mute)}
+#detail .more{margin-top:6px;font-size:12.5px;padding:4px 10px}
 #detail dt{color:var(--mute)} #detail dd{margin:0;min-width:0}
 .mono{font-family:var(--mono);font-size:12.5px}
 #log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;max-height:420px;overflow:auto;font-size:13.5px}
@@ -152,7 +174,7 @@ details summary{cursor:pointer;font-weight:900}
       <span class="chip todo">Attend ses dépendances</span><span class="chip ready">Peut partir</span><span class="chip run">En cours</span>
       <span class="chip ok">Faite</span><span class="chip you">Attend ta décision</span><span class="chip ko">Coupée, à reprendre</span>
     </div>
-    <p class="note" style="margin-bottom:10px">Touche une tâche pour voir ce qu'elle attend et ce qu'elle débloque. Une flèche pleine part d'une tâche finie. Le modèle de chaque tâche est dans son coin.</p>
+    <p class="note" style="margin-bottom:10px">Touche une tâche : toute la chaîne qui y mène s'allume (ses dépendances directes en trait épais), ce qui en dépend en bleu, et le panneau liste la chaîne dans l'ordre du travail ; Échap ferme. Une flèche pleine part d'une tâche finie. Le modèle de chaque tâche est dans son coin.</p>
     <div class="scroll"><svg id="graph" role="img" aria-label="Graphe des 50 tâches du chantier"></svg></div>
   </section>
 
@@ -168,9 +190,10 @@ details summary{cursor:pointer;font-weight:900}
     </section>
 
     <section class="card" id="detail" aria-live="polite">
-      <h3 id="d-title">Choisis une tâche</h3>
+      <div class="dh"><h3 id="d-title">Choisis une tâche</h3><button type="button" id="d-x" aria-label="Fermer" hidden>×</button></div>
       <p class="note" id="d-hint">Touche une case du graphe : ses dépendances et ce qu'elle débloque s'allument, le reste s'efface.</p>
       <dl id="d-dl" hidden></dl>
+      <div id="d-chain" hidden></div>
     </section>
 
     <section class="card" aria-label="Journal">
@@ -226,6 +249,7 @@ details summary{cursor:pointer;font-weight:900}
   <div class="card">
     <h3>Dans le skill research-plan</h3>
     <p>Depuis la v1.6.0, chaque run tient un <code class="mono">graph.json</code> et publie cette page de suivi. <code class="mono">set.py</code> met une tâche à jour et dit ce qui peut partir ; <code class="mono">build.py</code> relit les transcripts et refait la page.</p>
+    <p>Depuis la v1.8.0, la vraie page fait comme ici : une tâche touchée ouvre son détail, toute la chaîne qu'il a fallu pour y arriver (les dépendances directes marquées), ce qui dépend d'elle et, à la demande, tout ce qu'elle bloque, et on passe de l'une à l'autre. Elle y ajoute le zoom, le plein écran et un sommaire qui reste à portée, parce qu'un vrai chantier dépasse vite les 300 tâches.</p>
   </div>
 </section>
 
@@ -474,7 +498,7 @@ details summary{cursor:pointer;font-weight:900}
   function render(){
     const cls = {wait:'wait', ready:'ready', run:'run', done:'done', user:'user', ko:'ko'};
     ids.forEach(i => { const n = N[i];
-      const base = 'node ' + cls[n.st] + (selected === i ? ' sel' : '') + (hl.has(i) ? ' hl' : '');
+      const base = 'node ' + cls[n.st] + (selected === i ? ' sel' : '') + (upS.has(i) ? ' up' : '') + (d1S.has(i) ? ' d1' : '') + (dnS.has(i) ? ' dn' : '');
       if (n.g.getAttribute('class') !== base) n.g.setAttribute('class', base);
       const p = n.dur ? (1 - n.left / n.dur) : (n.st === 'done' ? 1 : 0);
       n.prog.setAttribute('width', n.st === 'run' || n.st === 'ko' ? Math.max(0, p) * BW : 0);
@@ -485,7 +509,7 @@ details summary{cursor:pointer;font-weight:900}
       }
       if (n.st !== 'done' && n.badge) { n.badge.remove(); n.badge = null; }
     });
-    edges.forEach(e => e.p.setAttribute('class', 'edge' + (isDone(e.from) ? ' done' : '') + (hlE.has(e) ? ' hl' : '')));
+    edges.forEach(e => e.p.setAttribute('class', 'edge' + (isDone(e.from) ? ' done' : '') + (eUp.has(e) ? ' up' : '') + (eD1.has(e) ? ' d1' : '') + (eDn.has(e) ? ' dn' : '')));
     const doneN = ids.filter(isDone).length, run = ids.filter(i => N[i].st === 'run' && N[i].model !== 'Fable').length;
     const total = MODELS.reduce((s,m) => s + S.tok[m], 0);
     txt('clock', 'T+' + fmtH(S.t));
@@ -506,36 +530,81 @@ details summary{cursor:pointer;font-weight:900}
   }
   const txt = (id, v) => { const e = document.getElementById(id); if (e.textContent !== String(v)) e.textContent = v; };
 
-  // ── focus: ancestors and descendants of the selected task ──
-  let hl = new Set(), hlE = new Set();
+  // ── focus: the whole chain that leads to the selected task, its dependents, all of them on demand ──
+  let upS = new Set(), d1S = new Set(), dnS = new Set(), eUp = new Set(), eD1 = new Set(), eDn = new Set(), downAll = false;
+  const LANE = Object.fromEntries(LANES); LANE.top = 'Cadrage';
+  const STL = {wait:'Attend ses dépendances', ready:'Peut partir, attend un agent libre', run:'En cours', done:'Faite', user:'Attend ta décision', ko:'Coupée, à reprendre'};
+  const reach = (i, next) => { const s = new Set(), t = [i]; while (t.length) next(t.pop()).forEach(x => { if (x !== i && !s.has(x)) { s.add(x); t.push(x); } }); return s; };
+  // Steps from each task of the set to the selected one, longest path: larger first is a valid work order.
+  function order(set, next, desc){
+    const memo = new Map([[selected, 0]]), on = new Set();
+    const f = v => { if (memo.has(v)) return memo.get(v); if (on.has(v)) return 0; on.add(v);
+      let m = 0; next(v).forEach(w => { if (w === selected || set.has(w)) m = Math.max(m, 1 + f(w)); }); on.delete(v); memo.set(v, m); return m; };
+    set.forEach(f);
+    return [...set].sort((a, b) => desc ? memo.get(b) - memo.get(a) || depth[a] - depth[b] : memo.get(a) - memo.get(b) || depth[a] - depth[b]);
+  }
+  const plural = (n, one, many) => n + ' ' + (n === 1 ? one : many);
+  const entry = (i, num, direct) => `<li><button type="button" class="${direct ? 'd1' : ''}" data-go="${i}">${num ? `<span class="num">${num}</span>` : ''}<b>${i}</b>${direct ? '<span class="tag">directe</span>' : ''}<span class="st" data-st="${i}"></span><span class="t">${N[i].title}</span></button></li>`;
+  // One group per lane, entries numbered in work order; every group opens on these short chains.
+  function chainList(list, direct){
+    const g = new Map(); list.forEach((i, k) => { const l = LANE[N[i].lane] || N[i].lane; if (!g.has(l)) g.set(l, []); g.get(l).push([i, k + 1]); });
+    return `<div class="chain">${[...g].map(([l, rows]) => { const nd = rows.filter(([i]) => direct.has(i)).length;
+      return `<details open><summary><b>${l}</b> · ${plural(rows.length, 'tâche', 'tâches')}${nd ? ', ' + plural(nd, 'directe', 'directes') : ''}</summary><ul>${rows.map(([i, k]) => entry(i, k, direct.has(i))).join('')}</ul></details>`; }).join('')}</div>`;
+  }
+  function light(){
+    const n = N[selected];
+    upS = reach(selected, x => N[x].deps); d1S = new Set(n.deps);
+    dnS = downAll ? reach(selected, x => N[x].kids) : new Set(n.kids);
+    eUp = new Set(); eD1 = new Set(); eDn = new Set();
+    edges.forEach(e => {
+      if (upS.has(e.from) && (e.to === selected || upS.has(e.to))) { eUp.add(e); if (e.to === selected) eD1.add(e); }
+      else if (dnS.has(e.to) && (e.from === selected || (downAll && dnS.has(e.from)))) eDn.add(e);
+    });
+  }
+  function build(){
+    // Built once per selection so that its buttons survive the animation frames; render() refreshes the figures.
+    const n = N[selected], all = reach(selected, x => N[x].kids);
+    document.getElementById('d-dl').innerHTML = `<dt>État</dt><dd id="d-st"></dd>
+      <dt>Rôle</dt><dd>${n.role}</dd><dt>Modèle</dt><dd>${n.model} · effort ${EFFORT[n.model]}</dd>
+      <dt>Attend encore</dt><dd class="mono" id="d-miss"></dd>
+      <dt>Durée prévue</dt><dd>${n.dur ? n.dur + ' min' : '—'}</dd>
+      <dt>Jetons</dt><dd id="d-tok"></dd>`;
+    document.getElementById('d-chain').innerHTML = `<h4>Ce qu'il a fallu pour y arriver</h4>` +
+      (upS.size ? `<p class="cnt">${plural(upS.size, 'tâche', 'tâches')} en amont, dont ${plural(d1S.size, 'directe', 'directes')}</p>${chainList(order(upS, x => N[x].kids, true), d1S)}` : '<p class="cnt">Aucune</p>') +
+      `<h4>Ce qui dépend d'elle</h4>` +
+      (n.kids.length ? `<p class="cnt">${plural(n.kids.length, 'directe', 'directes')}, ${all.size} dans toute la descendance</p><ul>${n.kids.map(k => entry(k, '', false)).join('')}</ul>` : '<p class="cnt">Aucune</p>') +
+      (all.size > n.kids.length ? `<button type="button" class="more" data-down="1" aria-expanded="${downAll}">${downAll ? 'Replier' : 'Voir toute'} la descendance (${all.size})</button>` +
+        (downAll ? chainList(order(all, x => N[x].deps, false), new Set(n.kids)) : '') : '');
+  }
   function select(i){
     selected = selected === i ? null : i;
-    hl = new Set(); hlE = new Set();
-    if (selected) {
-      const up = x => N[x].deps.forEach(d => { if (!hl.has(d)) { hl.add(d); up(d); } });
-      const down = x => N[x].kids.forEach(k => { if (!hl.has(k)) { hl.add(k); down(k); } });
-      up(selected); down(selected);
-      edges.forEach(e => { if ((hl.has(e.from) || e.from === selected) && (hl.has(e.to) || e.to === selected)) hlE.add(e); });
-    }
+    downAll = false;
+    if (selected) light(); else { upS = new Set(); d1S = new Set(); dnS = new Set(); eUp = new Set(); eD1 = new Set(); eDn = new Set(); }
     svg.classList.toggle('focusing', !!selected);
+    document.getElementById('detail').classList.toggle('open', !!selected);
+    document.getElementById('d-x').hidden = !selected;
+    document.getElementById('d-chain').hidden = !selected;
     if (!selected) { txt('d-title', 'Choisis une tâche'); document.getElementById('d-hint').hidden = false; document.getElementById('d-dl').hidden = true; }
+    else build();
     render();
   }
-  const STL = {wait:'Attend ses dépendances', ready:'Peut partir, attend un agent libre', run:'En cours', done:'Faite', user:'Attend ta décision', ko:'Coupée, à reprendre'};
   function detail(i){
     const n = N[i];
     txt('d-title', `${i} · ${n.title}`);
     document.getElementById('d-hint').hidden = true;
-    const dl = document.getElementById('d-dl'); dl.hidden = false;
-    const missing = n.deps.filter(d => !isDone(d));
-    dl.innerHTML = `<dt>État</dt><dd>${STL[n.st]}${VERDICT[i] && n.st === 'done' ? ' · ' + VERDICT[i] : ''}</dd>
-      <dt>Rôle</dt><dd>${n.role}</dd><dt>Modèle</dt><dd>${n.model} · effort ${EFFORT[n.model]}</dd>
-      <dt>Dépend de</dt><dd class="mono">${n.deps.join(' ') || '—'}</dd>
-      <dt>Attend encore</dt><dd class="mono">${missing.join(' ') || '—'}</dd>
-      <dt>Débloque</dt><dd class="mono">${n.kids.join(' ') || '—'}</dd>
-      <dt>Durée prévue</dt><dd>${n.dur ? n.dur + ' min' : '—'}</dd>
-      <dt>Jetons</dt><dd>${fmtT(n.used)}</dd>`;
+    document.getElementById('d-dl').hidden = false;
+    txt('d-st', STL[n.st] + (VERDICT[i] && n.st === 'done' ? ' · ' + VERDICT[i] : ''));
+    txt('d-miss', n.deps.filter(d => !isDone(d)).join(' ') || '—');
+    txt('d-tok', fmtT(n.used));
+    document.querySelectorAll('#d-chain [data-st]').forEach(s => { const v = STL[N[s.dataset.st].st]; if (s.textContent !== v) s.textContent = v; });
   }
+  document.getElementById('detail').addEventListener('click', e => {
+    const b = e.target.closest('[data-go]');
+    if (b) { selected = null; select(b.dataset.go); N[b.dataset.go].g.focus({preventScroll: true}); return; }
+    if (e.target.closest('[data-down]')) { downAll = !downAll; light(); build(); render(); }
+  });
+  document.getElementById('d-x').addEventListener('click', () => select(null));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && selected) select(null); });
 
   // ── loop ──
   let speed = 1, last = null;
