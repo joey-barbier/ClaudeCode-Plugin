@@ -38,7 +38,7 @@ An agent never launches a tier above its own. Delegation is a direct `claude -p`
 
 ## The task graph and the board
 
-Every run, short or full, is a task graph. A task starts as soon as what it reads is done. A blocked task blocks only its descendants. A decision waiting on the user is a node of its own. `scripts/board/set.py` updates a task, prints what can start now and rebuilds `board.html`: the graph coloured by status, then the consumption debrief read from the transcripts (tokens per task and per model, cache reads, direct calls, wall time vs cumulated agent time, parallelism factor). The board replaces progress messages and feeds the scorecard.
+Every run, short or full, is a task graph. A task starts as soon as what it reads is done. A blocked task blocks only its descendants. A decision waiting on the user is a node of its own. `scripts/board/set.py` updates a task, prints what can start now and rebuilds `board.html`: the graph coloured by status, then the consumption debrief read from the transcripts (tokens per task and per model, cache reads, direct calls, wall time vs cumulated agent time, parallelism factor). On the page, a click on a task opens its detail (note, agents, tokens, what it waits for and what depends on it, each one a link) and fades the rest; the graph zooms, pans and goes full screen, and a sticky contents bar reaches every part, from what waits for the user to tokens per model. The board replaces progress messages and feeds the scorecard.
 
 ## Verification
 
