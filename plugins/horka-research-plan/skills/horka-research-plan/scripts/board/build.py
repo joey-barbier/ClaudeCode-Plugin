@@ -27,26 +27,48 @@ L = {
                essentials='The essentials', waiting_on='Waiting on {who}', decisions='Decisions taken', probes='Real probes: what we found',
                k_tasks='tasks done', k_run='tasks running', k_agents='agents launched', k_asks='direct calls to a cheaper model',
                k_tok='tokens in all, {cr} of them cache reads', k_out='output tokens',
-               k_time='elapsed, for {cum} of agent work ({par})', graph='Task graph',
+               k_time='elapsed, for {cum} of agent work ({par})', u_day='d', graph='Task graph',
                graph_note='A task starts as soon as the tasks it depends on are done; the others do not wait for it. A solid arrow comes from a finished task.',
                tasks='Tasks and agents', by_model='Tokens by model',
                h=['Id', 'Task', 'Role', 'Model', 'Effort', 'State', 'Agents', 'Duration', 'Turns', 'Tokens', 'Output'],
                hm=['Model', 'Agents', 'Turns', 'Tokens in all', 'Cache reads', 'Input and cache writes', 'Output'],
                model_note='The top tier orchestrates and judges, the expert tier writes and reviews, the generalist does checked mechanical work, the cheapest tier does wide lookups. Dollars are not measured here.',
                done='Done', running='Running', ready='Can start', waiting='Waits for its dependencies', user='Waits for {who}',
-               failed='To redo', interrupted='Interrupted, to resume', notyet='Not started', you='you'),
+               failed='To redo', interrupted='Interrupted, to resume', notyet='Not started', you='you',
+               toc='Contents', n_ess='Essentials', n_kpi='Figures and time', n_wait='Waits for {who}', n_dec='Decisions',
+               n_probes='Probes', n_graph='Graph', n_tasks='Tokens per task', n_models='Tokens per model',
+               tools='Graph controls', z_in='Zoom in', z_out='Zoom out', z_fit='Fit to window', z_full='Full screen',
+               z_exit='Exit full screen', z_hint='Drag to move · Ctrl + wheel or pinch to zoom · Esc to leave',
+               graph_hint='Click a task to light the whole chain that leads to it, thicker for its direct dependencies, and what depends on it.',
+               p_label='Task detail', p_close='Close', p_role='Role', p_model='Model', p_effort='effort',
+               p_agents='Agents', p_dur='Duration', p_turns='Turns', p_tok='Tokens', p_out='output',
+               p_deps='What it took to get here', p_kids='Depends on it', p_none='None',
+               p_up_n='{n} upstream, {d}', p_down_n='{d}, {n} in the whole descent',
+               p_task='task|tasks', p_dir='direct|direct', p_direct='direct', p_all='Show the whole descent ({n})',
+               p_less='Fold the descent ({n})', p_nolane='No lane', p_row='Its row in the task table'),
     'fr': dict(title='Suivi du chantier', updated='Mis à jour le', tok_note='Jetons lus dans les transcripts, lectures de cache comprises.',
                essentials="L'essentiel", waiting_on='En attente de {who}', decisions='Décisions prises', probes="Sondes réelles : ce qu'on a relevé",
                k_tasks='tâches faites', k_run='tâches en cours', k_agents='agents lancés', k_asks='appels directs à un modèle moins cher',
                k_tok='jetons au total, dont {cr} de lectures de cache', k_out='jetons de sortie',
-               k_time="écoulées, pour {cum} de travail d'agents ({par})", graph='Graphe des tâches',
+               k_time="de temps écoulé, pour {cum} de travail d'agents ({par})", u_day='j', graph='Graphe des tâches',
                graph_note="Une tâche part dès que celles dont elle dépend sont faites ; les autres ne l'attendent pas. Une flèche pleine vient d'une tâche terminée.",
                tasks='Tâches et agents', by_model='Jetons par modèle',
                h=['Id', 'Tâche', 'Rôle', 'Modèle', 'Effort', 'État', 'Agents', 'Durée', 'Tours', 'Jetons', 'Sortie'],
                hm=['Modèle', 'Agents', 'Tours', 'Jetons au total', 'Lectures de cache', 'Entrée et écriture de cache', 'Sortie'],
                model_note="Le palier du haut orchestre et juge, le palier expert écrit et relit, le généraliste fait le mécanique vérifiable, le moins cher fait les recherches larges. Le coût en dollars n'est pas mesuré ici.",
                done='Fait', running='En cours', ready='Peut partir', waiting='Attend ses dépendances', user='Attend {who}',
-               failed='À refaire', interrupted='Coupée, à reprendre', notyet='Pas encore lancée', you='toi'),
+               failed='À refaire', interrupted='Coupée, à reprendre', notyet='Pas encore lancée', you='toi',
+               toc='Sommaire', n_ess="L'essentiel", n_kpi='Chiffres et temps', n_wait='Attend {who}', n_dec='Décisions',
+               n_probes='Sondes', n_graph='Graphe', n_tasks='Jetons par tâche', n_models='Jetons par modèle',
+               tools='Commandes du graphe', z_in='Zoom avant', z_out='Zoom arrière', z_fit='Ajuster à la fenêtre', z_full='Plein écran',
+               z_exit='Quitter le plein écran', z_hint='Glisser pour déplacer · Ctrl + molette ou pincement pour zoomer · Échap pour sortir',
+               graph_hint="Touche une tâche : toute la chaîne qui y mène s'allume, en trait épais pour ses dépendances directes, avec ce qui dépend d'elle.",
+               p_label="Détail d'une tâche", p_close='Fermer', p_role='Rôle', p_model='Modèle', p_effort='effort',
+               p_agents='Agents', p_dur='Durée', p_turns='Tours', p_tok='Jetons', p_out='de sortie',
+               p_deps="Ce qu'il a fallu pour y arriver", p_kids="Ce qui dépend d'elle", p_none='Aucune',
+               p_up_n='{n} en amont, dont {d}', p_down_n='{d}, {n} dans toute la descendance',
+               p_task='tâche|tâches', p_dir='directe|directes', p_direct='directe', p_all='Voir toute la descendance ({n})',
+               p_less='Replier la descendance ({n})', p_nolane='Sans couloir', p_row='Sa ligne dans le tableau des tâches'),
 }
 
 
@@ -91,6 +113,20 @@ def fmt(n):
     return str(n)
 
 
+def span(minutes, day='d'):
+    """A duration given in minutes, as text: minutes under an hour ("45 min"), hours and minutes under a day ("2 h 15"),
+    days and hours beyond ("2 d 16 h"). Non-breaking spaces, so that a line never cuts a duration in two."""
+    m = max(0, int(round(minutes)))
+    if m < 60:
+        s = '%d min' % m
+    elif m < 1440:
+        s = ('%d h %02d' % divmod(m, 60)) if m % 60 else '%d h' % (m // 60)
+    else:
+        d, h = divmod(int(round(m / 60)), 24)
+        s = ('%d %s %d h' % (d, day, h)) if h else '%d %s' % (d, day)
+    return s.replace(' ', '\u00a0')
+
+
 def allin(c):
     return sum(c[k] for k in KEYS)
 
@@ -103,6 +139,9 @@ def main():
     G = json.load(open(os.path.join(board, 'graph.json'), encoding='utf-8'))
     lab = L.get(G.get('lang', 'en'), L['en'])
     who = G.get('user') or lab['you']
+
+    def label(status):
+        return lab.get(status, status).format(who=who)
     tz = datetime.timezone(datetime.timedelta(hours=float(G.get('utc_offset', 0))))
     start = ts(G['start'])
     now = datetime.datetime.now(datetime.timezone.utc)
@@ -161,7 +200,8 @@ def main():
 
     def dep(i):
         if i not in depth:
-            depth[i] = 1 + max([dep(d) for d in N[i].get('deps', [])], default=-1)
+            depth[i] = 0   # placeholder first: a cycle in faulty data ends here instead of recursing forever
+            depth[i] = 1 + max([dep(d) for d in N[i].get('deps', []) if d in N], default=-1)
         return depth[i]
 
     for i in N:
@@ -170,6 +210,7 @@ def main():
     nrows = max(depth.values()) + 1
     pos, lane_boxes = {}, []
     lanes = [l if isinstance(l, list) else [l, l] for l in G.get('lanes', [])]
+    lane_names = {k: v for k, v in lanes}
     if lanes:
         # One column per lane, sub-columns when a lane has several tasks at one depth; a lane-less
         # root (the framing task) is centred on top. Lanes advance at their own pace, which is the point.
@@ -189,16 +230,18 @@ def main():
             lx[k] = x
             x += lw[k] * BW + (lw[k] - 1) * GX + LG
         W = x - LG + PAD
-        H = PAD * 2 + HEAD + nrows * BH + (nrows - 1) * GY
+        # Lanes that start at depth 0 would share the top row with the centred root: push them one row down.
+        shift = 1 if top and any(0 in cells[k] for k in keys) else 0
+        H = PAD * 2 + HEAD + (nrows + shift) * BH + (nrows + shift - 1) * GY
         for j, i in enumerate(top):
             pos[i] = (W / 2 - BW / 2 + (j - (len(top) - 1) / 2) * (BW + GX), PAD + HEAD)
-        for k, label in lanes:
+        for k, lname in lanes:
             w = lw[k] * BW + (lw[k] - 1) * GX
-            lane_boxes.append((lx[k] - 7, PAD, w + 14, H - PAD * 2, lx[k] + w / 2, label))
+            lane_boxes.append((lx[k] - 7, PAD, w + 14, H - PAD * 2, lx[k] + w / 2, lname))
             for d, ids in cells[k].items():
                 off = (lw[k] - len(ids)) * (BW + GX) / 2
                 for j, i in enumerate(ids):
-                    pos[i] = (lx[k] + off + j * (BW + GX), PAD + HEAD + d * (BH + GY))
+                    pos[i] = (lx[k] + off + j * (BW + GX), PAD + HEAD + (d + shift) * (BH + GY))
     else:
         # One row per depth, top to bottom.
         rows = collections.defaultdict(list)
@@ -225,12 +268,15 @@ def main():
             out = [out[0], out[1][:n - 1].rstrip() + '…']
         return out
 
-    svg = ['<svg viewBox="0 0 %d %d" width="%d" height="%d" role="img" aria-label="%s">' % (W, H, W, H, E(lab['graph'])),
+    # Natural size in width/height: without script the graph scrolls in its box; the script turns
+    # the box into a pan and zoom view by moving the viewBox.
+    svg = ['<svg id="graph" viewBox="0 0 %d %d" width="%d" height="%d" data-w="%d" data-h="%d" aria-label="%s">'
+           % (W, H, W, H, W, H, E(lab['graph'])),
            '<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">'
            '<path d="M0 0L10 5L0 10z" class="arh"/></marker></defs>']
-    for x, y, w, h, cx, label in lane_boxes:
+    for x, y, w, h, cx, lname in lane_boxes:
         svg.append('<rect class="lane" x="%.0f" y="%.0f" width="%.0f" height="%.0f" rx="4"/>'
-                   '<text class="lane-t" x="%.0f" y="%.0f" text-anchor="middle">%s</text>' % (x, y, w, h, cx, y + 18, E(label)))
+                   '<text class="lane-t" x="%.0f" y="%.0f" text-anchor="middle">%s</text>' % (x, y, w, h, cx, y + 18, E(lname)))
     for n in G['nodes']:
         x2, y2 = pos[n['id']]
         for d in n.get('deps', []):
@@ -238,27 +284,29 @@ def main():
             a, b, c, e = x1 + BW / 2, y1 + BH, x2 + BW / 2, y2 - 3
             my = (b + e) / 2
             cls = 'edge done' if N[d]['status'] == 'done' else 'edge'
-            svg.append('<path class="%s" d="M%.0f %.0fC%.0f %.0f %.0f %.0f %.0f %.0f" marker-end="url(#ar)"/>' % (cls, a, b, a, my, c, my, c, e))
+            svg.append('<path class="%s" data-f="%s" data-t="%s" d="M%.0f %.0fC%.0f %.0f %.0f %.0f %.0f %.0f" marker-end="url(#ar)"/>'
+                       % (cls, E(d), E(n['id']), a, b, a, my, c, my, c, e))
     for n in G['nodes']:
         x, y = pos[n['id']]
         k = ST.get(n['status'], 'todo')
-        svg.append('<g class="node %s"><title>%s</title><rect class="sh" x="%.0f" y="%.0f" width="%d" height="%d" rx="4"/>'
-                   '<rect class="bx" x="%.0f" y="%.0f" width="%d" height="%d" rx="4"/>' % (k, E(n['title']), x + 4, y + 4, BW, BH, x, y, BW, BH))
+        # A link to the task's table row: the card still leads to its detail when script is off.
+        svg.append('<a class="node %s" href="#t-%s" tabindex="0" data-id="%s" data-x="%.0f" data-y="%.0f" aria-label="%s">'
+                   '<title>%s</title><rect class="sh" x="%.0f" y="%.0f" width="%d" height="%d" rx="4"/>'
+                   '<rect class="bx" x="%.0f" y="%.0f" width="%d" height="%d" rx="4"/>' % (
+                       k, E(n['id']), E(n['id']), x, y, E('%s · %s · %s' % (n['id'], n['title'], label(n['status']))),
+                       E(n['title']), x + 4, y + 4, BW, BH, x, y, BW, BH))
         svg.append('<text class="nid" x="%.0f" y="%.0f">%s</text>' % (x + 9, y + 16, E(n['id'])))
         if n.get('model'):
             svg.append('<text class="nwho" x="%.0f" y="%.0f" text-anchor="end">%s</text>' % (x + BW - 9, y + 16, E(n['model'])))
         for j, line in enumerate(wrap(n['title'])):
             svg.append('<text class="ntt" x="%.0f" y="%.0f">%s</text>' % (x + 9, y + 35 + j * 15, E(line)))
-        svg.append('</g>')
+        svg.append('</a>')
     svg.append('</svg>')
 
     def chip(k, t):
         return '<span class="chip %s">%s</span>' % (k, E(t))
 
-    def label(status):
-        return lab.get(status, status).format(who=who)
-
-    trs = []
+    trs, data = [], []
     for n in G['nodes']:
         tot, t0, t1 = collections.Counter(), None, None
         for aid in n.get('agents', []):
@@ -268,14 +316,19 @@ def main():
             tot.update(a['tot'])
             t0 = min(filter(None, [t0, a['t0']]))
             t1 = max(filter(None, [t1, a['t1']]))
-        dur = '%d min' % max(1, round((ts(t1) - ts(t0)).total_seconds() / 60)) if t0 else '—'
-        trs.append('<tr><td class="mono">%s</td><td>%s%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="num">%s</td>'
+        dur = span(max(1, (ts(t1) - ts(t0)).total_seconds() / 60), lab['u_day']) if t0 else '—'
+        trs.append('<tr id="t-%s"><td class="mono"><a href="#graph-section" data-go="%s">%s</a></td><td>%s%s</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td class="num">%s</td>'
                    '<td class="num">%s</td><td class="num">%s</td><td class="num">%s</td><td class="num">%s</td></tr>' % (
-                       E(n['id']), E(n['title']), ('<div class="note">%s</div>' % E(n['note'])) if n.get('note') else '',
+                       E(n['id']), E(n['id']), E(n['id']), E(n['title']), ('<div class="note">%s</div>' % E(n['note'])) if n.get('note') else '',
                        E(n.get('role', '')), E(n.get('model', '—')), E(n.get('effort', '—')),
                        chip(ST.get(n['status'], 'todo'), label(n['status'])),
                        len(n.get('agents', [])) or '—', dur, tot['turns'] or '—',
                        fmt(allin(tot)) if tot else '—', fmt(tot['output_tokens']) if tot else '—'))
+        # What the detail panel shows; plain text, set with textContent by the page script.
+        data.append(dict(id=n['id'], t=n['title'], k=ST.get(n['status'], 'todo'), s=label(n['status']),
+                         l=lane_names.get(n.get('lane'), ''), r=n.get('role', ''), m=n.get('model', ''), e=n.get('effort', ''),
+                         n=n.get('note', ''), a=n.get('agents', []), d=n.get('deps', []), h=depth[n['id']], du=dur if t0 else '',
+                         tu=tot['turns'] or '', to=fmt(allin(tot)) if tot else '', o=fmt(tot['output_tokens']) if tot else ''))
     mrows = []
     for m in sorted(models, key=lambda m: -allin(models[m])):
         c = models[m]
@@ -298,7 +351,7 @@ def main():
         '{{DECISIONS}}': lis('decisions'), '{{PROBES}}': lis('probes', 'sondes'),
         '{{K_TASKS}}': '%d / %d' % (count['done'], len(G['nodes'])), '{{K_RUN}}': str(count['running']),
         '{{K_AGENTS}}': str(len(agents)), '{{K_ASKS}}': str(n_asks), '{{K_TOK}}': fmt(tot_all), '{{K_OUT}}': fmt(tot_out),
-        '{{K_ELAPSED}}': '%d min' % round(elapsed),
+        '{{K_ELAPSED}}': span(elapsed, lab['u_day']),
         '{{SVG}}': '\n'.join(svg), '{{ROWS}}': '\n'.join(trs), '{{MROWS}}': '\n'.join(mrows),
         '{{CHIPS}}': ''.join(chip(ST[s], label(s)) for s in ('done', 'running', 'waiting', 'user', 'failed')),
     }
@@ -307,9 +360,18 @@ def main():
         rep['{{L_%s}}' % k.upper()] = E(lab[k])
     rep['{{L_WAITING_ON}}'] = E(lab['waiting_on'].format(who=who))
     rep['{{L_K_TOK}}'] = E(lab['k_tok'].format(cr='%d %%' % round(100 * tot_cr / tot_all) if tot_all else '—'))
-    rep['{{L_K_TIME}}'] = E(lab['k_time'].format(cum='%d min' % round(cum), par=('×%.1f' % (cum / elapsed)) if elapsed else '—'))
+    rep['{{L_K_TIME}}'] = E(lab['k_time'].format(cum=span(cum, lab['u_day']), par=('×%.1f' % (cum / elapsed)) if elapsed else '—'))
     rep['{{L_H}}'] = ''.join('<th%s>%s</th>' % (' class="num"' if i >= 6 else '', E(h)) for i, h in enumerate(lab['h']))
     rep['{{L_HM}}'] = ''.join('<th%s>%s</th>' % (' class="num"' if i >= 1 else '', E(h)) for i, h in enumerate(lab['hm']))
+    for k in ('toc', 'tools', 'z_in', 'z_out', 'z_fit', 'z_full', 'z_hint', 'graph_hint', 'p_label', 'p_close'):
+        rep['{{L_%s}}' % k.upper()] = E(lab[k])
+    rep['{{LANG}}'] = E(G.get('lang', 'en'))
+    nav = [('essentials', 'n_ess'), ('figures', 'n_kpi'), ('graph-section', 'n_graph'), ('waiting', 'n_wait'), ('decisions', 'n_dec'),
+           ('probes', 'n_probes'), ('models', 'n_models'), ('tasks', 'n_tasks')]   # page order
+    rep['{{NAV}}'] = ''.join('<li><a href="#%s">%s</a></li>' % (a, E(lab[k].format(who=who))) for a, k in nav)
+    # Data of the detail panel and its labels. "</" is escaped so that no note can close the script element.
+    ui = {k: lab[k].replace('{who}', who) for k in lab if k[:2] in ('p_', 'z_')}
+    rep['{{DATA}}'] = json.dumps({'nodes': data, 'lab': ui}, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/')
     for k, v in rep.items():
         page = page.replace(k, v)
     out = os.path.join(board, 'board.html')
