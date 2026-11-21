@@ -87,6 +87,10 @@ svg.focusing .node.hl,svg.focusing .node.sel{opacity:1} svg.focusing .edge.hl{op
 .decision .bar{margin-top:10px}
 .decision button{background:#FFFFFF;color:#111111;border-color:#111111}
 #detail dl{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;margin:8px 0 0;font-size:13.5px}
+/* A selected task's detail floats over the page, next to the graph that was clicked, as on the real board. */
+#detail.open{position:fixed;right:16px;bottom:16px;width:min(380px,calc(100% - 32px));max-height:70vh;overflow:auto;z-index:20}
+#detail .dh{display:flex;gap:10px;justify-content:space-between;align-items:flex-start}
+#detail .dgo{font:700 12px var(--mono);padding:2px 7px;margin:0 4px 4px 0;box-shadow:none}
 #detail dt{color:var(--mute)} #detail dd{margin:0;min-width:0}
 .mono{font-family:var(--mono);font-size:12.5px}
 #log{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px;max-height:420px;overflow:auto;font-size:13.5px}
@@ -152,7 +156,7 @@ details summary{cursor:pointer;font-weight:900}
       <span class="chip todo">Attend ses dépendances</span><span class="chip ready">Peut partir</span><span class="chip run">En cours</span>
       <span class="chip ok">Faite</span><span class="chip you">Attend ta décision</span><span class="chip ko">Coupée, à reprendre</span>
     </div>
-    <p class="note" style="margin-bottom:10px">Touche une tâche pour voir ce qu'elle attend et ce qu'elle débloque. Une flèche pleine part d'une tâche finie. Le modèle de chaque tâche est dans son coin.</p>
+    <p class="note" style="margin-bottom:10px">Touche une tâche pour voir ce qu'elle attend et ce qu'elle débloque, puis passe d'une tâche liée à l'autre ; Échap ferme. Une flèche pleine part d'une tâche finie. Le modèle de chaque tâche est dans son coin.</p>
     <div class="scroll"><svg id="graph" role="img" aria-label="Graphe des 50 tâches du chantier"></svg></div>
   </section>
 
@@ -168,7 +172,7 @@ details summary{cursor:pointer;font-weight:900}
     </section>
 
     <section class="card" id="detail" aria-live="polite">
-      <h3 id="d-title">Choisis une tâche</h3>
+      <div class="dh"><h3 id="d-title">Choisis une tâche</h3><button type="button" id="d-x" aria-label="Fermer" hidden>×</button></div>
       <p class="note" id="d-hint">Touche une case du graphe : ses dépendances et ce qu'elle débloque s'allument, le reste s'efface.</p>
       <dl id="d-dl" hidden></dl>
     </section>
@@ -226,6 +230,7 @@ details summary{cursor:pointer;font-weight:900}
   <div class="card">
     <h3>Dans le skill research-plan</h3>
     <p>Depuis la v1.6.0, chaque run tient un <code class="mono">graph.json</code> et publie cette page de suivi. <code class="mono">set.py</code> met une tâche à jour et dit ce qui peut partir ; <code class="mono">build.py</code> relit les transcripts et refait la page.</p>
+    <p>Depuis la v1.8.0, la vraie page fait comme ici : une tâche touchée ouvre son détail, ce qu'elle attend et ce qui dépend d'elle, et on passe de l'une à l'autre. Elle y ajoute le zoom, le plein écran et un sommaire qui reste à portée, parce qu'un vrai chantier dépasse vite les 300 tâches.</p>
   </div>
 </section>
 
@@ -518,7 +523,20 @@ details summary{cursor:pointer;font-weight:900}
       edges.forEach(e => { if ((hl.has(e.from) || e.from === selected) && (hl.has(e.to) || e.to === selected)) hlE.add(e); });
     }
     svg.classList.toggle('focusing', !!selected);
+    document.getElementById('detail').classList.toggle('open', !!selected);
+    document.getElementById('d-x').hidden = !selected;
     if (!selected) { txt('d-title', 'Choisis une tâche'); document.getElementById('d-hint').hidden = false; document.getElementById('d-dl').hidden = true; }
+    else {
+      // Built once per selection so that its buttons survive the animation frames; render() refreshes the figures.
+      const n = N[selected], go = l => l.map(d => `<button type="button" class="dgo" data-go="${d}">${d}</button>`).join('') || '—';
+      document.getElementById('d-dl').innerHTML = `<dt>État</dt><dd id="d-st"></dd>
+      <dt>Rôle</dt><dd>${n.role}</dd><dt>Modèle</dt><dd>${n.model} · effort ${EFFORT[n.model]}</dd>
+      <dt>Dépend de</dt><dd>${go(n.deps)}</dd>
+      <dt>Attend encore</dt><dd class="mono" id="d-miss"></dd>
+      <dt>Débloque</dt><dd>${go(n.kids)}</dd>
+      <dt>Durée prévue</dt><dd>${n.dur ? n.dur + ' min' : '—'}</dd>
+      <dt>Jetons</dt><dd id="d-tok"></dd>`;
+    }
     render();
   }
   const STL = {wait:'Attend ses dépendances', ready:'Peut partir, attend un agent libre', run:'En cours', done:'Faite', user:'Attend ta décision', ko:'Coupée, à reprendre'};
@@ -526,16 +544,14 @@ details summary{cursor:pointer;font-weight:900}
     const n = N[i];
     txt('d-title', `${i} · ${n.title}`);
     document.getElementById('d-hint').hidden = true;
-    const dl = document.getElementById('d-dl'); dl.hidden = false;
-    const missing = n.deps.filter(d => !isDone(d));
-    dl.innerHTML = `<dt>État</dt><dd>${STL[n.st]}${VERDICT[i] && n.st === 'done' ? ' · ' + VERDICT[i] : ''}</dd>
-      <dt>Rôle</dt><dd>${n.role}</dd><dt>Modèle</dt><dd>${n.model} · effort ${EFFORT[n.model]}</dd>
-      <dt>Dépend de</dt><dd class="mono">${n.deps.join(' ') || '—'}</dd>
-      <dt>Attend encore</dt><dd class="mono">${missing.join(' ') || '—'}</dd>
-      <dt>Débloque</dt><dd class="mono">${n.kids.join(' ') || '—'}</dd>
-      <dt>Durée prévue</dt><dd>${n.dur ? n.dur + ' min' : '—'}</dd>
-      <dt>Jetons</dt><dd>${fmtT(n.used)}</dd>`;
+    document.getElementById('d-dl').hidden = false;
+    txt('d-st', STL[n.st] + (VERDICT[i] && n.st === 'done' ? ' · ' + VERDICT[i] : ''));
+    txt('d-miss', n.deps.filter(d => !isDone(d)).join(' ') || '—');
+    txt('d-tok', fmtT(n.used));
   }
+  document.getElementById('d-dl').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) { selected = null; select(b.dataset.go); N[b.dataset.go].g.focus({preventScroll: true}); } });
+  document.getElementById('d-x').addEventListener('click', () => select(null));
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && selected) select(null); });
 
   // ── loop ──
   let speed = 1, last = null;
