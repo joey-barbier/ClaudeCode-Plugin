@@ -1,0 +1,69 @@
+{
+  "skill_name": "horka-harness-audit",
+  "setup": "bash evals/build_fixture.sh <folder> builds an offline fixture (a fake Claude Code config and two repositories with planted facts). Replace {FIXTURE} in the prompts with that folder. For evals 1 and 3 the output to grade is the audit.json and audit.html written by the skill, plus the short message in the thread; for eval 2 it is the answer in the thread.",
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-audit-production-repo",
+      "prompt": "j'ai lu un article sur le harness engineering et je veux savoir où j'en suis. Audite ma façon de bosser avec l'IA sur shop-api : le repo est dans {FIXTURE}/shop-api, ma config Claude Code dans {FIXTURE}/home/.claude (pas dans ~/.claude). C'est en prod avec des clients qui paient. J'ai des agents qui tournent la nuit sans moi (triage des issues, correction auto des tests). Donne-moi mon niveau et quoi brancher en premier.",
+      "expected_output": "An HTML page in French, rendered from audit.json and opened: three separate levels (design, detection, enforcement), what holds, what does not, three to six actions with the free ones first, the twelve criteria, limits. Five lines at most in the thread. It must find the planted facts below.",
+      "files": [],
+      "assertions": [
+        "States that the production deploy job (deploy-prod in deploy.yml) does not wait for any test job",
+        "Names at least one concrete command form that gets past the push guard (git -C, a +refspec, or a chained command) as a tested result, not as a possibility",
+        "States that a plain push to main is pre-approved or not stopped by anything (broad allow on git, local allow on git push)",
+        "Flags the unattended agent calls (triage workflow or night-fix script) as having no turn or budget cap",
+        "Gives three separate levels from 0 to 3, one whole number each for design, detection and enforcement (or their French equivalents), with no range, and the enforcement level is 0 or 1",
+        "Credits what works: says tests do run on every pull request (ci.yml)",
+        "Says the end-to-end suite runs only on a schedule and is not connected to the deploy",
+        "Says branch protection or platform settings could not be measured (no GitHub remote) instead of asserting that the branch is or is not protected",
+        "Notes that AGENTS.md is wrong or stale about the test runner (it says Jest, package.json uses vitest)",
+        "Lists between three and six recommended actions, and the first one costs nothing (a needs: on the deploy job, a hook fix or a permission rule)",
+        "Flags that the nightly triage agent reads issue text written by anyone while holding a broad tool grant (Bash(gh:*))",
+        "Notes that the gate proves little: the repository holds no test file (or declares no test dependency), so check.sh and the CI test job pass on nothing",
+        "Does not send the person to a file they do not have (a bare references/… or scripts/… path of the auditing tool)",
+        "The page is in French (audit.json has lang fr and French text), render.py accepted the file and wrote audit.html",
+        "The message in the thread is five lines at most and gives the full path of the page"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "narrow-question-push-rule",
+      "prompt": "Quick one: my CLAUDE.md says NEVER push directly to main and never force push. Is that actually enforced, or am I kidding myself? Config is in {FIXTURE}/home/.claude (not ~/.claude), the repo I care about is {FIXTURE}/shop-api. It's production.",
+      "expected_output": "A narrow answer: no, mostly not. Evidence from the probe: which command forms are stopped and which pass, the broad allow rules, the local allow on git push. A concrete fix. Not a full twelve-criterion audit.",
+      "files": [],
+      "assertions": [
+        "Answers the question directly in the first lines: the rule is not enforced, or only partly",
+        "States that a plain `git push origin main` goes through with no prompt because of an allow rule (Bash(git:*) globally or Bash(git push:*) locally)",
+        "States that the guard hook does stop a force push typed at the start of the command (--force or -f)",
+        "Names at least two forms that bypass the guard among: git -C, a +refspec, a chained command",
+        "Presents these as results of a test run against the hook or the rules, not as speculation",
+        "Proposes a concrete fix that reads the whole command (a hook) and removing or narrowing the allow rules",
+        "Says that whether main is protected on the hosting platform could not be checked",
+        "Does not produce a full twelve-criterion table: the answer stays on the push question",
+        "Makes no false claim about a command form: in particular it does not say that --force-with-lease, typed right after `git push`, gets past the guard (the guard's prefix match blocks it)",
+        "Does not send the person to a file they do not have (a bare references/… or scripts/… path of the auditing tool)",
+        "The answer is no longer than 30 lines"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "v1-speed-first-repo",
+      "prompt": "Rate my AI dev setup for proto-lab ({FIXTURE}/proto-lab). It's a v1, zero users, I'm deliberately going for speed and I know I'm skipping things, I'll catch up later. Claude Code config is in {FIXTURE}/home/.claude (not ~/.claude). No agents running unattended on this one.",
+      "expected_output": "An HTML page that respects the stated regime: the missing CI and tests are listed as chosen debt with a repayment trigger, not as failures. It still names the few things that are not debt in any regime (unguarded push to the default branch, a broad allow that lets an env file be read). Three levels. Five lines at most in the thread.",
+      "files": [],
+      "assertions": [
+        "Presents the absence of CI and tests as a choice or accepted debt for a v1, not as a failure or a weakness to fix now",
+        "Names at least one event that should trigger repayment of that debt (first user, first deploy, second developer, first unattended run, or similar)",
+        "Still flags at least one guard that matters regardless of regime: the unguarded push to the default branch, or env files readable through a broad allow rule",
+        "Credits what is in place: a short map (CLAUDE.md) and a state file kept in the repository and touched by the last commit (STATE.md)",
+        "Gives three separate levels from 0 to 3 for design, detection and enforcement, each a single whole number",
+        "Does not recommend more than six actions, and none of them is setting up a full CI pipeline or paid branch protection now",
+        "Does not send the person to a file they do not have (a bare references/… or scripts/… path of the auditing tool)",
+        "Notes that the lessons file holds sentences only (no script or check behind them), or that the one hard rule in CLAUDE.md (API keys) has no enforcer",
+        "render.py accepted audit.json (no field over its limit) and wrote audit.html",
+        "The message in the thread is five lines at most and gives the full path of the page"
+      ]
+    }
+  ]
+}

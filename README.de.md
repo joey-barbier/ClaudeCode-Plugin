@@ -30,6 +30,7 @@ Dann `/plugin` → **Discover** Tab zum Durchsuchen, oder installiere Plugins ei
 | **[horka-agent-forge](#horka-agent-forge)** | Skill-Fabrik mit verpflichtenden Qualitätsgates | Skill |
 | **[horka-project-index](#horka-project-index)** | Globaler Projektindex: löst generische Befehle zum richtigen Projekt/Workspace auf | Skill + Skript |
 | **[horka-research-plan](#horka-research-plan)** | Das richtige Modell und der richtige Aufwand pro Agentenrolle → Multi-Agenten-Recherche, die Tokens spart und in einem belegten Aktionsplan endet (Doc-Style-Seite); Code-Variante für eine Migration mit vielen Agenten (blinde Tester vor Implementierern, grüner Integrations-Branch an einem Gate, getrennte Validierungs-Threads); jeder Lauf ist ein Aufgabengraph auf einem Live-Board mit Token-Auswertung pro Aufgabe und Modell; belastbare Prüfungen: das Produkt vor jedem Push end-to-end ausgeführt, Differenztests alt gegen neu, Urteile an einen Commit gebunden | skill |
+| **[horka-harness-audit](#horka-harness-audit)** | Was hält deine Regeln wirklich? Ein Scan, der nichts verändert (Regeln, deine eigenen Hooks laufen gegen riskante Befehle, die nie ausgeführt werden, CI, Branch-Schutz), dann eine Stufe von 0 bis 3 für Entwurf, Erkennung und Durchsetzung, auf einer HTML-Seite, die am Ende geöffnet wird | skill + scripts |
 | **[horka-played](#horka-played)** | `/played` wie in WoW: dein Claude-Code-Tokenverbrauch pro Tag, Maschine und Modell, mit teilbarer Karte und Story-PNG | skill + scripts |
 
 ---
@@ -169,6 +170,22 @@ claude plugin install horka-played
 | `/horka-played:played` | "/played", "how many tokens did I use", "wie viele Tokens habe ich verbraucht" | Summen, pro Tag / Maschine / Modell, Anteil der Subagenten, Rekordtag, Zeitraumwahl (letzter Tag, 7 Tage, freier Bereich, −1/+1 Tag), teilbare Karte und Story-PNG 1080×1920 |
 
 Nur lesend, keine geschätzte Zahl. Mehrere Maschinen: auf jeder ausführen und `~/.claude/played/<label>.json` auf die Maschine kopieren, auf der du die Seite öffnest. Cloud-Sitzungen speichern ihren Verbrauch am Ende jedes Turns selbst (claude.ai-Projekt-Threads, Plugin-Hook) und werden ab der Installation gezählt.
+
+---
+
+## horka-harness-audit
+
+**Was hält deine Regeln wirklich?** Ein Audit deiner Arbeitsweise mit KI-Agenten: Für jede Regel und jede Prüfung wird festgestellt, ob ein Satz, ein Skript, ein Hook, die CI oder die Plattform sie hält.
+
+```bash
+claude plugin install horka-harness-audit
+```
+
+| Komponente | Auslöser | Funktion |
+|---|---|---|
+| `/horka-harness-audit:horka-harness-audit` | "audit my harness", "do my guardrails hold", "prüfe mein Harness", "auf welcher Stufe bin ich" | Zwei oder drei Fragen, ein Scan von etwa 30 Sekunden, der nichts verändert, dann eine HTML-Seite, die am Ende geöffnet wird: eine Stufe von 0 bis 3 auf drei Achsen (Entwurf, Erkennung, Durchsetzung), was hält, was nicht hält, und die nächsten Schritte, der günstigste zuerst |
+
+Der Scan prüft deine Berechtigungsregeln und startet deine eigenen PreToolUse-Hooks gegen eine Reihe riskanter Befehle (die Befehle werden nie ausgeführt, aber ein Hook, der protokolliert, protokolliert sie; Hooks, die ein gescanntes Repository definiert, werden nicht gestartet), liest die CI-Abhängigkeiten und über `gh` den Branch-Schutz und Merges trotz roter Prüfungen. Details: [Plugin-README](plugins/horka-harness-audit/README.md).
 
 ---
 
